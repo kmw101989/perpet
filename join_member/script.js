@@ -317,13 +317,54 @@ function setupSubmitButton() {
           marketingAgree: marketingTermsCheckbox.checked,
         };
 
-        // 로컬 스토리지에 사용자 정보 저장
+        // Supabase에 사용자 정보 저장
         try {
-          const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-          userData.nickname = formData.nickname;
-          localStorage.setItem("userData", JSON.stringify(userData));
+          // Supabase 스크립트 로드 확인
+          if (typeof SupabaseService === 'undefined') {
+            console.error('SupabaseService가 로드되지 않았습니다.');
+            alert('서비스 초기화 중 오류가 발생했습니다. 페이지를 새로고침해주세요.');
+            return;
+          }
+
+          // Supabase에 사용자 등록
+          const userData = {
+            nickname: formData.nickname,
+            gender: formData.gender,
+            residence: formData.residence,
+            phone: formData.phone
+          };
+
+          const createdUser = await SupabaseService.createUser(userData);
+          
+          if (createdUser) {
+            const userId = createdUser.user_id;
+            
+            // 로컬 스토리지에도 저장 (인증 체크용)
+            const localUserData = {
+              userId: userId,
+              email: formData.email,
+              nickname: formData.nickname,
+              gender: formData.gender,
+              residence: formData.residence,
+              phone: formData.phone,
+              marketingAgree: formData.marketingAgree,
+              createdAt: new Date().toISOString()
+            };
+            
+            localStorage.setItem("userId", userId);
+            localStorage.setItem("userData", JSON.stringify(localUserData));
+            
+            console.log("✅ 회원가입 완료 - User ID:", userId);
+            console.log("✅ Supabase에 사용자 등록 완료:", createdUser);
+          } else {
+            console.error("❌ 사용자 등록 실패");
+            alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
+            return;
+          }
         } catch (error) {
           console.error("데이터 저장 실패:", error);
+          alert('회원가입 중 오류가 발생했습니다: ' + error.message);
+          return;
         }
 
         // 회원가입 완료 후 joinMemberData 초기화

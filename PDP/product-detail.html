@@ -115,7 +115,14 @@
     <button class="purchase-button">바로 구매</button>
   </div>
 
+  <script src="../common/auth-check.js"></script>
   <script src="product-detail-script.js"></script>
+  <script>
+    // 인증 체크
+    document.addEventListener('DOMContentLoaded', function() {
+      checkAuth();
+    });
+  </script>
 </body>
 </html>
 

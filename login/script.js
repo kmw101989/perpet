@@ -13,6 +13,7 @@ function clearAllData() {
     localStorage.removeItem('joinMemberData');
     localStorage.removeItem('editingPetIndex');
     localStorage.removeItem('userData');
+    localStorage.removeItem('userId'); // 사용자 ID도 삭제
     console.log('✅ 모든 데이터 초기화 완료');
 }
 
@@ -118,6 +119,15 @@ document.head.appendChild(style);
 // 페이지 로드 완료 시 초기화
 document.addEventListener('DOMContentLoaded', function() {
     console.log('로그인 페이지 로드 완료');
+    
+    // 기존 사용자 ID 확인
+    const existingUserId = localStorage.getItem('userId');
+    if (existingUserId) {
+        console.log('✅ 기존 사용자 ID 발견:', existingUserId);
+        // 기존 사용자가 있으면 메인페이지로 이동
+        window.location.href = '../website/index.html';
+        return;
+    }
     
     // login 페이지 접속 시 모든 관련 데이터 초기화 (새로운 세션 시작)
     console.log('새로운 세션 시작 - 모든 저장된 데이터 초기화');

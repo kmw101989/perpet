@@ -248,8 +248,15 @@
     </div>
   </div>
 
+  <script src="/common/auth-check.js"></script>
   <script src="/website/script.js"></script>
   <script src="/common/tabbar.js"></script>
+  <script>
+    // 인증 체크
+    document.addEventListener('DOMContentLoaded', function() {
+      checkAuth();
+    });
+  </script>
   <script>
     // AI 채팅 버튼 클릭 이벤트
     document.addEventListener('DOMContentLoaded', function() {

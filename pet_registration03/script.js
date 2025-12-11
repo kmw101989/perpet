@@ -86,7 +86,7 @@ window.addEventListener("DOMContentLoaded", () => {
   
   // 다음 버튼 클릭 이벤트 설정
   if (nextBtn) {
-    nextBtn.addEventListener("click", () => {
+    nextBtn.addEventListener("click", async () => {
       if (nextBtn.classList.contains("active")) {
         // 현재 등록 중인 반려동물 데이터 가져오기
         try {
@@ -106,6 +106,15 @@ window.addEventListener("DOMContentLoaded", () => {
           if (cautionInput) {
             currentPetData.cautionDetail = cautionInput.value.trim();
           }
+          
+          // 사용자 ID 가져오기
+          const userId = localStorage.getItem('userId');
+          if (!userId) {
+            alert('로그인이 필요합니다.');
+            window.location.href = '../login/index.html';
+            return;
+          }
+          currentPetData.user_id = userId;
           
           // petsData 배열 가져오기 (없으면 빈 배열)
           let petsData = JSON.parse(localStorage.getItem("petsData") || "[]");
@@ -131,6 +140,41 @@ window.addEventListener("DOMContentLoaded", () => {
           
           console.log("isEditMode:", isEditMode);
           console.log("editIndex:", editIndex);
+          
+          // Supabase에 반려동물 저장
+          if (typeof SupabaseService === 'undefined') {
+            console.error('SupabaseService가 로드되지 않았습니다.');
+            alert('서비스 초기화 중 오류가 발생했습니다. 페이지를 새로고침해주세요.');
+            return;
+          }
+
+          let createdPet = null;
+          if (!isEditMode || editIndex === null || isNaN(editIndex)) {
+            // 신규 등록: Supabase에 저장
+            try {
+              createdPet = await SupabaseService.createPet(currentPetData);
+              if (createdPet) {
+                console.log("✅ Supabase에 반려동물 등록 완료:", createdPet);
+                // Supabase에서 받은 pet_id를 currentPetData에 추가
+                currentPetData.pet_id = createdPet.pet_id;
+              } else {
+                console.error("❌ 반려동물 등록 실패");
+                alert('반려동물 등록 중 오류가 발생했습니다. 다시 시도해주세요.');
+                return;
+              }
+            } catch (error) {
+              console.error("반려동물 등록 중 오류:", error);
+              alert('반려동물 등록 중 오류가 발생했습니다: ' + error.message);
+              return;
+            }
+          } else {
+            // 수정 모드: 기존 pet_id 사용 (petsData에서 가져오기)
+            if (editIndex >= 0 && editIndex < petsData.length && petsData[editIndex].pet_id) {
+              currentPetData.pet_id = petsData[editIndex].pet_id;
+              // TODO: Supabase 업데이트 로직 추가 (필요시)
+              console.log("수정 모드: 기존 pet_id 사용:", currentPetData.pet_id);
+            }
+          }
           
           if (isEditMode && editIndex !== null && !isNaN(editIndex)) {
             // 수정 모드: 해당 인덱스의 데이터 업데이트

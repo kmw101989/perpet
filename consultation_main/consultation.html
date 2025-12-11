@@ -94,8 +94,15 @@
     </div>
   </div>
 
+  <script src="../common/auth-check.js"></script>
   <script src="consultation-script.js"></script>
   <script src="../common/tabbar.js"></script>
+  <script>
+    // 인증 체크
+    document.addEventListener('DOMContentLoaded', function() {
+      checkAuth();
+    });
+  </script>
 </body>
 </html>
 
