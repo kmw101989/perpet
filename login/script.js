@@ -41,13 +41,169 @@ googleBtn.addEventListener('click', function() {
     window.location.href = '../join_member/index.html';
 });
 
+// 이메일/비밀번호 로그인 함수 (로컬스토리지 기반)
+async function loginWithEmail(email, password) {
+    try {
+        // Supabase에서 사용자 조회
+        if (typeof SupabaseService !== 'undefined') {
+            const client = await getSupabaseClient();
+            const { data: user, error } = await client
+                .from('users')
+                .select('*')
+                .eq('email', email)
+                .eq('password', password) // 비밀번호 비교 (데모용 - 프로덕션에서는 해시 비교)
+                .single();
+
+            if (error || !user) {
+                console.log('로그인 실패: 이메일 또는 비밀번호가 일치하지 않습니다.');
+                return false;
+            }
+
+            // 로그인 성공 - 로컬스토리지에 저장
+            const userId = user.user_id;
+            const userData = {
+                userId: userId,
+                email: user.email,
+                nickname: user.nickname || user.user_name,
+                gender: user.user_gender,
+                residence: user.user_address1,
+                phone: user.phone_num,
+                createdAt: new Date().toISOString()
+            };
+
+            localStorage.setItem('userId', userId);
+            localStorage.setItem('userData', JSON.stringify(userData));
+
+            console.log('✅ 로그인 성공 - User ID:', userId);
+            return true;
+        } else {
+            // Supabase가 없으면 로컬스토리지에서만 확인
+            const savedUserData = localStorage.getItem('userData');
+            if (savedUserData) {
+                const userData = JSON.parse(savedUserData);
+                if (userData.email === email) {
+                    // 비밀번호는 로컬스토리지에 저장되지 않으므로 이메일만 확인
+                    localStorage.setItem('userId', userData.userId);
+                    console.log('✅ 로컬스토리지 로그인 성공');
+                    return true;
+                }
+            }
+            return false;
+        }
+    } catch (error) {
+        console.error('로그인 중 오류:', error);
+        return false;
+    }
+}
+
+// 로그인 모달 표시 함수
+function showLoginModal() {
+    // 기존 모달이 있으면 제거
+    const existingModal = document.getElementById('loginModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // 모달 생성
+    const modal = document.createElement('div');
+    modal.id = 'loginModal';
+    modal.className = 'login-modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>이메일 로그인</h3>
+                <button class="modal-close" id="closeLoginModal">&times;</button>
+            </div>
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="loginEmail">이메일</label>
+                    <input type="email" id="loginEmail" name="email" class="form-input" placeholder="이메일을 입력해주세요" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">비밀번호</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="loginPassword" name="password" class="form-input" placeholder="비밀번호를 입력해주세요" required autocomplete="current-password">
+                        <button type="button" class="toggle-password" data-target="loginPassword">보기</button>
+                    </div>
+                </div>
+                <div class="form-error" id="loginError" style="display: none;"></div>
+                <button type="submit" class="submit-btn" id="loginSubmitBtn">로그인</button>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // 모달 닫기
+    const closeBtn = document.getElementById('closeLoginModal');
+    closeBtn.addEventListener('click', () => {
+        modal.remove();
+    });
+
+    // 모달 배경 클릭 시 닫기
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+
+    // 비밀번호 보기/숨기기
+    const togglePasswordBtn = modal.querySelector('.toggle-password');
+    const passwordInput = document.getElementById('loginPassword');
+    togglePasswordBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            this.textContent = '숨기기';
+        } else {
+            passwordInput.type = 'password';
+            this.textContent = '보기';
+        }
+    });
+
+    // 로그인 폼 제출
+    const loginForm = document.getElementById('loginForm');
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const errorDiv = document.getElementById('loginError');
+        const submitBtn = document.getElementById('loginSubmitBtn');
+
+        if (!email || !password) {
+            errorDiv.textContent = '이메일과 비밀번호를 입력해주세요.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        // 로그인 버튼 비활성화
+        submitBtn.disabled = true;
+        submitBtn.textContent = '로그인 중...';
+
+        // 로그인 시도
+        const success = await loginWithEmail(email, password);
+
+        if (success) {
+            // 로그인 성공 - 메인 페이지로 이동
+            window.location.href = '../website/index.html';
+        } else {
+            // 로그인 실패
+            errorDiv.textContent = '이메일 또는 비밀번호가 일치하지 않습니다.';
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = '로그인';
+        }
+    });
+}
+
 // 이메일 로그인 링크 클릭 이벤트
 emailLogin.addEventListener('click', function(e) {
     e.preventDefault();
     console.log('이메일 로그인 클릭');
-    clearAllData();
-    // join_member 페이지로 이동
-    window.location.href = '../join_member/index.html';
+    showLoginModal();
 });
 
 // 이메일 회원가입 링크 클릭 이벤트
@@ -120,6 +276,11 @@ document.head.appendChild(style);
 document.addEventListener('DOMContentLoaded', function() {
     console.log('로그인 페이지 로드 완료');
     
+    // Supabase 스크립트 로드
+    const supabaseScript = document.createElement('script');
+    supabaseScript.src = '../common/supabase-config.js';
+    document.head.appendChild(supabaseScript);
+    
     // 기존 사용자 ID 확인
     const existingUserId = localStorage.getItem('userId');
     if (existingUserId) {
@@ -128,10 +289,6 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = '../website/index.html';
         return;
     }
-    
-    // login 페이지 접속 시 모든 관련 데이터 초기화 (새로운 세션 시작)
-    console.log('새로운 세션 시작 - 모든 저장된 데이터 초기화');
-    clearAllData();
     
     // 터치 이벤트 최적화 (모바일)
     if ('ontouchstart' in window) {

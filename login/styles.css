@@ -396,3 +396,143 @@ body:focus-visible {
     margin-bottom: 50px;
   }
 }
+
+/* 로그인 모달 스타일 */
+.login-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background-color: #ffffff;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 390px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.modal-header h3 {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: #202027;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999999;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: #202027;
+}
+
+.login-form {
+  padding: 20px;
+}
+
+.login-form .form-group {
+  margin-bottom: 20px;
+}
+
+.login-form .form-group label {
+  display: block;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 14px;
+  color: #202027;
+  margin-bottom: 8px;
+}
+
+.login-form .input-wrapper {
+  position: relative;
+}
+
+.login-form .form-input {
+  width: 100%;
+  height: 43px;
+  padding: 0 16px;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 14px;
+  color: #202027;
+  box-sizing: border-box;
+}
+
+.login-form .form-input:focus {
+  outline: none;
+  border-color: #408ef5;
+}
+
+.login-form .toggle-password {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 9px;
+  color: #c5c5c5;
+  cursor: pointer;
+  padding: 0;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+}
+
+.form-error {
+  color: #ff0000;
+  font-size: 12px;
+  margin-bottom: 10px;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+}
+
+.login-form .submit-btn {
+  width: 100%;
+  height: 43px;
+  background-color: #408ef5;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.login-form .submit-btn:hover {
+  background-color: #3068c4;
+}
+
+.login-form .submit-btn:disabled {
+  background-color: #c5c5c5;
+  cursor: not-allowed;
+}

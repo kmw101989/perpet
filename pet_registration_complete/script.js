@@ -676,9 +676,41 @@ if (addPetCard) {
 
 // 퍼펫트 시작하기 버튼
 if (startBtn) {
-  startBtn.addEventListener("click", () => {
+  startBtn.addEventListener("click", async () => {
     console.log("퍼펫트 시작하기 클릭");
-    // 메인페이지로 이동 (선택 제약 해제)
+
+    try {
+      const userId = localStorage.getItem("userId");
+      if (!userId) {
+        window.location.href = "../login/index.html";
+        return;
+      }
+
+      // Supabase에서 해당 사용자 반려동물 조회 후 가장 작은 pet_id 선택
+      if (typeof SupabaseService !== "undefined" && SupabaseService.getPetsByUserId) {
+        const pets = await SupabaseService.getPetsByUserId(userId);
+        if (pets && pets.length > 0) {
+          const sorted = [...pets].sort((a, b) => Number(a.pet_id) - Number(b.pet_id));
+          const firstPet = sorted[0];
+
+          // 로컬스토리지에 선택된 반려동물 저장
+          localStorage.setItem("selectedPetId", firstPet.pet_id);
+          localStorage.setItem("selectedPetData", JSON.stringify(firstPet));
+        }
+      } else {
+        // Supabase 미사용 시 로컬 petsData에서 선택
+        const petsData = JSON.parse(localStorage.getItem("petsData") || "[]");
+        if (petsData.length > 0) {
+          const petWithId = petsData.find(p => p.pet_id) || petsData[0];
+          localStorage.setItem("selectedPetId", petWithId.pet_id || "local_0");
+          localStorage.setItem("selectedPetData", JSON.stringify(petWithId));
+        }
+      }
+    } catch (err) {
+      console.error("초기 반려동물 선택 중 오류:", err);
+    }
+
+    // 메인페이지로 이동
     window.location.href = "../website/index.html";
   });
 }

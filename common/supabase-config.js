@@ -276,6 +276,7 @@ const SupabaseService = {
     const insertData = {
       user_id: userId,
       email: userData.email || '',
+      password: userData.password || '', // 비밀번호 저장 (데모용 - 프로덕션에서는 해시화 필요)
       nickname: userData.nickname || '',
       user_name: userData.nickname || userData.user_name || '', // 하위 호환성
       user_gender: userData.gender || userData.user_gender || '',
@@ -293,6 +294,11 @@ const SupabaseService = {
 
     if (error) {
       console.error('Error creating user:', error);
+      // RLS 정책 오류인 경우 더 자세한 정보 제공
+      if (error.code === '42501') {
+        console.error('RLS 정책 위반 오류입니다. Supabase Dashboard에서 RLS 정책을 설정해주세요.');
+        console.error('자세한 내용은 SUPABASE_RLS_FIX.md 파일을 참고하세요.');
+      }
       return null;
     }
 
@@ -334,41 +340,49 @@ const SupabaseService = {
     // 다음 pet_id 가져오기
     const petId = await this.getNextPetId();
     
-    // 생일을 문자열로 변환 (YYYY-MM-DD 형식)
-    let birthdayStr = null;
+    // 생일을 문자열로 변환 (YYYYMMDD 형식)
+    let petBirth = null;
     if (petData.birthday && petData.birthday.year && petData.birthday.month && petData.birthday.day) {
-      birthdayStr = `${petData.birthday.year}-${petData.birthday.month.padStart(2, '0')}-${petData.birthday.day.padStart(2, '0')}`;
+      petBirth = `${petData.birthday.year}${petData.birthday.month.padStart(2, '0')}${petData.birthday.day.padStart(2, '0')}`;
     }
 
     // 질병 ID: healthInterests 배열의 첫 번째 질병을 disease_id로 사용
     // 질병 이름을 disease_id로 변환
     let diseaseId = null;
     if (petData.healthInterests && petData.healthInterests.length > 0) {
-      // 질병 이름 매핑 (healthInterests의 키를 disease_name과 매칭)
+      // 질병 이름 매핑 (healthInterests의 키를 disease_id로 매칭)
       const diseaseMap = {
-        'rhinitis': '비염',
-        'heartworm': '심장사상충',
-        'kidney_failure': '신부전',
-        'cystitis': '방광염',
-        'hepatitis': '간염',
-        'enteritis': '장염',
-        'dermatitis': '피부염',
-        'periodontitis': '치주염',
-        'patellar_luxation': '슬개골탈구',
-        'keratitis': '각막염',
-        'allergy': '알레르기',
-        'dementia': '치매'
+        'rhinitis': 1,            // 비염
+        'heartworm': 2,           // 심장사상충
+        'kidney_failure': 3,      // 신부전
+        'cystitis': 4,            // 방광염
+        'hepatitis': 5,           // 간염
+        'enteritis': 6,           // 장염
+        'dermatitis': 7,          // 피부염
+        'periodontitis': 8,       // 치주염
+        'patellar_luxation': 9,   // 슬개골탈구
+        'keratitis': 10,          // 각막염
+        'allergy': 11,            // 알레르기
+        'dementia': 12            // 치매
       };
       
       const diseaseKey = petData.healthInterests[0]; // 첫 번째 질병만 사용
-      const diseaseName = diseaseMap[diseaseKey] || diseaseKey;
-      
-      // diseases 테이블에서 disease_id 찾기
+      diseaseId = diseaseMap[diseaseKey] || null;
+    }
+
+    // 상세 종(견종/묘종) 텍스트
+    const detailedSpecies = petData.breed || petData.detailedSpecies || null;
+    // 성별: 기존 값 사용
+    const petGender = petData.gender || petData.pet_gender || null;
+    // 체중 문자열 그대로 저장 (혹은 숫자 변환 시 parseFloat 가능)
+    const petWeight = petData.weight ? String(petData.weight) : null;
+
+    // 백업: disease_id를 찾지 못했을 때 diseases 테이블 조회 시도
+    if (!diseaseId && petData.healthInterests && petData.healthInterests.length > 0) {
       const diseases = await this.getDiseases();
-      const disease = diseases.find(d => d.disease_name === diseaseName);
-      if (disease) {
-        diseaseId = disease.disease_id;
-      }
+      const diseaseNameFallback = petData.healthInterests[0];
+      const disease = diseases.find(d => d.disease_name === diseaseNameFallback);
+      if (disease) diseaseId = disease.disease_id;
     }
 
     const insertData = {
@@ -376,7 +390,10 @@ const SupabaseService = {
       user_id: petData.user_id || petData.userId || '',
       pet_name: petData.name || petData.pet_name || '',
       pet_species: petData.type || petData.pet_species || '',
-      weight: petData.weight ? String(petData.weight) : null,
+      detailed_species: detailedSpecies, // 견종/묘종 상세명
+      pet_birth: petBirth,                // YYYYMMDD 형식
+      pet_gender: petGender,
+      weight: petWeight,
       disease_id: diseaseId,
       vaccination: null, // 추후 추가 가능
       vaccination_date: null // 추후 추가 가능

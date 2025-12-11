@@ -421,6 +421,7 @@ function setupSubmitButton() {
           // Supabase에 사용자 등록
           const userData = {
             email: formData.email,
+            password: formData.password, // 비밀번호 포함
             nickname: formData.nickname,
             gender: formData.gender,
             residence: formData.residence,

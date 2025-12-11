@@ -89,8 +89,65 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
+  // 선택된 반려동물 로드 및 표시
+  async function loadSelectedPet() {
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    // 1) 로컬스토리지에서 우선 시도
+    let selectedPet = null;
+    const storedPet = localStorage.getItem('selectedPetData');
+    if (storedPet) {
+      try {
+        selectedPet = JSON.parse(storedPet);
+      } catch (e) {
+        console.error('저장된 반려동물 파싱 실패:', e);
+      }
+    }
+
+    // 2) 없으면 Supabase에서 조회 후 가장 작은 pet_id 선택
+    if (!selectedPet && typeof SupabaseService !== 'undefined' && SupabaseService.getPetsByUserId) {
+      try {
+        const pets = await SupabaseService.getPetsByUserId(userId);
+        if (pets && pets.length > 0) {
+          const sorted = [...pets].sort((a, b) => Number(a.pet_id) - Number(b.pet_id));
+          selectedPet = sorted[0];
+          localStorage.setItem('selectedPetId', selectedPet.pet_id);
+          localStorage.setItem('selectedPetData', JSON.stringify(selectedPet));
+        }
+      } catch (err) {
+        console.error('Supabase 반려동물 조회 실패:', err);
+      }
+    }
+
+    if (!selectedPet) return;
+
+    // DOM 업데이트
+    const petNameEl = document.querySelector('.pet-name');
+    const petDetailsEl = document.querySelector('.pet-details');
+
+    if (petNameEl) {
+      petNameEl.textContent = selectedPet.pet_name || '내새꾸';
+    }
+
+    if (petDetailsEl) {
+      const birth = selectedPet.pet_birth;
+      let ageText = '';
+      if (birth && birth.length === 8) {
+        const year = parseInt(birth.slice(0, 4), 10);
+        const currentYear = new Date().getFullYear();
+        const age = currentYear - year;
+        if (!isNaN(age) && age >= 0) ageText = `${age}살 / `;
+      }
+      const species = selectedPet.pet_species || '';
+      const detailed = selectedPet.detailed_species ? ` ${selectedPet.detailed_species}` : '';
+      petDetailsEl.textContent = `${ageText}${species}${detailed}`.trim().replace(/^\/\s*/, '');
+    }
+  }
+
   // 초기 게이지 업데이트
   updateCircularChart();
+  loadSelectedPet();
 
   // 마이페이지 버튼 클릭 이벤트
   const mypageBtn = document.querySelector('.mypage-btn');
