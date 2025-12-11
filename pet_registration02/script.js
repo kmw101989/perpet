@@ -112,7 +112,10 @@ function setupGenderButtons() {
   if (!genderButtons || genderButtons.length === 0) return;
   
   genderButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
       genderButtons.forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       selectedGender = btn.dataset.gender;
@@ -126,7 +129,10 @@ function setupBodyTypeButtons() {
   if (!bodyTypeButtons || bodyTypeButtons.length === 0) return;
   
   bodyTypeButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
       bodyTypeButtons.forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       selectedBodyType = btn.dataset.type;

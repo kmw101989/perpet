@@ -8,7 +8,10 @@ function setupHealthButtons() {
   if (!healthButtons || healthButtons.length === 0) return;
   
   healthButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
       const healthType = btn.dataset.health;
 
       if (btn.classList.contains("active")) {
@@ -31,7 +34,10 @@ function setupCautionButtons() {
   if (!cautionButtons || cautionButtons.length === 0 || !cautionInputSection || !cautionInput) return;
   
   cautionButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
       const cautionType = btn.dataset.caution;
 
       if (btn.classList.contains("active")) {

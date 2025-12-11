@@ -10,7 +10,10 @@ function setupTogglePasswordButtons() {
   if (!togglePasswordButtons || togglePasswordButtons.length === 0) return;
   
   togglePasswordButtons.forEach((btn) => {
-    btn.addEventListener("click", function () {
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
       const targetId = this.getAttribute("data-target");
       const targetInput = document.getElementById(targetId);
       if (!targetInput) return;
@@ -37,7 +40,10 @@ function setupGenderButtons() {
   if (!genderButtons || genderButtons.length === 0 || !genderInput) return;
   
   genderButtons.forEach((btn) => {
-    btn.addEventListener("click", function () {
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
       genderButtons.forEach((b) => b.classList.remove("active"));
       this.classList.add("active");
       if (genderInput) {
@@ -278,7 +284,7 @@ function setupSubmitButton() {
   
   let isFirstClick = true; // 첫 클릭 여부 추적
   
-  submitBtn.addEventListener("click", function (e) {
+  submitBtn.addEventListener("click", async function (e) {
     e.preventDefault();
 
     if (!submitBtn.disabled) {
@@ -356,6 +362,18 @@ function setupSubmitButton() {
             
             console.log("✅ 회원가입 완료 - User ID:", userId);
             console.log("✅ Supabase에 사용자 등록 완료:", createdUser);
+            
+            // 회원가입 완료 후 joinMemberData 초기화
+            localStorage.removeItem("joinMemberData");
+            
+            // 정상적인 플로우 시작을 위해 currentPetData 초기화
+            localStorage.removeItem("currentPetData");
+            localStorage.removeItem("editingPetIndex");
+
+            console.log("회원가입 정보:", formData);
+
+            // pet_registration01 페이지로 이동
+            window.location.href = "../pet_registration01/index.html";
           } else {
             console.error("❌ 사용자 등록 실패");
             alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
@@ -366,6 +384,9 @@ function setupSubmitButton() {
           alert('회원가입 중 오류가 발생했습니다: ' + error.message);
           return;
         }
+      }
+    }
+  });
 
         // 회원가입 완료 후 joinMemberData 초기화
         localStorage.removeItem("joinMemberData");
