@@ -1,0 +1,596 @@
+/* JejuGothic 폰트 */
+@font-face {
+  font-family: "JejuGothic";
+  src: url("../JejuGothic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  background-color: #F9F9F9;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  max-width: 390px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  scrollbar-gutter: stable;
+  overflow-x: hidden;
+}
+
+.container {
+  width: 100%;
+  max-width: 390px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background-color: #F9F9F9;
+  border: 1px solid #d5d5d5;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.content-frame {
+  width: 100%;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 100%;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.back-btn {
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  position: absolute;
+  top: calc(20px + (21.7px / 2) - (24px / 2));
+  left: 20px;
+  z-index: 10;
+  transition: opacity 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-btn::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  border-left: 2px solid #202027;
+  border-bottom: 2px solid #202027;
+}
+
+.back-btn:hover {
+  opacity: 0.7;
+}
+
+.back-btn:active {
+  opacity: 0.5;
+}
+
+.title {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: #202027;
+  text-align: center;
+  margin-bottom: 8px;
+  line-height: 21.7px;
+  flex-shrink: 0;
+}
+
+.description {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.description-text {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: #202027;
+  text-align: left;
+  line-height: 21.7px;
+}
+
+/* 반려동물 정보 카드 */
+.pet-card {
+  width: 100%;
+  min-height: 152px;
+  border: 1.5px solid #E5E5E5;
+  border-radius: 10px;
+  background-color: #ffffff;
+  position: relative;
+  padding: 25px 18px;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.pet-card:hover {
+  border-color: #202027;
+}
+
+.pet-card.selected {
+  border-color: #202027;
+}
+
+.edit-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 9px;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  color: #c5c5c5;
+  cursor: pointer;
+  padding: 8px 12px;
+  line-height: 9.77px;
+  min-width: 36px;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.edit-btn:hover {
+  color: #202027;
+}
+
+.edit-btn:active {
+  color: #202027;
+  opacity: 0.7;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 52px;
+  background: none;
+  border: none;
+  font-size: 9px;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  color: #c5c5c5;
+  cursor: pointer;
+  padding: 8px 12px;
+  line-height: 9.77px;
+  min-width: 36px;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.delete-btn:hover {
+  color: #ff4444;
+}
+
+.delete-btn:active {
+  color: #ff4444;
+  opacity: 0.7;
+}
+
+.pet-info {
+  display: flex;
+  align-items: center;
+  gap: 19px;
+  min-height: 100%;
+}
+
+.pet-profile {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.pet-profile {
+  flex-shrink: 0;
+}
+
+.pet-image {
+  width: 115px;
+  height: 115px;
+  border-radius: 50%;
+  background-color: #d9d9d9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  transition: opacity 0.3s ease;
+}
+
+.pet-image:hover {
+  opacity: 0.8;
+}
+
+.pet-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: none;
+}
+
+.pet-image img[src] {
+  display: block;
+}
+
+.pet-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  cursor: pointer;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.pet-name {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #202027;
+  line-height: 13.02px;
+  margin-bottom: 2px;
+  transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pet-name + .pet-breed {
+  margin-top: 12px;
+}
+
+.pet-card.selected .pet-name {
+  color: #202027;
+}
+
+.gender-icon {
+  font-size: 14px;
+  line-height: 13.02px;
+  font-weight: bold;
+}
+
+.pet-breed {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #202027;
+  line-height: 13.02px;
+  margin-bottom: 0;
+  transition: color 0.3s ease;
+}
+
+.pet-card.selected .pet-breed {
+  color: #202027;
+}
+
+.pet-meta {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  color: #202027;
+  line-height: 13.02px;
+  margin-top: 5px;
+  margin-bottom: 8px;
+  transition: color 0.3s ease;
+}
+
+.pet-card.selected .pet-meta {
+  color: #202027;
+}
+
+.separator {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  color: #202027;
+  transition: color 0.3s ease;
+}
+
+.pet-card.selected .separator {
+  color: #202027;
+}
+
+.pet-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  width: 100%;
+}
+
+/* petsContainer 스타일 */
+#petsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tag {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  cursor: default;
+  min-width: 0;
+  max-width: 100%;
+  flex-shrink: 1;
+}
+
+.tag-label {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  border-radius: 5px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 13.02px;
+  color: #ffffff;
+  transition: background-color 0.3s ease;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.tag-interest .tag-label {
+  background-color: #76B2FF;
+}
+
+.tag-interest {
+  align-items: flex-start;
+  flex-direction: row;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tag-caution .tag-label {
+  background-color: #FF8080;
+}
+
+.tag-caution {
+  align-items: flex-start;
+  flex-direction: row;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  flex-basis: 100%;
+}
+
+
+.tag.selected .tag-label {
+  background-color: #76B2FF;
+}
+
+.tag-caution.selected .tag-label {
+  background-color: #FF8080;
+}
+
+.pet-card:hover .tag .tag-label,
+.pet-card.selected .tag.selected .tag-label {
+  background-color: #76B2FF;
+}
+
+.pet-card:hover .tag-caution .tag-label,
+.pet-card.selected .tag-caution.selected .tag-label {
+  background-color: #FF8080;
+}
+
+.tag-value {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #202027;
+  line-height: 13.02px;
+  transition: color 0.3s ease;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  min-width: 0;
+  flex: 1;
+  display: block;
+}
+
+.tag.selected .tag-value {
+  color: #202027;
+}
+
+.pet-card:hover .tag .tag-value,
+.pet-card.selected .tag.selected .tag-value {
+  color: #202027;
+}
+
+/* 다른 내새꾸 등록 카드 */
+.add-pet-card {
+  width: 100%;
+  min-height: 152px;
+  border: 1.5px solid #E5E5E5;
+  border-radius: 10px;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 25px 18px;
+  box-sizing: border-box;
+}
+
+.add-pet-card:hover {
+  border-color: #202027;
+}
+
+.add-pet-card:hover .add-pet-text {
+  color: #202027;
+}
+
+.add-pet-card:hover .add-icon span {
+  color: #202027;
+}
+
+.add-pet-card:hover .add-icon {
+  border-color: #202027;
+}
+
+.add-pet-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.add-icon {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #d9d9d9;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  transition: border-color 0.3s ease;
+}
+
+.add-icon span {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 30px;
+  font-weight: 400;
+  color: #c5c5c5;
+  line-height: 32.55px;
+  transition: color 0.3s ease;
+}
+
+.add-pet-text {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  color: #c5c5c5;
+  line-height: 10.85px;
+  text-align: center;
+  transition: color 0.3s ease;
+}
+
+/* 스크롤 가능한 카드 영역 */
+.scrollable-cards {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 퍼펫트 시작하기 버튼 */
+.start-btn {
+  width: 100%;
+  height: 43px;
+  border: none;
+  border-radius: 10px;
+  background-color: #e5e5e5;
+  color: #a0a0a0;
+  font-size: 15px;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-weight: 400;
+  cursor: pointer;
+  margin-top: 0;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.start-btn.active {
+  background-color: #023E8C;
+  color: #ffffff;
+}
+
+/* 반응형 디자인 */
+@media (min-width: 768px) {
+  body {
+    max-width: 768px;
+  }
+  
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    max-width: 1024px;
+  }
+  
+  .container {
+    max-width: 1024px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    border-left: none;
+    border-right: none;
+  }
+
+  .content-frame {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 390px) {
+  .pet-card {
+    padding: 14px;
+  }
+
+  .pet-image {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+@media (max-width: 360px) {
+  .content-frame {
+    padding: 12px;
+  }
+
+  .pet-card {
+    padding: 12px;
+  }
+}
+

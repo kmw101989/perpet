@@ -1,0 +1,693 @@
+/* JejuGothic 폰트 */
+@font-face {
+  font-family: 'JejuGothic';
+  src: url('../fonts/JejuGothic.ttf') format('truetype'),
+       url('../fonts/JejuGothicOTF.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bazzi 폰트 */
+@font-face {
+  font-family: 'Bazzi';
+  src: url('../fonts/Bazzi.ttf') format('truetype'),
+       url('../fonts/Bazzi OTF.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 기본 리셋 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'JejuGothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f9f9f9;
+  color: #202027;
+  max-width: 390px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  padding-bottom: 49px;
+  scrollbar-gutter: stable;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* 모바일 최적화 */
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px 12px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-image {
+  width: 32px;
+  height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.logo-text {
+  font-family: 'Bazzi', 'Noto Sans KR', sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: #202027;
+  line-height: 22.1px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-profile-image {
+  width: 43px;
+  height: 43px;
+  border-radius: 50%;
+  background-color: #d9d9d9;
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23d9d9d9"/></svg>');
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.bell-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: block;
+}
+
+/* 반려동물 정보 섹션 */
+.pet-info-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 25px 12px;
+}
+
+.pet-profile-image {
+  width: 59px;
+  height: 59px;
+  border-radius: 50%;
+  background-color: #d9d9d9;
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23d9d9d9"/></svg>');
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.pet-info-text {
+  flex: 1;
+}
+
+.pet-name {
+  font-size: 12px;
+  color: #000000;
+  line-height: 12px;
+  margin-bottom: 1px;
+  font-weight: 400;
+}
+
+.pet-details {
+  font-size: 8px;
+  color: #959595;
+  line-height: 8px;
+  font-weight: 400;
+}
+
+.pet-action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.mypage-btn {
+  height: 19px;
+  padding: 0 12px;
+  background-color: #2065c0;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 400;
+  font-family: 'JejuGothic', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 10px;
+}
+
+.add-pet-btn {
+  height: 19px;
+  padding: 0 12px;
+  background-color: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  color: #000000;
+  font-size: 10px;
+  font-weight: 400;
+  font-family: 'JejuGothic', sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  line-height: 10px;
+}
+
+.add-pet-icon {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: #959595;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 12px;
+  flex-shrink: 0;
+}
+
+/* 퍼펫트한 관리 카드 */
+.management-card {
+  margin: 0 25px 8px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 6px 0 0;
+  overflow: visible;
+  position: relative;
+}
+
+.management-card-header {
+  background-color: transparent;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+}
+
+.management-card-ribbon {
+  width: 340px;
+  height: 40px;
+  max-width: 95%;
+  display: block;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.calendar-section {
+  padding: 20px 16px 12px;
+  position: relative;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.calendar-arrow {
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
+}
+
+.calendar-month {
+  font-size: 14px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 15.19px;
+  font-family: 'JejuGothic', sans-serif;
+}
+
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.schedule-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 5px;
+  padding: 6px 8px;
+  min-height: 28px;
+}
+
+.schedule-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #eff9ff;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.schedule-icon-img {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  display: block;
+}
+
+.schedule-text {
+  font-size: 10px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 10px;
+  font-family: 'JejuGothic', sans-serif;
+  flex: 1;
+}
+
+.schedule-nav {
+  position: absolute;
+  top: 8px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.schedule-nav-btn {
+  width: 17px;
+  height: 17px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  pointer-events: all;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.activity-buttons {
+  display: flex;
+  gap: 11px;
+  padding: 12px 16px;
+  border-top: 0.5px solid #d9d9d9;
+}
+
+.activity-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.activity-button-container {
+  width: 80px;
+  height: 80px;
+  background-color: #f6f6f6;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0;
+}
+
+.activity-icon-circle {
+  width: 36px;
+  height: 36px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.activity-progress {
+  width: 36px;
+  height: 36px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.activity-icon {
+  width: 24px;
+  height: 24px;
+  position: relative;
+  z-index: 1;
+  object-fit: contain;
+}
+
+.activity-label {
+  font-size: 12px;
+  color: #091c40;
+  font-weight: 400;
+  line-height: 13.02px;
+  font-family: 'JejuGothic', sans-serif;
+}
+
+/* 이벤트 배너 */
+.event-banner {
+  margin: 0 25px 20px;
+  background: linear-gradient(135deg, #4caf50 0%, #2196f3 100%);
+  border-radius: 10px;
+  padding: 16px;
+  overflow: hidden;
+  position: relative;
+}
+
+.event-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.event-tag {
+  background-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 400;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: 'JejuGothic', sans-serif;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.event-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.event-title {
+  font-size: 12px;
+  color: #ffffff;
+  font-weight: 400;
+  line-height: 14px;
+  font-family: 'JejuGothic', sans-serif;
+}
+
+.event-subtitle {
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 400;
+  line-height: 10px;
+  font-family: 'JejuGothic', sans-serif;
+}
+
+.event-images {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.event-image {
+  width: 40px;
+  height: 40px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* 맞춤 추천 섹션 */
+.recommendation-card {
+  margin: 0 25px 20px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.recommendation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.recommendation-title {
+  font-size: 16px;
+  color: #202027;
+  font-weight: 400;
+  line-height: 17.36px;
+  font-family: 'JejuGothic', sans-serif;
+}
+
+.recommendation-tabs {
+  display: flex;
+  gap: 0;
+}
+
+.tab-btn {
+  padding: 0 12px;
+  height: 20px;
+  border-radius: 16px;
+  font-size: 12px;
+  border: none;
+  background-color: transparent;
+  color: #000000;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'JejuGothic', sans-serif;
+  font-weight: 400;
+  line-height: 12px;
+  white-space: nowrap;
+}
+
+.tab-btn.active {
+  background-color: #023e8c;
+  color: #ffffff;
+}
+
+.recommendation-subtitle {
+  font-size: 8px;
+  color: #959595;
+  margin-bottom: 12px;
+  font-weight: 400;
+  line-height: 8.68px;
+  font-family: 'JejuGothic', sans-serif;
+}
+
+.product-list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.product-list::-webkit-scrollbar {
+  display: none;
+}
+
+.product-card {
+  flex-shrink: 0;
+  width: 100px;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-image {
+  width: 100%;
+  height: 110px;
+  background-color: #f2f2f2;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 110"><rect width="100" height="110" fill="%23f2f2f2" rx="6"/></svg>');
+  background-size: cover;
+  background-position: center;
+}
+
+.product-brand {
+  font-size: 8px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 8.68px;
+  font-family: 'JejuGothic', sans-serif;
+  margin-bottom: 2px;
+}
+
+.product-name {
+  font-size: 10px;
+  color: #414147;
+  font-weight: 400;
+  line-height: 10.85px;
+  font-family: 'JejuGothic', sans-serif;
+  margin-bottom: 4px;
+}
+
+.product-price {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.discount {
+  font-size: 10px;
+  color: #e64f30;
+  font-weight: 400;
+  line-height: 10.85px;
+  font-family: 'JejuGothic', sans-serif;
+}
+
+.price {
+  font-size: 10px;
+  color: #414147;
+  font-weight: 400;
+  line-height: 10.85px;
+  font-family: 'JejuGothic', sans-serif;
+}
+
+.product-rating {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.rating-stars {
+  font-size: 8px;
+  color: #ffc107;
+  font-weight: 400;
+  line-height: 8.68px;
+  font-family: 'JejuGothic', sans-serif;
+}
+
+.rating-number {
+  font-size: 8px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 8.68px;
+  font-family: 'JejuGothic', sans-serif;
+}
+
+.rating-reviews {
+  font-size: 6px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 6.51px;
+  font-family: 'JejuGothic', sans-serif;
+}
+
+/* AI 채팅 플로팅 버튼 */
+.ai-chat-fab {
+  position: fixed;
+  bottom: 70px;
+  left: 50%;
+  margin-left: calc(390px / 2 - 56px - 16px);
+  width: 56px;
+  height: 56px;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.ai-chat-fab:hover {
+  transform: scale(1.05);
+}
+
+.ai-chat-fab:active {
+  transform: scale(0.95);
+}
+
+.bot-icon {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.25));
+}
+
+/* TabBar - 공통 스타일은 common/tabbar.css 사용 */
+
+/* 반응형 - 태블릿 이상 */
+@media (min-width: 768px) {
+  body {
+    max-width: 768px;
+  }
+  
+  .ai-chat-fab {
+    margin-left: calc(768px / 2 - 56px - 16px);
+  }
+  
+  .management-card-ribbon {
+    width: 320px;
+    height: 38px;
+    max-width: 75%;
+  }
+}
+
+/* 반응형 - 데스크톱 */
+@media (min-width: 1024px) {
+  body {
+    max-width: 1024px;
+  }
+  
+  .ai-chat-fab {
+    margin-left: calc(1024px / 2 - 56px - 16px);
+  }
+  
+  .management-card-ribbon {
+    width: 300px;
+    height: 36px;
+    max-width: 70%;
+  }
+}

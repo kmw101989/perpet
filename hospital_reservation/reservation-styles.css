@@ -1,0 +1,573 @@
+/* JejuGothic 폰트 */
+@font-face {
+  font-family: 'JejuGothic';
+  src: url('../../fonts/JejuGothic.ttf') format('truetype'),
+       url('../../fonts/JejuGothicOTF.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 기본 리셋 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'JejuGothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f9f9f9;
+  color: #202027;
+  max-width: 390px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  padding-bottom: 80px;
+  scrollbar-gutter: stable; /* 스크롤바 공간을 항상 확보하여 레이아웃 일정성 유지 */
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* 모바일 최적화 */
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.reservation-container {
+  background-color: #ffffff;
+  min-height: 100vh;
+  width: 100%;
+  max-width: 390px;
+  margin: 0 auto;
+}
+
+/* 헤더 */
+.reservation-header {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+}
+
+.back-icon {
+  width: 27px;
+  height: 27px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* 메인 콘텐츠 */
+.reservation-content {
+  padding: 0 32px;
+}
+
+.page-title {
+  font-size: 15px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 16.28px;
+  margin-bottom: 24px;
+  padding-top: 8px;
+}
+
+/* 달력 섹션 */
+.calendar-section {
+  margin-bottom: 32px;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.calendar-nav-btn {
+  width: 27px;
+  height: 27px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.calendar-nav-btn svg {
+  width: 27px;
+  height: 27px;
+}
+
+.calendar-month {
+  font-size: 16px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 17.36px;
+}
+
+/* 달력 요일 */
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0;
+  margin-bottom: 8px;
+}
+
+.weekday {
+  text-align: center;
+  font-size: 12px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 13.02px;
+  padding: 4px 0;
+}
+
+/* 달력 날짜 */
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 13.02px;
+  cursor: pointer;
+  position: relative;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+
+.calendar-day.other-month {
+  color: #d9d9d9;
+}
+
+.calendar-day.today {
+  background-color: #f6f6f6;
+}
+
+.calendar-day.selected {
+  background-color: #bbe8ff;
+  color: #000000;
+}
+
+.calendar-day.disabled {
+  color: #d9d9d9;
+  cursor: not-allowed;
+}
+
+.calendar-day:not(.disabled):not(.other-month):hover {
+  background-color: #f0f0f0;
+}
+
+/* 시간 선택 섹션 */
+.time-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.time-period {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.period-label {
+  font-size: 12px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 13.02px;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.time-slots {
+  display: grid;
+  grid-template-columns: repeat(4, 65px);
+  gap: 8px;
+  justify-content: start;
+}
+
+.time-slot {
+  width: 65px;
+  height: 31px;
+  background-color: #ffffff;
+  border: 1px solid #d9d9d9;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 13.02px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.time-slot:hover:not(.disabled):not(.selected) {
+  background-color: #f6f6f6;
+  border-color: #b9b9b9;
+}
+
+.time-slot.selected {
+  background-color: #bbe8ff;
+  border-color: #d9d9d9;
+  color: #000000;
+}
+
+.time-slot.disabled {
+  background-color: #f9f9f9;
+  border-color: #e5e5e5;
+  color: #d9d9d9;
+  cursor: not-allowed;
+}
+
+/* 예약하기 버튼 */
+.reservation-footer {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 390px;
+  padding: 16px 32px;
+  background-color: #ffffff;
+  border-top: 1px solid #e5e5e5;
+  z-index: 10;
+}
+
+.reservation-btn {
+  width: 100%;
+  height: 43px;
+  background-color: #e5e5e5;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #a0a0a0;
+  font-weight: 400;
+  font-family: 'Noto Sans KR', sans-serif;
+  line-height: 16.28px;
+  cursor: not-allowed;
+  transition: all 0.2s;
+}
+
+.reservation-btn:not(:disabled) {
+  background-color: #023e8c;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.reservation-btn:not(:disabled):active {
+  background-color: #022d6b;
+}
+
+/* 반응형 - 태블릿 이상 */
+@media (min-width: 768px) {
+  body {
+    max-width: 768px;
+  }
+  
+  .reservation-container {
+    max-width: 768px;
+  }
+  
+  .reservation-footer {
+    max-width: 768px;
+  }
+}
+
+/* 예약 완료 모달 */
+.success-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 390px;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.success-modal.show {
+  display: flex;
+}
+
+.modal-content {
+  background-color: #ffffff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 324px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* 모달 헤더 */
+.modal-header {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.logo-icon {
+  width: 25px;
+  height: 19px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-text {
+  font-size: 20px;
+  color: #202027;
+  font-weight: 400;
+  line-height: 22.1px;
+  font-family: 'Bazzi', 'Noto Sans KR', sans-serif;
+}
+
+/* 완료 메시지 */
+.success-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.pet-name {
+  font-size: 15px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 16.28px;
+}
+
+.completion-text {
+  font-size: 15px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 16.28px;
+}
+
+/* 프로필 이미지 */
+.profile-image {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background-color: #f2f2f2;
+  border: 1px solid #adadad;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.check-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 예약 정보 카드 */
+.reservation-info-card {
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-item {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.info-label {
+  font-size: 12px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 13.02px;
+  min-width: 30px;
+}
+
+.info-value {
+  font-size: 12px;
+  color: #202027;
+  font-weight: 400;
+  line-height: 13.02px;
+  flex: 1;
+}
+
+/* 작은 달력 */
+.mini-calendar {
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 20px;
+  padding: 16px;
+}
+
+.mini-calendar-month {
+  font-size: 13px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 14.11px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.mini-calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0;
+  margin-bottom: 8px;
+}
+
+.mini-weekday {
+  text-align: center;
+  font-size: 12px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 13.02px;
+  padding: 2px 0;
+}
+
+.mini-calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.mini-calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 13.02px;
+  border-radius: 3px;
+  min-height: 20px;
+}
+
+.mini-calendar-day.other-month {
+  color: #d9d9d9;
+}
+
+.mini-calendar-day.selected {
+  background-color: #d9d9d9;
+  color: #000000;
+}
+
+/* 예약 취소 링크 */
+.cancel-link {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.cancel-btn {
+  background: none;
+  border: none;
+  font-size: 8px;
+  color: #a0a0a0;
+  font-weight: 400;
+  line-height: 8.68px;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.cancel-btn:hover {
+  color: #808080;
+}
+
+/* 모달 푸터 */
+.modal-footer {
+  width: 100%;
+  padding-top: 8px;
+}
+
+.modal-complete-btn {
+  width: 100%;
+  height: 43px;
+  background-color: #e5e5e5;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #a0a0a0;
+  font-weight: 400;
+  font-family: 'Noto Sans KR', sans-serif;
+  line-height: 16.28px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-complete-btn:active {
+  background-color: #d5d5d5;
+}
+
+/* 반응형 - 태블릿 이상 (모바일 우선이므로 주석 처리) */
+@media (min-width: 768px) {
+  body {
+    max-width: 768px;
+  }
+  
+  .reservation-footer {
+    max-width: 768px;
+  }
+  
+  .success-modal {
+    max-width: 768px;
+  }
+}
+
+/* 반응형 - 데스크톱 */
+@media (min-width: 1024px) {
+  body {
+    max-width: 1024px;
+  }
+  
+  .reservation-footer {
+    max-width: 1024px;
+  }
+  
+  .success-modal {
+    max-width: 1024px;
+  }
+}
+

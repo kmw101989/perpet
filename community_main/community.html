@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>커뮤니티 - 퍼펫트</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="community-styles.css">
+  <link rel="stylesheet" href="../common/category-tabs.css">
+  <link rel="stylesheet" href="../common/tabbar.css">
+</head>
+<body>
+  <div class="community-container">
+    <!-- 헤더 -->
+    <header class="community-header">
+      <h1 class="community-title">커뮤니티</h1>
+    </header>
+
+    <!-- 카테고리 탭 -->
+    <div class="category-tabs">
+      <div class="category-tab active">전체</div>
+      <div class="category-tab">병원 Q&A</div>
+      <div class="category-tab">고민상담</div>
+      <div class="category-tab">자유게시판</div>
+      <div class="category-tab">내돈내산</div>
+    </div>
+
+    <!-- 검색 바 -->
+    <div class="search-bar">
+      <svg class="search-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="9" cy="9" r="6" stroke="#a3a3a3" stroke-width="1.5" fill="none"/>
+        <path d="M13 13L17 17" stroke="#a3a3a3" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <input type="text" class="search-input" placeholder="어떤 게 궁금해멍?" />
+    </div>
+
+    <!-- 인기글 섹션 -->
+    <div class="popular-section">
+      <div class="section-title-wrapper">
+        <h2 class="section-title">인기글</h2>
+        <svg class="section-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10 2L12.5 7.5L18.5 8.5L14 12.5L15 18.5L10 15.5L5 18.5L6 12.5L1.5 8.5L7.5 7.5L10 2Z" stroke="#000000" stroke-width="1.5" fill="none"/>
+        </svg>
+      </div>
+      <div class="post-card">
+        <div class="post-image"></div>
+        <div class="post-content">
+          <div class="post-title">강아지가 하루 종일 잠만자요..ㅠㅠ</div>
+          <div class="post-meta">
+            <span class="post-author">초보멍주</span>
+            <span class="post-date">2025.11.28</span>
+          </div>
+          <div class="post-text">
+            시골에서 강아지를 데려온지 한 일주일?된 것 같은데
+
+            계속 잠만자요.. ㅠㅠ
+            원래 강아지들은 엄청 뛰어다니고.....
+          </div>
+          <div class="post-views">
+            <svg class="view-icon" width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5 2C2.5 2 0.5 4 0.5 5C0.5 6 2.5 8 5 8C7.5 8 9.5 6 9.5 5C9.5 4 7.5 2 5 2Z" stroke="#c7c7c7" stroke-width="0.8" fill="none"/>
+              <circle cx="5" cy="5" r="1.5" fill="#c7c7c7"/>
+            </svg>
+            <span class="view-count">3,597</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 최신글 섹션 -->
+    <div class="latest-section">
+      <div class="section-header">
+        <div class="section-title-wrapper">
+          <h2 class="section-title">최신글</h2>
+          <svg class="section-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 1.5L9.5 5.5L13.5 6.5L10.5 9.5L11.5 13.5L8 11.5L4.5 13.5L5.5 9.5L2.5 6.5L6.5 5.5L8 1.5Z" stroke="#000000" stroke-width="1.2" fill="none"/>
+          </svg>
+        </div>
+        <div class="filter-wrapper">
+          <div class="filter-button" id="filterButton">
+            <span id="filterText">정확도순</span>
+            <svg class="filter-icon" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 4.5L6 7.5L9 4.5" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="filter-dropdown" id="filterDropdown">
+            <div class="filter-option" data-value="latest">최신순</div>
+            <div class="filter-option" data-value="popular">인기도순</div>
+            <div class="filter-option active" data-value="accuracy">정확도순</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="post-list">
+        <div class="post-card">
+          <div class="post-image"></div>
+          <div class="post-content">
+            <div class="post-title">개가 무슨 코골이가..</div>
+            <div class="post-meta">
+              <span class="post-author">왕와오앙</span>
+              <span class="post-date">30분 전</span>
+            </div>
+            <div class="post-text">
+              N년째 코골이 듣고있는데
+              오늘따라 더 심한거 같아서
+
+              얘를 지금 깨워야 할지.. 고민중.....
+            </div>
+            <div class="post-views">
+              <svg class="view-icon" width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5 2C2.5 2 0.5 4 0.5 5C0.5 6 2.5 8 5 8C7.5 8 9.5 6 9.5 5C9.5 4 7.5 2 5 2Z" stroke="#c7c7c7" stroke-width="0.8" fill="none"/>
+                <circle cx="5" cy="5" r="1.5" fill="#c7c7c7"/>
+              </svg>
+              <span class="view-count">21</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="post-card">
+          <div class="post-image"></div>
+          <div class="post-content">
+            <div class="post-title">눈물자국 어떻게 없애?</div>
+            <div class="post-meta">
+              <span class="post-author">울지마러</span>
+              <span class="post-date">2시간 전</span>
+            </div>
+            <div class="post-text">
+              말티키우는데
+              어느날부터 눈물자국이 막 생기기 시작했는데
+
+              뽀뽀하려고 하니까 쉰내나... ㅁㅊ...
+            </div>
+            <div class="post-views">
+              <svg class="view-icon" width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5 2C2.5 2 0.5 4 0.5 5C0.5 6 2.5 8 5 8C7.5 8 9.5 6 9.5 5C9.5 4 7.5 2 5 2Z" stroke="#c7c7c7" stroke-width="0.8" fill="none"/>
+                <circle cx="5" cy="5" r="1.5" fill="#c7c7c7"/>
+              </svg>
+              <span class="view-count">152</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="post-card">
+          <div class="post-image"></div>
+          <div class="post-content">
+            <div class="post-title">우리집 서열 내가 꼴지..ㅎ</div>
+            <div class="post-meta">
+              <span class="post-author">누나잖아!!</span>
+              <span class="post-date">2시간 전</span>
+            </div>
+            <div class="post-text">
+              개가 주인을 밟고다녀 ㅋㅋㅋㅋㅋ
+
+              진짜 어이가 없어서 화내려다가 귀여워서 참았는데
+              나를 아주 지 밑으로 보는 듯 ㅋㅋㅋ
+            </div>
+            <div class="post-views">
+              <svg class="view-icon" width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5 2C2.5 2 0.5 4 0.5 5C0.5 6 2.5 8 5 8C7.5 8 9.5 6 9.5 5C9.5 4 7.5 2 5 2Z" stroke="#c7c7c7" stroke-width="0.8" fill="none"/>
+                <circle cx="5" cy="5" r="1.5" fill="#c7c7c7"/>
+              </svg>
+              <span class="view-count">12</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TabBar -->
+  <div class="tabbar">
+    <div class="tabbar-tabs">
+      <div class="tab-item">
+        <img src="../svg/shop.svg" alt="자사몰" class="tab-icon" />
+        <span class="tab-label">자사몰</span>
+      </div>
+      <div class="tab-item">
+        <img src="../svg/hospital.svg" alt="병원" class="tab-icon" />
+        <span class="tab-label">병원</span>
+      </div>
+      <div class="tab-item">
+        <img src="../svg/home.svg" alt="홈" class="tab-icon" />
+        <span class="tab-label">홈</span>
+      </div>
+      <div class="tab-item">
+        <img src="../svg/vet.svg" alt="수의사" class="tab-icon" />
+        <span class="tab-label">수의사</span>
+      </div>
+      <div class="tab-item active">
+        <img src="../svg/icon_community.svg" alt="커뮤니티" class="tab-icon" />
+        <span class="tab-label">커뮤니티</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="community-script.js"></script>
+  <script src="../common/tabbar.js"></script>
+</body>
+</html>
+

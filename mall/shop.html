@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>자사몰 - 퍼펫트</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shop-styles.css">
+  <link rel="stylesheet" href="../common/category-tabs.css">
+  <link rel="stylesheet" href="../common/tabbar.css">
+</head>
+<body>
+  <!-- 헤더 -->
+  <header class="shop-header">
+    <div class="header-icons">
+      <svg class="header-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.7 15.3C4.3 15.7 4.6 16.5 5.1 16.5H17M17 13V17M9 19.5C9.8 19.5 10.5 20.2 10.5 21C10.5 21.8 9.8 22.5 9 22.5C8.2 22.5 7.5 21.8 7.5 21C7.5 20.2 8.2 19.5 9 19.5ZM20 19.5C20.8 19.5 21.5 20.2 21.5 21C21.5 21.8 20.8 22.5 20 22.5C19.2 22.5 18.5 21.8 18.5 21C18.5 20.2 19.2 19.5 20 19.5Z" stroke="#202027" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <svg class="header-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="8" r="3.5" stroke="#202027" stroke-width="1.5" fill="none"/>
+        <path d="M6 21C6 16 8.5 13 12 13C15.5 13 18 16 18 21" stroke="#202027" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      </svg>
+      <svg class="header-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C8 2 5 5 5 9V11C5 12 4 13 3 14V16H21V14C20 13 19 12 19 11V9C19 5 16 2 12 2Z" stroke="#202027" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="12" cy="20" r="1.5" fill="#202027"/>
+      </svg>
+    </div>
+  </header>
+
+  <div class="shop-container">
+    <!-- 상단 카테고리 탭 -->
+    <div class="category-tabs">
+      <div class="category-tab active">종합관리</div>
+      <div class="category-tab">심장</div>
+      <div class="category-tab">신장/방광</div>
+      <div class="category-tab">간</div>
+      <div class="category-tab">위/장</div>
+      <div class="category-tab">피부</div>
+      <div class="category-tab">치아</div>
+      <div class="category-tab">뼈/관절</div>
+      <div class="category-tab">눈</div>
+      <div class="category-tab">면역력</div>
+      <div class="category-tab">행동</div>
+    </div>
+
+    <!-- 검색 바 -->
+    <div class="search-bar">
+      <svg class="search-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="9" cy="9" r="6" stroke="#a3a3a3" stroke-width="1.5" fill="none"/>
+        <path d="M13 13L17 17" stroke="#a3a3a3" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <input type="text" class="search-input" placeholder="어떤 맛있는 걸 찾고있냠?" />
+    </div>
+
+    <!-- 첫 번째 섹션: 내새꾸를 위한 냠냠 추천 -->
+    <div class="recommendation-section">
+      <div class="section-header">
+        <h2 class="section-title">내새꾸를 위한 냠냠 추천</h2>
+        <div class="section-tabs">
+          <div class="section-tab active">사료</div>
+          <div class="section-tab">영양제</div>
+          <div class="section-tab">간식</div>
+        </div>
+      </div>
+      
+      <div class="product-grid-small">
+        <div class="product-card-small">
+          <div class="product-image-small"></div>
+          <div class="product-brand">룰루키친</div>
+          <p class="product-name">룰루키친 램(양)</p>
+          <div class="product-price">
+            <span class="discount">15%</span>
+            <span class="price">13,000원</span>
+          </div>
+          <div class="product-rating">
+            <span class="rating-stars">5</span>
+            <span class="rating-reviews">리뷰 3</span>
+          </div>
+        </div>
+        
+        <div class="product-card-small">
+          <div class="product-image-small"></div>
+          <div class="product-brand">룰루키친</div>
+          <p class="product-name">룰루키친 치킨(닭)</p>
+          <div class="product-price">
+            <span class="discount">15%</span>
+            <span class="price">10,500원</span>
+          </div>
+          <div class="product-rating">
+            <span class="rating-stars">5</span>
+            <span class="rating-reviews">리뷰 1</span>
+          </div>
+        </div>
+        
+        <div class="product-card-small">
+          <div class="product-image-small"></div>
+          <div class="product-brand">룰루키친</div>
+          <p class="product-name">룰루키친 비프(소)</p>
+          <div class="product-price">
+            <span class="discount">15%</span>
+            <span class="price">12,500원</span>
+          </div>
+          <div class="product-rating">
+            <span class="rating-stars">5</span>
+            <span class="rating-reviews">리뷰 3</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 두 번째 섹션: 종합관리를 위한 냠냠 -->
+    <div class="recommendation-section">
+      <div class="section-header">
+        <h2 class="section-title">종합관리를 위한 냠냠</h2>
+        <div class="section-tabs">
+          <div class="section-tab active">사료</div>
+          <div class="section-tab">영양제</div>
+          <div class="section-tab">간식</div>
+        </div>
+      </div>
+      
+      <div class="product-grid-large">
+        <div class="product-card-large">
+          <div class="product-image-large"></div>
+          <div class="product-brand">바프독</div>
+          <p class="product-name">프리미엄 비프(소 단일)</p>
+          <div class="product-price">
+            <span class="discount">15%</span>
+            <span class="price">53,900원</span>
+          </div>
+          <div class="product-rating">
+            <span class="rating-stars">5</span>
+            <span class="rating-reviews">리뷰 13</span>
+          </div>
+        </div>
+        
+        <div class="product-card-large">
+          <div class="product-image-large"></div>
+          <div class="product-brand">바프독</div>
+          <p class="product-name">스타터프리미엄(닭&칠면조)</p>
+          <div class="product-price">
+            <span class="discount">15%</span>
+            <span class="price">43,900원</span>
+          </div>
+          <div class="product-rating">
+            <span class="rating-stars">5</span>
+            <span class="rating-reviews">리뷰 17</span>
+          </div>
+        </div>
+        
+        <div class="product-card-large">
+          <div class="product-image-large"></div>
+          <div class="product-brand">아더마스</div>
+          <p class="product-name">아더마스 오리 치즈볼</p>
+          <div class="product-price">
+            <span class="discount">15%</span>
+            <span class="price">17,000원</span>
+          </div>
+          <div class="product-rating">
+            <span class="rating-stars">5</span>
+            <span class="rating-reviews">리뷰 4</span>
+          </div>
+        </div>
+        
+        <div class="product-card-large">
+          <div class="product-image-large"></div>
+          <div class="product-brand">K9</div>
+          <p class="product-name">K9 강아지 소고기 습식캔</p>
+          <div class="product-price">
+            <span class="discount">15%</span>
+            <span class="price">5,900원</span>
+          </div>
+          <div class="product-rating">
+            <span class="rating-stars">0</span>
+            <span class="rating-reviews">리뷰 0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TabBar -->
+  <div class="tabbar">
+    <div class="tabbar-tabs">
+      <div class="tab-item active">
+        <img src="../svg/shop.svg" alt="자사몰" class="tab-icon" />
+        <span class="tab-label">자사몰</span>
+      </div>
+      <div class="tab-item">
+        <img src="../svg/hospital.svg" alt="병원" class="tab-icon" />
+        <span class="tab-label">병원</span>
+      </div>
+      <div class="tab-item">
+        <img src="../svg/home.svg" alt="홈" class="tab-icon" />
+        <span class="tab-label">홈</span>
+      </div>
+      <div class="tab-item">
+        <img src="../svg/vet.svg" alt="수의사" class="tab-icon" />
+        <span class="tab-label">수의사</span>
+      </div>
+      <div class="tab-item">
+        <img src="../svg/icon_community.svg" alt="커뮤니티" class="tab-icon" />
+        <span class="tab-label">커뮤니티</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="shop-script.js"></script>
+  <script src="../common/tabbar.js"></script>
+</body>
+</html>
+

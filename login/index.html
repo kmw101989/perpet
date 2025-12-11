@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>퍼펫트 - 회원가입</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Jeju+Gothic&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="login-screen">
+        <!-- 로그인 제목 -->
+        <h2 class="login-title">로그인</h2>
+
+        <!-- 안내 텍스트 -->
+        <p class="privacy-notice">
+          본 페이지는 테스트 용도로만 운영되며,<br />
+          입력하신 개인정보는 별도로 저장하거나 활용하지 않습니다.<br />
+          안심하고 이용해주시기 바랍니다.
+        </p>
+
+        <!-- 로고 영역 -->
+        <div class="logo-section">
+          <div class="logo-icon">
+            <img
+              src="../svg/Union.svg"
+              alt="퍼펫트 로고"
+              style="object-fit: contain"
+            />
+          </div>
+          <h1 class="app-title">퍼펫트</h1>
+          <p class="app-subtitle">내새꾸만을 위한 펫스널 플랫폼</p>
+        </div>
+
+        <!-- 로그인 섹션 -->
+        <div class="login-section">
+          <!-- 소셜 로그인 버튼들 -->
+          <div class="social-login">
+            <button class="social-btn kakao-btn" id="kakaoBtn">
+              <span class="social-icon">
+                <img
+                  src="../svg/tap_icon_kakao.svg"
+                  alt="카카오톡 아이콘"
+                  style="width: 100%; height: 100%; object-fit: contain"
+                />
+              </span>
+              <span class="social-text">카카오톡으로 시작하기</span>
+            </button>
+
+            <button class="social-btn naver-btn" id="naverBtn">
+              <span class="social-icon">
+                <img
+                  src="../svg/tap_icon_naver.svg"
+                  alt="네이버 아이콘"
+                  style="width: 100%; height: 100%; object-fit: contain"
+                />
+              </span>
+              <span class="social-text">네이버로 시작하기</span>
+            </button>
+
+            <button class="social-btn google-btn" id="googleBtn">
+              <span class="social-icon">
+                <img
+                  src="../svg/tap_icon_google.svg"
+                  alt="구글 아이콘"
+                  style="width: 100%; height: 100%; object-fit: contain"
+                />
+              </span>
+              <span class="social-text">구글로 시작하기</span>
+            </button>
+          </div>
+
+          <!-- 이메일 로그인/회원가입 링크 -->
+          <div class="email-options">
+            <a href="#" class="email-link" id="emailLogin">이메일로 로그인</a>
+            <span class="divider">|</span>
+            <a href="#" class="email-link" id="emailSignup"
+              >이메일로 회원가입</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

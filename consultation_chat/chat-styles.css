@@ -1,0 +1,347 @@
+/* JejuGothic 폰트 */
+@font-face {
+  font-family: 'JejuGothic';
+  src: url('../fonts/JejuGothic.ttf') format('truetype'),
+       url('../fonts/JejuGothicOTF.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 기본 리셋 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'JejuGothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f9f9f9;
+  color: #202027;
+  max-width: 390px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  padding-bottom: 94px;
+  display: flex;
+  scrollbar-gutter: stable; /* 스크롤바 공간을 항상 확보하여 레이아웃 일정성 유지 */
+  flex-direction: column;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* 헤더 */
+.chat-header {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 12px 32px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.back-icon {
+  width: 27px;
+  height: 27px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.vet-profile-image {
+  width: 62px;
+  height: 62px;
+  background-color: #d9d9d9;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+
+.header-text {
+  flex: 1;
+}
+
+.vet-hospital {
+  font-size: 16px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 16px;
+  margin-bottom: 4px;
+}
+
+.vet-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vet-rating {
+  font-size: 12px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 12px;
+}
+
+.vet-response {
+  font-size: 12px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 12px;
+}
+
+/* 액션 버튼들 */
+.action-buttons {
+  display: flex;
+  gap: 11px;
+  padding: 12px 32px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.action-btn {
+  height: 27px;
+  padding: 0 12px;
+  background-color: transparent;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  color: #000000;
+  font-size: 12px;
+  font-weight: 400;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.action-btn:active {
+  background-color: #f6f6f6;
+}
+
+.action-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* 모바일 최적화 */
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+
+/* 채팅 영역 */
+.chat-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+  background-color: #f9f9f9;
+}
+
+.chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  background-color: #ffffff;
+  min-height: calc(100vh - 200px);
+}
+
+.message {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px 32px;
+}
+
+.message-avatar {
+  flex-shrink: 0;
+}
+
+.vet-avatar-image {
+  width: 40px;
+  height: 40px;
+  background-color: #d9d9d9;
+  border-radius: 32px;
+}
+
+.message-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.message-bubble {
+  background-color: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 12px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 13.02px;
+  max-width: 250px;
+  width: fit-content;
+  word-wrap: break-word;
+  display: inline-block;
+}
+
+.user-message {
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+
+.user-message .message-bubble {
+  background-color: #408ef5;
+  color: #ffffff;
+  border: none;
+  margin-left: auto;
+  max-width: 250px;
+}
+
+/* 채팅 입력 영역 */
+.chat-input-area {
+  position: fixed;
+  bottom: 49px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 390px;
+  background-color: #ffffff;
+  padding: 0;
+  z-index: 10;
+  height: 45px;
+  display: flex;
+  align-items: center;
+}
+
+.chat-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 32px;
+  background-color: #ffffff;
+}
+
+.add-button {
+  width: 24px;
+  height: 24px;
+  background-color: #e5e5e5;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.add-icon {
+  width: 21px;
+  height: 21px;
+}
+
+.add-button:active {
+  opacity: 0.7;
+}
+
+.chat-input {
+  flex: 1;
+  border: 1px solid #d9d9d9;
+  border-radius: 50px;
+  outline: none;
+  background: transparent;
+  font-size: 10px;
+  color: #202027;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 400;
+  padding: 0 16px;
+  height: 31px;
+  line-height: 22px;
+}
+
+.chat-input::placeholder {
+  color: #a3a3a3;
+}
+
+.voice-button {
+  width: 20px;
+  height: 20px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.voice-icon {
+  width: 20px;
+  height: 20px;
+  display: block !important;
+}
+
+.send-icon {
+  width: 20px;
+  height: 20px;
+  display: none !important;
+}
+
+.voice-button.has-text .voice-icon {
+  display: none !important;
+}
+
+.voice-button.has-text .send-icon {
+  display: block !important;
+}
+
+.voice-button:active {
+  opacity: 0.7;
+}
+
+/* TabBar - 공통 스타일은 common/tabbar.css 사용 */
+
+/* 반응형 - 태블릿 이상 */
+@media (min-width: 768px) {
+  body {
+    max-width: 768px;
+  }
+  
+  .chat-input-area {
+    max-width: 768px;
+  }
+}
+
+/* 반응형 - 데스크톱 */
+@media (min-width: 1024px) {
+  body {
+    max-width: 1024px;
+  }
+  
+  .chat-input-area {
+    max-width: 1024px;
+  }
+}
+

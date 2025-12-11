@@ -1,0 +1,135 @@
+/* 공통 하단바 스타일 */
+.tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 390px; /* 초기값 설정 - JavaScript로 동적으로 업데이트됨 */
+  height: 49px;
+  background-color: rgba(249, 249, 249, 0.94);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+}
+
+.tabbar-tabs {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  height: 100%;
+  padding: 0;
+  position: relative;
+}
+
+/* 슬라이딩 배경 요소 */
+.tab-slider {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 49px;
+  background: linear-gradient(180deg, #023e8c 0%, #2a73d2 100%);
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  transform-origin: bottom center;
+  transform: scaleY(1);
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0; /* 초기에는 숨김 */
+}
+
+.tab-slider.initialized {
+  opacity: 1; /* 초기화 후 보이기 */
+}
+
+.tab-slider.no-transition {
+  transition: none !important;
+}
+
+.tab-slider.transition-transform {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.tab-slider.transition-all {
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.tab-slider.hiding {
+  transform: scaleY(0);
+}
+
+.tab-slider.showing {
+  transform: scaleY(1);
+}
+
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  max-width: 75px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.tab-item:active {
+  opacity: 0.7;
+}
+
+/* 활성화된 탭 - 배경은 슬라이더가 처리 */
+.tab-item.active {
+  background: transparent;
+}
+
+.tab-item.active .tab-icon {
+  filter: brightness(0) invert(1); /* 아이콘을 흰색으로 변경 */
+  opacity: 1;
+}
+
+/* 비활성화된 탭 아이콘 */
+.tab-item:not(.active) .tab-icon {
+  opacity: 1;
+  filter: none;
+}
+
+.tab-item.active .tab-label {
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.tab-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  transition: filter 0.2s;
+  display: block;
+  object-fit: contain;
+}
+
+.tab-label {
+  font-size: 10px;
+  color: #000000;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
+  font-weight: 400;
+  line-height: 12.102px;
+  white-space: nowrap;
+  letter-spacing: -0.24px;
+}
+
+.tab-item.active .tab-label {
+  font-weight: 500;
+  color: #ffffff;
+}
+
+/* 반응형은 JavaScript로 동적으로 처리됨 */
+
+

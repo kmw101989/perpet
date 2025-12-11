@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>수의사 상담 - 퍼펫트</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="chat-styles.css">
+  <link rel="stylesheet" href="../common/tabbar.css">
+</head>
+<body>
+  <!-- 헤더 -->
+  <header class="chat-header">
+    <svg class="back-icon" width="27" height="27" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M16 8L10 13.5L16 19" stroke="#202027" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="header-info">
+      <div class="vet-profile-image"></div>
+      <div class="header-text">
+        <div class="vet-hospital">스마트동물병원</div>
+        <div class="vet-meta">
+          <span class="vet-rating">⭐ 4.8(50)</span>
+          <span class="vet-response">보통 2시간 이내 응답</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 액션 버튼들 -->
+  <div class="action-buttons">
+    <button class="action-btn">예약하기</button>
+    <button class="action-btn">상세정보</button>
+    <button class="action-btn">
+      <svg class="action-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 2V14M2 8H14" stroke="#202027" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      후기보내기
+    </button>
+  </div>
+
+  <!-- 채팅 영역 -->
+  <div class="chat-container">
+    <div class="chat-messages">
+      <!-- 수의사 메시지 -->
+      <div class="message vet-message">
+        <div class="message-avatar">
+          <div class="vet-avatar-image"></div>
+        </div>
+        <div class="message-content">
+          <div class="message-bubble">
+            안녕하세요. 예은동물의료센터<br>
+박성준 수의사입니다.<br>
+쿵이의 증상을 얘기해주세요.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 채팅 입력 영역 -->
+  <div class="chat-input-area">
+    <div class="chat-input-wrapper">
+      <button class="add-button">
+        <svg class="add-icon" width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10.5 3V18M3 10.5H18" stroke="#202027" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <input type="text" class="chat-input" id="chatInput" placeholder="상담할 내용을 입력하세요." />
+      <button class="voice-button" id="voiceButton">
+        <svg class="voice-icon" id="voiceIcon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10 2C8.89543 2 8 2.89543 8 4V10C8 11.1046 8.89543 12 10 12C11.1046 12 12 11.1046 12 10V4C12 2.89543 11.1046 2 10 2Z" stroke="#202027" stroke-width="1.5" fill="none"/>
+          <path d="M5 9V10C5 12.7614 7.23858 15 10 15C12.7614 15 15 12.7614 15 10V9" stroke="#202027" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M10 15V18M7 18H13" stroke="#202027" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <svg class="send-icon" id="sendIcon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 2L9 11" stroke="#202027" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M18 2L12 18L9 11L2 8L18 2Z" stroke="#202027" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- TabBar -->
+  <div class="tabbar">
+    <div class="tabbar-tabs">
+      <div class="tab-item">
+        <img src="../svg/shop.svg" alt="자사몰" class="tab-icon" />
+        <span class="tab-label">자사몰</span>
+      </div>
+      <div class="tab-item">
+        <img src="../svg/hospital.svg" alt="병원" class="tab-icon" />
+        <span class="tab-label">병원</span>
+      </div>
+      <div class="tab-item">
+        <img src="../svg/home.svg" alt="홈" class="tab-icon" />
+        <span class="tab-label">홈</span>
+      </div>
+      <div class="tab-item active">
+        <img src="../svg/vet.svg" alt="수의사" class="tab-icon" />
+        <span class="tab-label">수의사</span>
+      </div>
+      <div class="tab-item">
+        <img src="../svg/icon_community.svg" alt="커뮤니티" class="tab-icon" />
+        <span class="tab-label">커뮤니티</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="chat-script.js"></script>
+  <script src="../common/tabbar.js"></script>
+</body>
+</html>
+

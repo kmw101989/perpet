@@ -1,0 +1,512 @@
+/* JejuGothic 폰트 */
+@font-face {
+  font-family: 'JejuGothic';
+  src: url('../fonts/JejuGothic.ttf') format('truetype'),
+       url('../fonts/JejuGothicOTF.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 기본 리셋 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'JejuGothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f9f9f9;
+  color: #202027;
+  max-width: 390px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  padding-bottom: 92px;
+  scrollbar-gutter: stable; /* 스크롤바 공간을 항상 확보하여 레이아웃 일정성 유지 */
+}
+
+/* 모바일 최적화 */
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+/* 헤더 */
+.product-header {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 390px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  z-index: 100;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+.back-icon {
+  width: 27px;
+  height: 27px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.header-right-icons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.header-icon {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.product-detail-container {
+  padding-bottom: 20px;
+}
+
+/* 상품 이미지 섹션 */
+.product-image-section {
+  width: 100%;
+  background-color: #ffffff;
+  padding: 0;
+  position: relative;
+  margin-bottom: 0;
+}
+
+.product-image {
+  width: 100%;
+  height: 314px;
+  background-color: #f2f2f2;
+}
+
+.product-image-section::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 0.5px;
+  background-color: #c1c1c1;
+}
+
+/* 상품 정보 섹션 */
+.product-info-section {
+  background-color: #ffffff;
+  padding: 32px 16px 24px;
+  margin-bottom: 0;
+}
+
+.brand-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.brand-name {
+  font-size: 14px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 14px;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+}
+
+.brand-icon {
+  width: 19px;
+  height: 19px;
+  background-color: transparent;
+}
+
+.product-name {
+  font-size: 16px;
+  color: #414147;
+  line-height: 16px;
+  margin-bottom: 8px;
+  font-weight: 400;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+}
+
+.rating-section {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.rating-stars {
+  font-size: 12px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 12px;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.rating-stars::before {
+  content: '★';
+  color: #ffc107;
+  font-size: 12px;
+}
+
+.rating-reviews {
+  font-size: 10px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 10px;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+}
+
+.price-section {
+  margin-bottom: 16px;
+}
+
+.price-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.discount {
+  font-size: 10px;
+  color: #e64f30;
+  font-weight: 400;
+  line-height: 10.85px;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+}
+
+.original-price {
+  font-size: 10px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 10.85px;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+  text-decoration: line-through;
+}
+
+.sale-price {
+  font-size: 15px;
+  color: #202027;
+  font-weight: 400;
+  line-height: 15px;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+}
+
+.badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  height: 18px;
+  padding: 0 12px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 400;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+  line-height: 10.85px;
+  cursor: pointer;
+}
+
+.badge.puppertga {
+  background: linear-gradient(180deg, #023e8c 0%, #2a73d2 100%);
+  color: #ffffff;
+  border: none;
+}
+
+.badge.coupon {
+  background-color: transparent;
+  color: #091c40;
+  border: 1px solid #d9d9d9;
+}
+
+/* 퍼펫트 분석 섹션 */
+.analysis-section {
+  background-color: #ffffff;
+  border-radius: 10px;
+  margin: 0 16px 12px;
+  padding: 16px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+
+.section-number {
+  width: 20px;
+  height: 20px;
+  background-color: #bbe8ff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #414147;
+  font-weight: 400;
+  line-height: 15.19px;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+  flex-shrink: 0;
+}
+
+.section-title {
+  font-size: 14px;
+  color: #414147;
+  font-weight: 400;
+  line-height: 15.19px;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+}
+
+.analysis-card {
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 14px;
+  min-height: 98px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border: 1px solid transparent;
+}
+
+.analysis-icon {
+  width: 45px;
+  height: 45px;
+  background-color: #e1f5ff;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.analysis-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.analysis-title {
+  font-size: 12px;
+  color: #414147;
+  font-weight: 400;
+  line-height: 13.02px;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+}
+
+.analysis-description {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.analysis-description > div {
+  font-size: 10px;
+  color: #414147;
+  font-weight: 400;
+  line-height: 10.85px;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+}
+
+/* 급여 방법 섹션 */
+.feeding-section {
+  background-color: #ffffff;
+  border-radius: 10px;
+  margin: 0 16px 12px;
+  padding: 16px;
+}
+
+.feeding-card {
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 14px;
+  min-height: 93px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+}
+
+.pet-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.pet-image {
+  width: 51px;
+  height: 51px;
+  background-color: #d9d9d9;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pet-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pet-name {
+  font-size: 12px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 12px;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+}
+
+.pet-age {
+  font-size: 8px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 8px;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+}
+
+.feeding-divider {
+  width: 0.5px;
+  height: 68px;
+  background-color: #d9d9d9;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.feeding-recommendation {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.recommendation-label {
+  font-size: 8px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 8px;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+}
+
+.recommendation-amount {
+  font-size: 12px;
+  color: #091c40;
+  font-weight: 400;
+  line-height: 12px;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+}
+
+.feeding-icon {
+  width: 24px;
+  height: 24px;
+  background-color: #efefef;
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* 하단 구매 버튼 영역 */
+.purchase-bar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 390px;
+  height: 49px;
+  background-color: rgba(249, 249, 249, 0.94);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 32px;
+  z-index: 10;
+}
+
+.wishlist-button {
+  width: 44px;
+  height: 43px;
+  background-color: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.wishlist-icon {
+  width: 24px;
+  height: 24px;
+  stroke: #202027;
+}
+
+.purchase-button {
+  flex: 1;
+  height: 43px;
+  max-width: 272px;
+  background-color: #2065c0;
+  border: none;
+  border-radius: 40px;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 400;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+  line-height: 16.28px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.purchase-button:active {
+  opacity: 0.8;
+  background-color: #1a5aa0;
+}
+
+/* TabBar - 공통 스타일은 common/tabbar.css 사용 */
+
+/* 반응형 - 태블릿 이상 */
+@media (min-width: 768px) {
+  body {
+    max-width: 768px;
+  }
+  
+  .purchase-bar {
+    max-width: 768px;
+  }
+}
+
+/* 반응형 - 데스크톱 */
+@media (min-width: 1024px) {
+  body {
+    max-width: 1024px;
+  }
+  
+  .purchase-bar {
+    max-width: 1024px;
+  }
+}
+

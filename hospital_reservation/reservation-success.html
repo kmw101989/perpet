@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>예약 완료 - 퍼펫트</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="reservation-success-styles.css">
+</head>
+<body>
+  <div class="success-container">
+    <!-- 로고 및 체크 아이콘 -->
+    <div class="success-header">
+      <div class="logo-section">
+        <img src="../../svg/Union.svg" alt="로고" class="logo-icon" />
+        <div class="logo-text">퍼펫트</div>
+      </div>
+    </div>
+
+    <!-- 완료 메시지 -->
+    <div class="success-message">
+      <div class="pet-name">쿵이의</div>
+      <div class="completion-text">예약이 완료되었습니다!</div>
+    </div>
+
+    <!-- 프로필 이미지 -->
+    <div class="profile-image">
+      <div class="check-icon">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 20L18 26L28 14" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 예약 정보 카드 -->
+    <div class="reservation-info-card">
+      <div class="info-item">
+        <span class="info-label">병원</span>
+        <span class="info-value" id="reservationHospital">스마트동물병원 신사본원</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">일정</span>
+        <span class="info-value" id="reservationDateTime">1.5(월) 17:00</span>
+      </div>
+    </div>
+
+    <!-- 작은 달력 -->
+    <div class="mini-calendar">
+      <div class="mini-calendar-month" id="miniCalendarMonth">2026년 01월</div>
+      <div class="mini-calendar-weekdays">
+        <div class="mini-weekday">일</div>
+        <div class="mini-weekday">월</div>
+        <div class="mini-weekday">화</div>
+        <div class="mini-weekday">수</div>
+        <div class="mini-weekday">목</div>
+        <div class="mini-weekday">금</div>
+        <div class="mini-weekday">토</div>
+      </div>
+      <div class="mini-calendar-days" id="miniCalendarDays">
+        <!-- JavaScript로 동적 생성 -->
+      </div>
+    </div>
+
+    <!-- 예약 취소 링크 -->
+    <div class="cancel-link">
+      <button class="cancel-btn" id="cancelReservationBtn">예약취소</button>
+    </div>
+
+    <!-- 예약완료 버튼 -->
+    <div class="success-footer">
+      <button class="complete-btn" id="completeBtn">예약완료</button>
+    </div>
+  </div>
+
+  <script src="reservation-success-script.js"></script>
+</body>
+</html>
+
+

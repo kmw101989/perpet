@@ -1,0 +1,313 @@
+/* JejuGothic 폰트 */
+@font-face {
+  font-family: 'JejuGothic';
+  src: url('../fonts/JejuGothic.ttf') format('truetype'),
+       url('../fonts/JejuGothicOTF.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 기본 리셋 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'JejuGothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f9f9f9;
+  color: #202027;
+  max-width: 390px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  padding-bottom: 49px;
+  scrollbar-gutter: stable; /* 스크롤바 공간을 항상 확보하여 레이아웃 일정성 유지 */
+}
+
+/* 모바일 최적화 */
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+/* 헤더 */
+.shop-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 20px 32px 12px;
+}
+
+.header-icons {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.shop-container {
+  padding: 0 32px;
+  padding-bottom: 20px;
+}
+
+/* 상단 카테고리 탭 - 공통 스타일은 common/category-tabs.css 사용 */
+
+/* 검색 바 */
+.search-bar {
+  width: 100%;
+  max-width: 322px;
+  height: 30px;
+  background-color: #ffffff;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  margin-bottom: 16px;
+}
+
+.search-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 10px;
+  color: #a3a3a3;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.41px;
+}
+
+.search-input::placeholder {
+  color: #a3a3a3;
+}
+
+/* 추천 섹션 */
+.recommendation-section {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.section-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+.section-title {
+  font-size: 16px;
+  color: #202027;
+  font-weight: 400;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+.section-tabs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 0;
+}
+
+.section-tab {
+  font-size: 12px;
+  color: #959595;
+  padding: 0;
+  padding-bottom: 4px;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+  font-weight: 400;
+  line-height: 13.02px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+}
+
+.section-tab.active {
+  font-size: 12px;
+  color: #202027;
+  border-bottom: 2px solid #2065c0;
+  padding-bottom: 4px;
+  line-height: 13.02px;
+}
+
+/* 작은 상품 그리드 (100x110) */
+.product-grid-small {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.product-card-small {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.product-card-small .product-image-small {
+  margin-bottom: 8px;
+}
+
+.product-card-small .product-name {
+  margin-bottom: 6px;
+}
+
+.product-image-small {
+  width: 100%;
+  height: 110px;
+  background-color: #e8f4f8;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-brand {
+  font-size: 10px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 12px;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+  margin-bottom: 4px;
+}
+
+.product-name {
+  font-size: 12px;
+  color: #202027;
+  margin: 0 0 6px 0;
+  line-height: 14px;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+  font-weight: 400;
+}
+
+.product-price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.discount {
+  font-size: 12px;
+  color: #e64f30;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+  font-weight: 400;
+  line-height: 14px;
+}
+
+.price {
+  font-size: 14px;
+  color: #202027;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.product-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rating-stars {
+  font-size: 10px;
+  color: #202027;
+  font-weight: 400;
+  line-height: 12px;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.rating-stars::before {
+  content: '★';
+  color: #ffc107;
+  font-size: 12px;
+}
+
+.rating-reviews {
+  font-size: 10px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 12px;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+}
+
+/* 큰 상품 그리드 (140x150) */
+.product-grid-large {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.product-card-large {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.product-card-large .product-image-large {
+  margin-bottom: 8px;
+}
+
+.product-card-large .product-brand {
+  margin-bottom: 4px;
+}
+
+.product-card-large .product-name {
+  margin-bottom: 6px;
+}
+
+.product-card-large .product-price {
+  margin-bottom: 6px;
+}
+
+.product-image-large {
+  width: 100%;
+  height: 150px;
+  background-color: #f2f2f2;
+  border-radius: 6px;
+}
+
+/* TabBar - 공통 스타일은 common/tabbar.css 사용 */
+
+/* 반응형 - 태블릿 이상 */
+@media (min-width: 768px) {
+  body {
+    max-width: 768px;
+  }
+}
+
+/* 반응형 - 데스크톱 */
+@media (min-width: 1024px) {
+  body {
+    max-width: 1024px;
+  }
+}
+

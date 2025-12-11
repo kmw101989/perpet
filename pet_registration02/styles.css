@@ -1,0 +1,449 @@
+/* JejuGothic 폰트 */
+@font-face {
+  font-family: "JejuGothic";
+  src: url("../JejuGothic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  background-color: #F9F9F9;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  max-width: 390px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  scrollbar-gutter: stable;
+  overflow-x: hidden;
+}
+
+.container {
+  width: 100%;
+  max-width: 390px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background-color: #F9F9F9;
+  border: 1px solid #d5d5d5;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.content-frame {
+  width: 100%;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 100%;
+  flex: 1;
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+}
+
+.scrollable-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
+}
+
+.back-btn {
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  position: absolute;
+  top: calc(20px + (20px / 2) - (24px / 2));
+  left: 20px;
+  z-index: 10;
+  transition: opacity 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-btn::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  border-left: 2px solid #202027;
+  border-bottom: 2px solid #202027;
+}
+
+.back-btn:hover {
+  opacity: 0.7;
+}
+
+.back-btn:active {
+  opacity: 0.5;
+}
+
+.title {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: #202027;
+  text-align: center;
+  margin-bottom: 0;
+  line-height: 20px;
+  flex-shrink: 0;
+}
+
+.subtitle {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: #202027;
+  text-align: center;
+  line-height: 21.7px;
+  margin-top: 52px;
+  margin-bottom: 22px;
+}
+
+/* 프로필 이미지 영역 */
+.profile-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  margin-bottom: 16px;
+}
+
+.profile-image-container {
+  position: relative;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.profile-image {
+  width: 115px;
+  height: 115px;
+  border-radius: 50%;
+  background-color: #d9d9d9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.profile-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.upload-icon {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 40px;
+  color: #959595;
+  font-weight: 300;
+}
+
+/* 폼 그룹 */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.form-group:last-of-type {
+  margin-bottom: 0;
+}
+
+.form-label {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: #202027;
+  line-height: 16.28px;
+}
+
+.form-input {
+  width: 100%;
+  height: 43px;
+  padding: 12px 16px;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  background-color: transparent;
+  font-size: 15px;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  color: #202027;
+  outline: none;
+}
+
+.form-input::placeholder {
+  color: #c5c5c5;
+}
+
+.form-input:focus {
+  border-color: #202027;
+}
+
+/* 몸무게 입력 */
+.weight-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.weight-input-wrapper .form-input {
+  padding-right: 50px;
+}
+
+.weight-unit {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 15px;
+  color: #c5c5c5;
+  pointer-events: none;
+}
+
+/* 생일 입력 */
+.birthday-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.birth-year,
+.birth-month,
+.birth-day {
+  height: 43px;
+  padding: 12px 16px;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  background-color: transparent;
+  font-size: 15px;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  color: #202027;
+  outline: none;
+  text-align: center;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23959595' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 40px;
+}
+
+.birth-year {
+  flex: 1;
+  min-width: 70px;
+}
+
+.birth-year option,
+.birth-month option,
+.birth-day option {
+  text-align: center;
+  padding: 8px;
+}
+
+.birth-month {
+  width: 70px;
+}
+
+.birth-day {
+  width: 80px;
+}
+
+.birth-year:focus,
+.birth-month:focus,
+.birth-day:focus {
+  border-color: #202027;
+}
+
+.birth-year:invalid,
+.birth-month:invalid,
+.birth-day:invalid {
+  color: #c5c5c5;
+}
+
+.birth-year option:first-child,
+.birth-month option:first-child,
+.birth-day option:first-child {
+  color: #c5c5c5;
+}
+
+.birth-year option:not(:first-child),
+.birth-month option:not(:first-child),
+.birth-day option:not(:first-child) {
+  color: #202027;
+}
+
+.separator {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 18px;
+  color: #959595;
+  font-weight: 400;
+}
+
+/* 성별 버튼 */
+.gender-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.gender-btn {
+  flex: 1;
+  height: 43px;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  color: #c5c5c5;
+  transition: all 0.3s ease;
+}
+
+.gender-btn.active {
+  border-color: #202027;
+  background-color: transparent;
+  color: #202027;
+}
+
+.gender-btn.active .gender-icon {
+  color: #202027;
+}
+
+.gender-icon {
+  font-size: 16px;
+}
+
+/* 체형 버튼 */
+.body-type-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.body-type-btn {
+  flex: 1;
+  height: 43px;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  color: #c5c5c5;
+  transition: all 0.3s ease;
+}
+
+.body-type-btn.active {
+  border-color: #202027;
+  background-color: transparent;
+  color: #202027;
+}
+
+/* 다음 버튼 */
+.next-btn {
+  width: 100%;
+  height: 43px;
+  min-height: 43px;
+  border: none;
+  border-radius: 10px;
+  background-color: #e5e5e5;
+  color: #a0a0a0;
+  font-size: 15px;
+  font-weight: 400;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 0;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.next-btn:enabled {
+  background-color: #023E8C;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.next-btn:enabled:active {
+  background-color: #15151a;
+}
+
+.next-btn:disabled {
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+/* 반응형 디자인 */
+@media (min-width: 768px) {
+  body {
+    max-width: 768px;
+  }
+  
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    max-width: 1024px;
+  }
+  
+  .container {
+    max-width: 1024px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    border-left: none;
+    border-right: none;
+  }
+
+  .content-frame {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .content-frame {
+    padding: 12px;
+  }
+}

@@ -1,0 +1,90 @@
+[build]
+  publish = "."
+  command = ""
+
+[[redirects]]
+  from = "/"
+  to = "/website/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/login"
+  to = "/login/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/join_member"
+  to = "/join_member/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/pet_registration01"
+  to = "/pet_registration01/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/pet_registration02"
+  to = "/pet_registration02/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/pet_registration03"
+  to = "/pet_registration03/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/pet_registration_complete"
+  to = "/pet_registration_complete/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/mall"
+  to = "/mall/shop.html"
+  status = 200
+
+[[redirects]]
+  from = "/PDP"
+  to = "/PDP/product-detail.html"
+  status = 200
+
+[[redirects]]
+  from = "/mypage"
+  to = "/mypage/mypage.html"
+  status = 200
+
+[[redirects]]
+  from = "/chatbot"
+  to = "/chatbot/chat.html"
+  status = 200
+
+[[redirects]]
+  from = "/hospital_reservation"
+  to = "/hospital_reservation/reservation.html"
+  status = 200
+
+[[redirects]]
+  from = "/consultation_main"
+  to = "/consultation_main/consultation.html"
+  status = 200
+
+[[redirects]]
+  from = "/consultation_chat"
+  to = "/consultation_chat/chat.html"
+  status = 200
+
+[[redirects]]
+  from = "/community_main"
+  to = "/community_main/community.html"
+  status = 200
+
+[[redirects]]
+  from = "/hospital"
+  to = "/hospital/hospital-compare.html"
+  status = 200
+
+# SPA fallback for 404 errors
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
+

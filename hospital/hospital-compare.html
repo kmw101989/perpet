@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>병원 비교 - 퍼펫트</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="hospital-compare-styles.css">
+  <link rel="stylesheet" href="../common/category-tabs.css">
+  <link rel="stylesheet" href="../common/tabbar.css">
+</head>
+<body>
+  <!-- 지도 레이어 (배경) -->
+  <div class="map-container" id="mapContainer">
+    <!-- 실제 지도 API는 여기에 추가 -->
+    <div class="map-placeholder">
+      <div class="map-marker"></div>
+    </div>
+  </div>
+
+  <!-- 하단 시트 (드래그 가능) -->
+  <div class="bottom-sheet" id="bottomSheet">
+    <!-- 드래그 핸들 -->
+    <div class="sheet-handle" id="sheetHandle">
+      <div class="handle-bar"></div>
+    </div>
+
+    <!-- 시트 내용 -->
+    <div class="sheet-content">
+      <!-- 검색 바 -->
+      <div class="search-bar">
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="9" cy="9" r="6" stroke="#a3a3a3" stroke-width="1.5" fill="none"/>
+          <path d="M13 13L17 17" stroke="#a3a3a3" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <input type="text" class="search-input" placeholder="궁금하신 질환을 검색해주세요." />
+      </div>
+
+      <!-- 카테고리 탭 -->
+      <div class="category-tabs">
+        <div class="category-tab">종합관리</div>
+        <div class="category-tab active">심장</div>
+        <div class="category-tab">간</div>
+        <div class="category-tab">위/장</div>
+        <div class="category-tab">피부</div>
+        <div class="category-tab">치아</div>
+        <div class="category-tab">뼈/관절</div>
+        <div class="category-tab">눈</div>
+        <div class="category-tab">면역력</div>
+        <div class="category-tab">행동</div>
+        <div class="category-tab">신장/방광</div>
+      </div>
+
+      <!-- 24시간 버튼 -->
+      <div class="filter-section">
+        <button class="filter-24h">
+          <span>24h</span>
+        </button>
+      </div>
+
+      <!-- 가격비교 섹션 -->
+      <div class="price-section">
+        <div class="section-title">퍼펫트한 가격비교</div>
+        <div class="price-cards">
+          <div class="price-card">
+            <div class="price-label-badge">초진 진찰료</div>
+            <div class="price-average">평균</div>
+            <div class="price-value">10,000원</div>
+          </div>
+          <div class="price-card">
+            <div class="price-label-badge">재진 진찰료</div>
+            <div class="price-average">평균</div>
+            <div class="price-value">10,000원</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 병원 리스트 섹션 -->
+      <div class="hospital-section">
+        <div class="section-title">퍼펫트한 맞춤병원</div>
+        <div class="hospital-list">
+          <div class="hospital-card">
+            <div class="hospital-image"></div>
+            <div class="hospital-info">
+              <div class="hospital-header">
+                <div class="hospital-name">스마트동물병원</div>
+                <div class="hospital-rating">⭐ 4.4(636)</div>
+              </div>
+              <div class="hospital-details">
+                <div class="detail-item">24시간 운영</div>
+                <div class="detail-item">서울 강남구 도산대로 213 1층</div>
+                <div class="detail-item">0507-1406-0275</div>
+                <div class="detail-item">항암, 수술 전문</div>
+              </div>
+              <div class="hospital-actions">
+                <button class="action-btn primary">예약하기</button>
+                <button class="action-btn secondary">상세정보</button>
+              </div>
+            </div>
+            <div class="hospital-badge">퍼펫트맞춤</div>
+          </div>
+          
+          <!-- 추가 병원 카드들 -->
+          <div class="hospital-card">
+            <div class="hospital-image"></div>
+            <div class="hospital-info">
+              <div class="hospital-header">
+                <div class="hospital-name">강남동물병원</div>
+                <div class="hospital-rating">⭐ 4.6 (32)</div>
+              </div>
+              <div class="hospital-details">
+                <div class="detail-item">평일 09:00-21:00</div>
+                <div class="detail-item">서울 강남구 테헤란로 123</div>
+                <div class="detail-item">02-1234-5678</div>
+                <div class="detail-item">종합 진료</div>
+              </div>
+              <div class="hospital-actions">
+                <button class="action-btn primary">예약하기</button>
+                <button class="action-btn">상세정보</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TabBar -->
+  <div class="tabbar">
+    <div class="tabbar-tabs">
+      <div class="tab-item">
+        <img src="../svg/shop.svg" alt="자사몰" class="tab-icon" />
+        <span class="tab-label">자사몰</span>
+      </div>
+      <div class="tab-item active">
+        <img src="../svg/hospital.svg" alt="병원" class="tab-icon" />
+        <span class="tab-label">병원</span>
+      </div>
+      <div class="tab-item">
+        <img src="../svg/home.svg" alt="홈" class="tab-icon" />
+        <span class="tab-label">홈</span>
+      </div>
+      <div class="tab-item">
+        <img src="../svg/vet.svg" alt="수의사" class="tab-icon" />
+        <span class="tab-label">수의사</span>
+      </div>
+      <div class="tab-item">
+        <img src="../svg/icon_community.svg" alt="커뮤니티" class="tab-icon" />
+        <span class="tab-label">커뮤니티</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="hospital-compare-script.js"></script>
+  <script src="../common/tabbar.js"></script>
+</body>
+</html>
+

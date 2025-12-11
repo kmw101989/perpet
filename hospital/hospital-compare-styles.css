@@ -1,0 +1,488 @@
+/* JejuGothic 폰트 */
+@font-face {
+  font-family: 'JejuGothic';
+  src: url('../fonts/JejuGothic.ttf') format('truetype'),
+       url('../fonts/JejuGothicOTF.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 기본 리셋 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'JejuGothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f9f9f9;
+  color: #202027;
+  max-width: 390px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  scrollbar-gutter: stable; /* 스크롤바 공간을 항상 확보하여 레이아웃 일정성 유지 */
+}
+
+/* 모바일 최적화 */
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+  touch-action: pan-y;
+}
+
+/* 지도 컨테이너 (배경) */
+.map-container {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 390px;
+  height: 100vh;
+  z-index: 1;
+  background-color: #e8f5e9;
+}
+
+.map-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #a5d6a7 0%, #81c784 50%, #66bb6a 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.map-placeholder::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background-image: 
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.1) 2px, rgba(255,255,255,0.1) 4px),
+    repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255,255,255,0.1) 2px, rgba(255,255,255,0.1) 4px);
+  animation: mapMove 20s linear infinite;
+}
+
+@keyframes mapMove {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(50px, 50px); }
+}
+
+.map-marker {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  background-color: #ff5252;
+  border-radius: 50% 50% 50% 0;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.map-marker::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 20px;
+  height: 20px;
+  background-color: #ffffff;
+  border-radius: 50%;
+}
+
+/* 하단 시트 */
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 390px;
+  height: 60vh;
+  background-color: #ffffff;
+  border-radius: 20px 20px 0 0;
+  z-index: 10;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.bottom-sheet.expanded {
+  height: 90vh;
+  transform: translateX(-50%) translateY(0);
+}
+
+.bottom-sheet.collapsed {
+  height: 200px;
+  transform: translateX(-50%) translateY(calc(100% - 200px));
+}
+
+/* 드래그 핸들 */
+.sheet-handle {
+  width: 100%;
+  padding: 12px 0 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.sheet-handle:active {
+  cursor: grabbing;
+}
+
+.handle-bar {
+  width: 40px;
+  height: 4px;
+  background-color: #d9d9d9;
+  border-radius: 2px;
+}
+
+/* 시트 내용 */
+.sheet-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 32px 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sheet-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sheet-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sheet-content::-webkit-scrollbar-thumb {
+  background: #d9d9d9;
+  border-radius: 2px;
+}
+
+/* 검색 바 */
+.search-bar {
+  width: 100%;
+  max-width: 322px;
+  height: 30px;
+  background-color: #ffffff;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  margin: 0 auto 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 10px;
+  color: #a3a3a3;
+  font-weight: 400;
+  letter-spacing: -0.41px;
+}
+
+.search-input::placeholder {
+  color: #a3a3a3;
+}
+
+/* 카테고리 탭 */
+/* 카테고리 탭 - 공통 스타일은 common/category-tabs.css 사용 */
+
+/* 필터 섹션 */
+.filter-section {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 0 16px;
+}
+
+.filter-24h {
+  width: 32px;
+  height: 32px;
+  background-color: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+}
+
+.filter-24h span {
+  font-size: 12px;
+  color: #000000;
+  font-weight: 400;
+}
+
+.filter-24h:active {
+  background-color: #f6f6f6;
+}
+
+.filter-24h.active {
+  background-color: #959595;
+  border-color: #959595;
+}
+
+.filter-24h.active span {
+  color: #ffffff;
+}
+
+/* 섹션 제목 */
+.section-title {
+  font-size: 20px;
+  color: #202027;
+  font-weight: 400;
+  margin-bottom: 16px;
+  line-height: 21.7px;
+}
+
+/* 가격비교 섹션 */
+.price-section {
+  margin-bottom: 24px;
+}
+
+/* 병원 리스트 섹션 */
+.hospital-section {
+  margin-bottom: 20px;
+}
+
+/* 가격 카드 */
+.price-cards {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 8px;
+}
+
+.price-cards::-webkit-scrollbar {
+  display: none;
+}
+
+.price-card {
+  min-width: 155px;
+  height: 75px;
+  background-color: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.price-label-badge {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 81px;
+  height: 30px;
+  background-color: #bbe8ff;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #091c40;
+  font-weight: 400;
+  line-height: 15.19px;
+  z-index: 1;
+}
+
+.price-label {
+  font-size: 14px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 15.19px;
+}
+
+.price-average {
+  font-size: 12px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 13.02px;
+  margin-top: 6px;
+}
+
+.price-value {
+  font-size: 14px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 15.19px;
+}
+
+/* 병원 리스트 */
+.hospital-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 20px;
+}
+
+.hospital-card {
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 18px;
+  position: relative;
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  border: 1px solid #e5e5e5;
+}
+
+.hospital-image {
+  width: 125px;
+  height: 125px;
+  background-color: #d9d9d9;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+
+.hospital-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.hospital-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.hospital-name {
+  font-size: 16px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 17.36px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.hospital-rating {
+  font-size: 12px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 13.02px;
+}
+
+.hospital-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-item {
+  font-size: 12px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 13.02px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.hospital-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.action-btn {
+  height: 23px;
+  padding: 0 12px;
+  background-color: #d9d9d9;
+  border: 1px solid #d9d9d9;
+  border-radius: 5px;
+  color: #000000;
+  font-size: 13px;
+  font-weight: 400;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.action-btn.primary {
+  background-color: #023e8c;
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+.action-btn.secondary {
+  background-color: transparent;
+  border-color: #d9d9d9;
+  color: #000000;
+}
+
+.action-btn:active {
+  background-color: #c9c9c9;
+}
+
+.hospital-badge {
+  position: absolute;
+  top: 12px;
+  left: 18px;
+  width: 60px;
+  height: 20px;
+  background: linear-gradient(180deg, #023e8c 0%, #63dcef 100%);
+  border: 1px solid #ffffff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #ffffff;
+  font-weight: 400;
+  line-height: 10px;
+  z-index: 1;
+}
+
+/* TabBar - 공통 스타일은 common/tabbar.css 사용 */
+
+/* 반응형 - 태블릿 이상 */
+@media (min-width: 768px) {
+  body {
+    max-width: 768px;
+  }
+}
+
+/* 반응형 - 데스크톱 */
+@media (min-width: 1024px) {
+  body {
+    max-width: 1024px;
+  }
+}

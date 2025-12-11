@@ -1,0 +1,33 @@
+# Firebase
+.firebaserc
+firebase.json
+firebase-debug.log
+firebase-debug.*.log
+.firebase/
+firebase-export-*/
+
+# Netlify
+.netlify/
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+build/
