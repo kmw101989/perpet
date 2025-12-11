@@ -45,6 +45,7 @@
                 name="password"
                 class="form-input"
                 placeholder="비밀번호를 입력해주세요"
+                autocomplete="new-password"
               />
               <button
                 type="button"
@@ -65,6 +66,7 @@
                 name="passwordConfirm"
                 class="form-input"
                 placeholder="비밀번호를 한번 더 입력해주세요"
+                autocomplete="new-password"
               />
               <button
                 type="button"
@@ -73,6 +75,9 @@
               >
                 보기
               </button>
+            </div>
+            <div class="error-message" id="passwordConfirmError" style="display: none; color: #ff0000; font-size: 12px; margin-top: 4px;">
+              비밀번호가 일치하지 않습니다.
             </div>
           </div>
 

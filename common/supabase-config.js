@@ -275,7 +275,9 @@ const SupabaseService = {
     
     const insertData = {
       user_id: userId,
-      user_name: userData.nickname || userData.user_name || '',
+      email: userData.email || '',
+      nickname: userData.nickname || '',
+      user_name: userData.nickname || userData.user_name || '', // 하위 호환성
       user_gender: userData.gender || userData.user_gender || '',
       user_address1: userData.residence || userData.user_address1 || '',
       phone_num: userData.phone || userData.phone_num || '',

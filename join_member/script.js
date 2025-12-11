@@ -7,17 +7,29 @@ let genderButtons, residenceButtons, termCheckboxes, togglePasswordButtons;
 
 // 비밀번호 보기/숨기기 토글 설정 함수
 function setupTogglePasswordButtons() {
-  if (!togglePasswordButtons || togglePasswordButtons.length === 0) return;
+  if (!togglePasswordButtons || togglePasswordButtons.length === 0) {
+    console.warn("비밀번호 보기 버튼을 찾을 수 없습니다.");
+    return;
+  }
   
-  togglePasswordButtons.forEach((btn) => {
+  console.log("비밀번호 보기 버튼 설정 중...", togglePasswordButtons.length);
+  
+  togglePasswordButtons.forEach((btn, index) => {
+    console.log(`비밀번호 보기 버튼 ${index + 1} 설정:`, btn);
     btn.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
       
+      console.log("비밀번호 보기 버튼 클릭됨");
       const targetId = this.getAttribute("data-target");
       const targetInput = document.getElementById(targetId);
-      if (!targetInput) return;
+      
+      if (!targetInput) {
+        console.error("대상 입력 필드를 찾을 수 없습니다:", targetId);
+        return;
+      }
 
+      console.log("입력 필드 타입 변경:", targetInput.type);
       if (targetInput.type === "password") {
         targetInput.type = "text";
         this.textContent = "숨기기";
@@ -37,17 +49,30 @@ function setupTogglePasswordButtons() {
 
 // 성별 선택 설정 함수
 function setupGenderButtons() {
-  if (!genderButtons || genderButtons.length === 0 || !genderInput) return;
+  if (!genderButtons || genderButtons.length === 0) {
+    console.warn("성별 버튼을 찾을 수 없습니다.");
+    return;
+  }
   
-  genderButtons.forEach((btn) => {
+  if (!genderInput) {
+    console.warn("성별 입력 필드를 찾을 수 없습니다.");
+    return;
+  }
+  
+  console.log("성별 버튼 설정 중...", genderButtons.length);
+  
+  genderButtons.forEach((btn, index) => {
+    console.log(`성별 버튼 ${index + 1} 설정:`, btn, btn.getAttribute("data-gender"));
     btn.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
       
+      console.log("성별 버튼 클릭됨:", this.getAttribute("data-gender"));
       genderButtons.forEach((b) => b.classList.remove("active"));
       this.classList.add("active");
       if (genderInput) {
         genderInput.value = this.getAttribute("data-gender");
+        console.log("성별 값 설정:", genderInput.value);
       }
       saveJoinMemberData();
       validateForm();
@@ -57,14 +82,30 @@ function setupGenderButtons() {
 
 // 거주지 선택 설정 함수
 function setupResidenceButtons() {
-  if (!residenceButtons || residenceButtons.length === 0 || !residenceInput) return;
+  if (!residenceButtons || residenceButtons.length === 0) {
+    console.warn("거주지 버튼을 찾을 수 없습니다.");
+    return;
+  }
   
-  residenceButtons.forEach((btn) => {
-    btn.addEventListener("click", function () {
+  if (!residenceInput) {
+    console.warn("거주지 입력 필드를 찾을 수 없습니다.");
+    return;
+  }
+  
+  console.log("거주지 버튼 설정 중...", residenceButtons.length);
+  
+  residenceButtons.forEach((btn, index) => {
+    console.log(`거주지 버튼 ${index + 1} 설정:`, btn, btn.getAttribute("data-residence"));
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      console.log("거주지 버튼 클릭됨:", this.getAttribute("data-residence"));
       residenceButtons.forEach((b) => b.classList.remove("active"));
       this.classList.add("active");
       if (residenceInput) {
         residenceInput.value = this.getAttribute("data-residence");
+        console.log("거주지 값 설정:", residenceInput.value);
       }
       saveJoinMemberData();
       validateForm();
@@ -76,12 +117,17 @@ function setupResidenceButtons() {
 function setupTermCheckboxes() {
   if (!agreeAllCheckbox || !termCheckboxes || termCheckboxes.length === 0) return;
   
-  // 약관 전체 동의
+  // 약관 전체 동의 (마케팅 동의는 제외 - 선택사항)
   agreeAllCheckbox.addEventListener("change", function () {
     const isChecked = this.checked;
     termCheckboxes.forEach((checkbox) => {
-      checkbox.checked = isChecked;
+      // 마케팅 동의는 선택사항이므로 전체 동의에서 제외
+      if (checkbox.id !== "marketingTerms") {
+        checkbox.checked = isChecked;
+      }
     });
+    // 전체 동의 상태 업데이트 (마케팅 동의 제외)
+    updateAgreeAllCheckbox();
     validateForm();
   });
 
@@ -97,10 +143,14 @@ function setupTermCheckboxes() {
   });
 }
 
-// 전체 동의 체크박스 상태 업데이트
+// 전체 동의 체크박스 상태 업데이트 (마케팅 동의 제외)
 function updateAgreeAllCheckbox() {
-  const allChecked = Array.from(termCheckboxes).every((cb) => cb.checked);
-  agreeAllCheckbox.checked = allChecked;
+  // 마케팅 동의를 제외한 필수 약관만 확인
+  const requiredCheckboxes = Array.from(termCheckboxes).filter(
+    (cb) => cb.id !== "marketingTerms"
+  );
+  const allRequiredChecked = requiredCheckboxes.every((cb) => cb.checked);
+  agreeAllCheckbox.checked = allRequiredChecked;
 }
 
 // 입력 필드 유효성 검사 (형식 검증 제거, 입력 여부만 확인)
@@ -148,13 +198,32 @@ function saveJoinMemberData() {
     };
     
     localStorage.setItem("joinMemberData", JSON.stringify(joinMemberData));
-    console.log("✅ joinMemberData 저장 완료:", {
-      ...joinMemberData,
-      password: "(마스킹됨)",
-      passwordConfirm: "(마스킹됨)"
-    });
+    // 로그는 디버깅 시에만 필요하므로 제거 (너무 자주 호출됨)
+    // console.log("✅ joinMemberData 저장 완료:", {
+    //   ...joinMemberData,
+    //   password: "(마스킹됨)",
+    //   passwordConfirm: "(마스킹됨)"
+    // });
   } catch (error) {
     console.error("❌ joinMemberData 저장 실패:", error);
+  }
+}
+
+// 비밀번호 일치 확인
+function checkPasswordMatch() {
+  const password = passwordInput ? passwordInput.value : '';
+  const passwordConfirm = passwordConfirmInput ? passwordConfirmInput.value : '';
+  const errorElement = document.getElementById('passwordConfirmError');
+  
+  if (!errorElement) return true;
+  
+  // 비밀번호 확인 칸에 입력이 있고, 비밀번호와 일치하지 않으면 에러 표시
+  if (passwordConfirm.trim() !== '' && password !== passwordConfirm) {
+    errorElement.style.display = 'block';
+    return false;
+  } else {
+    errorElement.style.display = 'none';
+    return true;
   }
 }
 
@@ -173,6 +242,9 @@ function validateForm() {
   const residence = residenceInput.value.trim();
   const phone = phoneInput.value.trim();
 
+  // 비밀번호 일치 확인
+  const passwordMatch = checkPasswordMatch();
+
   // 필수 약관 체크
   const requiredTermsChecked =
     age14Checkbox.checked &&
@@ -184,7 +256,7 @@ function validateForm() {
     validateEmail(email) &&
     validatePassword(password) &&
     passwordConfirm.trim() !== "" &&
-    password === passwordConfirm &&
+    passwordMatch &&
     validateNickname(nickname) &&
     gender !== "" &&
     validateResidence(residence) &&
@@ -195,14 +267,14 @@ function validateForm() {
     validateEmail(email) &&
     validatePassword(password) &&
     passwordConfirm.trim() !== "" &&
-    password === passwordConfirm &&
+    passwordMatch &&
     validateNickname(nickname) &&
     gender !== "" &&
     validateResidence(residence) &&
     validatePhone(phone) &&
     requiredTermsChecked;
 
-  // 모든 입력이 완료되고 모든 버튼이 클릭되면 submit-btn 활성화 (checkbox 체크 여부와 무관)
+  // 모든 입력이 완료되고 모든 버튼이 클릭되면 submit-btn 활성화
   if (allInputsFilled && gender !== "" && residence !== "") {
     submitBtn.disabled = false;
   } else {
@@ -244,7 +316,15 @@ function setupInputEventListeners() {
         this.style.letterSpacing = "normal";
       }
       saveJoinMemberData();
+      checkPasswordMatch(); // 비밀번호 일치 확인
       validateForm();
+    });
+  }
+  
+  // password input 변경 시에도 비밀번호 일치 확인
+  if (passwordInput) {
+    passwordInput.addEventListener("input", function () {
+      checkPasswordMatch(); // 비밀번호 일치 확인
     });
   }
 
@@ -313,13 +393,19 @@ function setupSubmitButton() {
         console.log("필수 체크박스 선택 완료. 네 번째 체크박스 선택 후 다시 클릭해주세요.");
       } else {
         // 두 번째 클릭: 실제 폼 제출 및 페이지 이동
+        // 비밀번호 일치 확인
+        if (!checkPasswordMatch()) {
+          alert('비밀번호가 일치하지 않습니다.');
+          return;
+        }
+        
         const formData = {
           email: emailInput.value.trim(),
           password: passwordInput.value,
           nickname: nicknameInput.value.trim(),
           gender: genderInput.value,
           residence: residenceInput.value.trim(),
-          phone: phoneInput.value.trim(),
+          phone: phoneInput.value.trim().replace(/-/g, ''), // 하이픈 제거
           marketingAgree: marketingTermsCheckbox.checked,
         };
 
@@ -334,6 +420,7 @@ function setupSubmitButton() {
 
           // Supabase에 사용자 등록
           const userData = {
+            email: formData.email,
             nickname: formData.nickname,
             gender: formData.gender,
             residence: formData.residence,
@@ -384,21 +471,6 @@ function setupSubmitButton() {
           alert('회원가입 중 오류가 발생했습니다: ' + error.message);
           return;
         }
-      }
-    }
-  });
-
-        // 회원가입 완료 후 joinMemberData 초기화
-        localStorage.removeItem("joinMemberData");
-        
-        // 정상적인 플로우 시작을 위해 currentPetData 초기화
-        localStorage.removeItem("currentPetData");
-        localStorage.removeItem("editingPetIndex");
-
-        console.log("회원가입 정보:", formData);
-
-        // pet_registration01 페이지로 이동
-        window.location.href = "../pet_registration01/index.html";
       }
     }
   });
@@ -541,7 +613,9 @@ function restoreJoinMemberData() {
 }
 
 // 페이지 로드 시 초기화
-window.addEventListener("DOMContentLoaded", () => {
+function initializePage() {
+  console.log("=== 페이지 초기화 시작 ===");
+  
   // DOM 요소 가져오기
   signupForm = document.getElementById("signupForm");
   emailInput = document.getElementById("email");
@@ -557,12 +631,42 @@ window.addEventListener("DOMContentLoaded", () => {
   privacyTermsCheckbox = document.getElementById("privacyTerms");
   marketingTermsCheckbox = document.getElementById("marketingTerms");
   submitBtn = document.getElementById("submitBtn");
-  genderButtons = document.querySelectorAll(".gender-btn:not(.residence-btn)");
-  residenceButtons = document.querySelectorAll(".residence-btn");
+  
+  // 버튼 선택 - 더 명확하게
+  genderButtons = document.querySelectorAll("button.gender-btn:not(.residence-btn)");
+  residenceButtons = document.querySelectorAll("button.residence-btn");
   termCheckboxes = document.querySelectorAll(".term-checkbox");
-  togglePasswordButtons = document.querySelectorAll(".toggle-password");
+  togglePasswordButtons = document.querySelectorAll("button.toggle-password");
+  
+  // 디버깅: 선택된 요소 확인
+  console.log("=== DOM 요소 확인 ===");
+  console.log("성별 버튼 개수:", genderButtons.length);
+  console.log("거주지 버튼 개수:", residenceButtons.length);
+  console.log("비밀번호 보기 버튼 개수:", togglePasswordButtons.length);
+  console.log("성별 입력 필드:", genderInput);
+  console.log("거주지 입력 필드:", residenceInput);
+  
+  // 요소가 없으면 경고
+  if (genderButtons.length === 0) {
+    console.error("❌ 성별 버튼을 찾을 수 없습니다!");
+    // 직접 선택 시도
+    const allGenderBtns = document.querySelectorAll(".gender-btn");
+    console.log("전체 gender-btn 개수:", allGenderBtns.length);
+    allGenderBtns.forEach((btn, i) => {
+      console.log(`버튼 ${i}:`, btn, "클래스:", btn.className, "residence-btn 포함?", btn.classList.contains("residence-btn"));
+    });
+  }
+  
+  if (residenceButtons.length === 0) {
+    console.error("❌ 거주지 버튼을 찾을 수 없습니다!");
+  }
+  
+  if (togglePasswordButtons.length === 0) {
+    console.error("❌ 비밀번호 보기 버튼을 찾을 수 없습니다!");
+  }
   
   // 이벤트 리스너 설정
+  console.log("=== 이벤트 리스너 설정 시작 ===");
   setupTogglePasswordButtons();
   setupGenderButtons();
   setupResidenceButtons();
@@ -652,26 +756,24 @@ window.addEventListener("DOMContentLoaded", () => {
   // 초기 상태 설정
   validateForm();
   
-  // 페이지를 떠나기 전에 현재 상태 저장
+  // 페이지를 떠나기 전에 현재 상태 저장 (로그 제거)
   window.addEventListener("beforeunload", () => {
-    console.log("페이지를 떠나기 전 데이터 저장 시도");
     saveJoinMemberData();
   });
   
-  // 페이지 가시성 변경 시에도 저장 (탭 전환 등)
+  // 페이지 가시성 변경 시에도 저장 (탭 전환 등, 로그 제거)
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
-      console.log("페이지 숨김 - 데이터 저장");
       saveJoinMemberData();
     }
   });
   
-  // 주기적으로 자동 저장 (5초마다)
-  setInterval(() => {
-    if (emailInput || passwordInput || nicknameInput || phoneInput) {
-      saveJoinMemberData();
-    }
-  }, 5000);
+  // 주기적 자동 저장 제거 (로그 도배 방지)
+  // setInterval(() => {
+  //   if (emailInput || passwordInput || nicknameInput || phoneInput) {
+  //     saveJoinMemberData();
+  //   }
+  // }, 5000);
   
   // 뒤로 가기 버튼 클릭 이벤트 설정
   const backBtn = document.getElementById("backBtn");
@@ -689,6 +791,26 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   } else {
     console.error("뒤로 가기 버튼을 찾을 수 없습니다!");
+  }
+  
+  console.log("=== 페이지 초기화 완료 ===");
+}
+
+// DOMContentLoaded와 window.onload 모두 처리
+if (document.readyState === 'loading') {
+  window.addEventListener("DOMContentLoaded", initializePage);
+} else {
+  // 이미 로드된 경우 즉시 실행
+  initializePage();
+}
+
+// 추가 안전장치: window.onload에서도 실행
+window.addEventListener("load", function() {
+  console.log("window.onload 이벤트 발생");
+  // 요소가 아직 없으면 다시 시도
+  if (!genderButtons || genderButtons.length === 0) {
+    console.log("요소를 찾지 못했으므로 재시도...");
+    initializePage();
   }
 });
 
