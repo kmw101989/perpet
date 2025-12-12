@@ -193,35 +193,35 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (petDetailsEl) {
-      // 나이 계산
-      const birth = selectedPet.pet_birth;
-      let ageText = '';
-      if (birth) {
-        const age = calculateAge(birth);
-        if (age !== null) {
-          ageText = `${age}살`;
-        }
-      }
-      
       // 품종 정보 (detailed_species)
       let speciesText = '';
       if (selectedPet.detailed_species) {
         speciesText = selectedPet.detailed_species.trim();
       }
       
-      // 나이와 품종 조합 (피그마 디자인: "10살 / 웰시코기")
+      // 체중 정보 (weight) - double precision 타입
+      let weightText = '';
+      if (selectedPet.weight !== null && selectedPet.weight !== undefined) {
+        // weight는 숫자이므로 그대로 사용
+        const weight = parseFloat(selectedPet.weight);
+        if (!isNaN(weight) && weight > 0) {
+          weightText = `${weight}kg`;
+        }
+      }
+      
+      // 품종과 체중 조합 (형식: "품종 · 체중kg")
       const details = [];
-      if (ageText) details.push(ageText);
       if (speciesText) details.push(speciesText);
+      if (weightText) details.push(weightText);
       
       // 상세 정보가 있으면 표시, 없으면 빈 값
-      petDetailsEl.textContent = details.length > 0 ? details.join(' / ') : '';
+      petDetailsEl.textContent = details.length > 0 ? details.join(' · ') : '';
       console.log('반려동물 상세 정보 표시:', {
         이름: selectedPet.pet_name,
-        나이: ageText,
         품종: speciesText,
-        생년월일: birth,
+        체중: weightText,
         detailed_species: selectedPet.detailed_species,
+        weight: selectedPet.weight,
         전체데이터: selectedPet
       });
     } else {

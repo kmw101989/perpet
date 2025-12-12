@@ -125,28 +125,57 @@ const SupabaseService = {
       }
 
       // 2. 질병 정보 가져오기 (category_id 포함)
+      // disease_id는 bigint 타입
+      const diseaseId = pet.disease_id;
+      console.log('질병 정보 조회 시작, disease_id:', diseaseId, '타입:', typeof diseaseId);
+      
+      let categoryId = null;
+      
+      // disease_id 컬럼으로 조회 (bigint 타입)
       const { data: disease, error: diseaseError } = await client
         .from('diseases')
-        .select('category_id')
-        .eq('disease_id', pet.disease_id)
-        .maybeSingle(); // .single() 대신 .maybeSingle() 사용
+        .select('disease_id, disease_name, category_id')
+        .eq('disease_id', diseaseId)
+        .maybeSingle();
 
       if (diseaseError) {
         console.error('질병 정보 조회 실패:', diseaseError);
         return [];
       }
 
-      if (!disease || !disease.category_id) {
-        console.log('질병 정보가 없거나 category_id가 없습니다. disease_id:', pet.disease_id);
+      if (!disease) {
+        console.log('질병 정보를 찾을 수 없습니다. disease_id:', diseaseId);
+        // 모든 질병 목록 조회하여 디버깅
+        const { data: allDiseases } = await client
+          .from('diseases')
+          .select('disease_id, disease_name, category_id')
+          .limit(10);
+        console.log('diseases 테이블 샘플 데이터:', allDiseases);
+        return [];
+      }
+
+      console.log('질병 정보 조회 성공:', disease);
+
+      if (!disease.category_id) {
+        console.log('질병 정보는 있지만 category_id가 없습니다. disease:', disease);
+        return [];
+      }
+
+      categoryId = disease.category_id;
+      console.log('category_id 추출 성공:', categoryId);
+
+      if (!categoryId) {
+        console.log('category_id를 찾을 수 없습니다.');
         return [];
       }
 
       // 3. 해당 category_id와 product_type에 맞는 제품 가져오기
       // 리뷰수와 별점으로 정렬 (리뷰수가 많고 별점이 높은 순)
+      console.log('제품 조회 시작, category_id:', categoryId, 'product_type:', productType);
       const { data: products, error: productsError } = await client
         .from('products')
         .select('product_id, brand, product_name, current_price, original_price, discount_percent, rating, review_count, product_img, category, product_type')
-        .eq('category', disease.category_id)
+        .eq('category', categoryId)
         .eq('product_type', productType)
         .order('review_count', { ascending: false, nullsLast: true })
         .order('rating', { ascending: false, nullsLast: true })
