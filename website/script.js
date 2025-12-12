@@ -380,7 +380,7 @@ function showBannerModal() {
     });
   }
 
-  // 이미지 클릭 시 닫기 (이미지에 X가 포함되어 있을 수 있으므로)
+  // 이미지 클릭 시 구독 페이지로 이동
   if (bannerImage) {
     bannerImage.addEventListener('click', function(e) {
       // 이미지의 오른쪽 상단 영역 클릭 시 닫기 (X 버튼 영역)
@@ -393,6 +393,10 @@ function showBannerModal() {
       // 오른쪽 상단 15% 영역 클릭 시 닫기 (X 버튼이 보통 그 위치에 있음)
       if (clickX > imageWidth * 0.85 && clickY < imageHeight * 0.15) {
         closeBannerModal();
+      } else {
+        // 그 외 영역 클릭 시 구독 페이지로 이동
+        closeBannerModal();
+        window.location.href = '/subscription/index.html';
       }
     });
   }

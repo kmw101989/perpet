@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>퍼펫트 - 멤버십 구독</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="subscription-header">
+    <button class="back-btn" id="backBtn">
+      <svg width="27" height="27" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16.5 8.25L10.5 13.5L16.5 18.75" stroke="#202027" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </header>
+
+  <!-- Main Content -->
+  <div class="subscription-container">
+    <h1 class="subscription-title">무료 체험 이후<br>시작할 멤버십을 고르세요!</h1>
+    
+    <!-- 멤버십 선택 카드들 -->
+    <div class="membership-cards">
+      <!-- 프리미엄 멤버십 -->
+      <div class="membership-card premium-card" data-membership="premium">
+        <div class="membership-badge premium-badge">인기상품</div>
+        <div class="membership-header">
+          <h2 class="membership-name">프리미엄 멤버십</h2>
+          <div class="membership-price">
+            <span class="price-amount">\14,900</span>
+            <span class="price-period">/월</span>
+          </div>
+        </div>
+        <div class="membership-divider"></div>
+        <ul class="membership-features">
+          <li class="feature-item">
+            <div class="feature-dot"></div>
+            <span>수의사 상담 월 3회 이용권</span>
+          </li>
+          <li class="feature-item">
+            <div class="feature-dot"></div>
+            <span>위시 제품 무료 제공 1회</span>
+            <span class="feature-note">(*선택 가능 상품 제한)</span>
+          </li>
+          <li class="feature-item">
+            <div class="feature-dot"></div>
+            <span>할인쿠폰 10% 추가 증정</span>
+            <span class="feature-note">+ 할인쿠폰(3~5%) 월 3개</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 베이직 멤버십 -->
+      <div class="membership-card basic-card" data-membership="basic">
+        <div class="membership-badge basic-badge">기본</div>
+        <div class="membership-header">
+          <h2 class="membership-name">베이직 멤버십</h2>
+          <div class="membership-price">
+            <span class="price-amount">\4,900</span>
+            <span class="price-period">/월</span>
+          </div>
+        </div>
+        <div class="membership-divider"></div>
+        <ul class="membership-features">
+          <li class="feature-item">
+            <div class="feature-dot basic-dot"></div>
+            <span>수의사 상담 월 1회 이용권</span>
+          </li>
+          <li class="feature-item">
+            <div class="feature-dot basic-dot"></div>
+            <span>할인쿠폰(3~5%) 월 3개</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 공통 혜택 -->
+    <div class="common-benefit">
+      멤버십 전상품 무료배송
+    </div>
+
+    <!-- 구독하기 버튼 -->
+    <button class="subscribe-btn" id="subscribeBtn">무료 체험해보고 구독하기</button>
+
+    <!-- 약관 및 안내 -->
+    <div class="subscription-footer">
+      <a href="#" class="terms-link">서비스 이용약관</a>
+      <div class="trial-info">
+        <p class="trial-text">30일간 무료체험</p>
+        <p class="cancel-text">언제든지 구독 취소 가능</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
