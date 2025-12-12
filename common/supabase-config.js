@@ -46,13 +46,13 @@ function loadSupabaseLibrary() {
 // 데이터 가져오기 헬퍼 함수들
 const SupabaseService = {
   // 제품 목록 가져오기
-  // category: bigint (category_id)
-  // product_type: '사료', '영양제', '간식' 등
+  // categoryId: bigint (category 필드 사용)
+  // productType: '사료', '영양제', '간식' 등
   async getProducts(categoryId = null, productType = null, limit = 100) {
     const client = await getSupabaseClient();
     let query = client
       .from('products')
-      .select('*')
+      .select('product_id, brand, product_name, current_price, original_price, discount_percent, rating, review_count, product_img, category, product_type')
       .limit(limit);
 
     if (categoryId) {
@@ -69,6 +69,76 @@ const SupabaseService = {
       return [];
     }
     return data || [];
+  },
+
+  // 제품 ID로 단일 제품 가져오기
+  async getProductById(productId) {
+    const client = await getSupabaseClient();
+    const { data, error } = await client
+      .from('products')
+      .select('*')
+      .eq('product_id', productId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching product:', error);
+      return null;
+    }
+    return data;
+  },
+
+  // 반려동물 기반 제품 추천
+  // 반려동물의 disease_id -> diseases 테이블의 category_id -> products 테이블의 category 매칭
+  // 리뷰수, 별점으로 정렬하여 상위 3개 반환
+  async getRecommendedProducts(petId, productType = '사료', limit = 3) {
+    const client = await getSupabaseClient();
+    
+    try {
+      // 1. 반려동물 정보 가져오기 (disease_id 포함)
+      const { data: pet, error: petError } = await client
+        .from('pets')
+        .select('disease_id')
+        .eq('pet_id', petId)
+        .single();
+
+      if (petError || !pet || !pet.disease_id) {
+        console.error('반려동물 정보를 가져올 수 없거나 disease_id가 없습니다:', petError);
+        return [];
+      }
+
+      // 2. 질병 정보 가져오기 (category_id 포함)
+      const { data: disease, error: diseaseError } = await client
+        .from('diseases')
+        .select('category_id')
+        .eq('disease_id', pet.disease_id)
+        .single();
+
+      if (diseaseError || !disease || !disease.category_id) {
+        console.error('질병 정보를 가져올 수 없거나 category_id가 없습니다:', diseaseError);
+        return [];
+      }
+
+      // 3. 해당 category_id와 product_type에 맞는 제품 가져오기
+      // 리뷰수와 별점으로 정렬 (리뷰수가 많고 별점이 높은 순)
+      const { data: products, error: productsError } = await client
+        .from('products')
+        .select('product_id, brand, product_name, current_price, original_price, discount_percent, rating, review_count, product_img, category, product_type')
+        .eq('category', disease.category_id)
+        .eq('product_type', productType)
+        .order('review_count', { ascending: false, nullsLast: true })
+        .order('rating', { ascending: false, nullsLast: true })
+        .limit(limit);
+
+      if (productsError) {
+        console.error('제품 추천 실패:', productsError);
+        return [];
+      }
+
+      return products || [];
+    } catch (error) {
+      console.error('추천 알고리즘 실행 중 오류:', error);
+      return [];
+    }
   },
 
   // 병원 목록 가져오기
