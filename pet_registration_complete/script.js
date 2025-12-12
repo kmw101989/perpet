@@ -562,34 +562,51 @@ function adjustTagAlignment() {
   });
 }
 
-// 로컬 스토리지에서 반려동물 정보 가져오기 및 렌더링
-function loadPetData() {
+// DB에서 반려동물 정보 가져오기 및 렌더링
+async function loadPetData() {
   try {
-    const petsData = JSON.parse(localStorage.getItem("petsData") || "[]");
-    
-    if (petsData.length === 0) {
-      // 기존 petData가 있으면 마이그레이션 (하위 호환성)
-      const oldPetData = localStorage.getItem("petData");
-      if (oldPetData) {
-        try {
-          const petData = JSON.parse(oldPetData);
-          if (petData.name) {
-            petsData.push(petData);
-            localStorage.setItem("petsData", JSON.stringify(petsData));
-            localStorage.removeItem("petData");
-          }
-        } catch (error) {
-          console.error("기존 데이터 마이그레이션 실패:", error);
-        }
-      }
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      console.error("userId가 없습니다.");
+      return;
     }
+
+    // Supabase 스크립트 로드 확인
+    if (typeof SupabaseService === 'undefined') {
+      console.error('SupabaseService가 로드되지 않았습니다.');
+      return;
+    }
+
+    console.log("DB에서 반려동물 목록 조회 시작, userId:", userId);
     
+    // DB에서 반려동물 목록 가져오기
+    const pets = await SupabaseService.getPetsByUserId(userId);
+    
+    if (!pets || pets.length === 0) {
+      console.log("등록된 반려동물이 없습니다.");
+      if (petsContainer) {
+        petsContainer.innerHTML = '<p style="text-align: center; color: #959595; padding: 20px;">등록된 반려동물이 없습니다.</p>';
+      }
+      return;
+    }
+
+    console.log("조회된 반려동물 목록:", pets);
+
     // petsContainer 초기화
     if (petsContainer) {
       petsContainer.innerHTML = "";
       
+      // pet_id 순서로 정렬 (가장 작은 pet_id가 먼저)
+      const sortedPets = [...pets].sort((a, b) => {
+        const aId = parseInt(a.pet_id, 10);
+        const bId = parseInt(b.pet_id, 10);
+        return (isNaN(aId) ? 0 : aId) - (isNaN(bId) ? 0 : bId);
+      });
+      
       // 각 반려동물에 대해 pet-card 생성
-      petsData.forEach((petData, index) => {
+      sortedPets.forEach((pet, index) => {
+        // Supabase 데이터를 createPetCard 형식으로 변환
+        const petData = convertPetDataForCard(pet);
         const cardHtml = createPetCard(petData, index);
         petsContainer.insertAdjacentHTML("beforeend", cardHtml);
       });
@@ -597,7 +614,7 @@ function loadPetData() {
       // 이벤트 핸들러 설정
       setupPetCardClickHandlers();
       
-      // startBtn 항상 활성화 (선택 제약 해제)
+      // startBtn 항상 활성화
       if (startBtn) {
         startBtn.classList.add("active");
       }
@@ -610,6 +627,44 @@ function loadPetData() {
   } catch (error) {
     console.error("반려동물 데이터 로드 실패:", error);
   }
+}
+
+// Supabase 반려동물 데이터를 createPetCard 형식으로 변환
+function convertPetDataForCard(pet) {
+  // 나이 계산
+  let age = "";
+  if (pet.pet_birth) {
+    const birthStr = String(pet.pet_birth);
+    if (birthStr.length >= 8) {
+      const year = parseInt(birthStr.slice(0, 4), 10);
+      const currentYear = new Date().getFullYear();
+      const calculatedAge = currentYear - year;
+      if (!isNaN(calculatedAge) && calculatedAge >= 0) {
+        age = `${calculatedAge}살`;
+      }
+    }
+  }
+
+  // 질병 정보 (disease_id를 통해 가져오기 - 나중에 처리)
+  const healthInterests = pet.disease_id ? ['disease_' + pet.disease_id] : [];
+
+  return {
+    name: pet.pet_name || "",
+    breed: pet.detailed_species || "",
+    gender: pet.pet_gender || "male",
+    weight: pet.weight ? `${pet.weight}kg` : "",
+    age: age,
+    birthday: pet.pet_birth ? {
+      year: String(pet.pet_birth).slice(0, 4),
+      month: String(pet.pet_birth).slice(4, 6),
+      day: String(pet.pet_birth).slice(6, 8)
+    } : null,
+    healthInterests: healthInterests,
+    caution: pet.pet_warning ? "yes" : "no",
+    cautionDetail: pet.pet_warning || "",
+    pet_id: pet.pet_id,
+    profileImage: null // 프로필 이미지는 추후 추가 가능
+  };
 }
 
 // 뒤로 가기 버튼 클릭 이벤트
@@ -708,20 +763,19 @@ if (startBtn) {
       if (typeof SupabaseService !== "undefined" && SupabaseService.getPetsByUserId) {
         const pets = await SupabaseService.getPetsByUserId(userId);
         if (pets && pets.length > 0) {
-          const sorted = [...pets].sort((a, b) => Number(a.pet_id) - Number(b.pet_id));
+          // pet_id를 숫자로 변환하여 정렬 (가장 작은 pet_id 선택)
+          const sorted = [...pets].sort((a, b) => {
+            const aId = parseInt(a.pet_id, 10);
+            const bId = parseInt(b.pet_id, 10);
+            return (isNaN(aId) ? 0 : aId) - (isNaN(bId) ? 0 : bId);
+          });
           const firstPet = sorted[0];
 
           // 로컬스토리지에 선택된 반려동물 저장
           localStorage.setItem("selectedPetId", firstPet.pet_id);
           localStorage.setItem("selectedPetData", JSON.stringify(firstPet));
-        }
-      } else {
-        // Supabase 미사용 시 로컬 petsData에서 선택
-        const petsData = JSON.parse(localStorage.getItem("petsData") || "[]");
-        if (petsData.length > 0) {
-          const petWithId = petsData.find(p => p.pet_id) || petsData[0];
-          localStorage.setItem("selectedPetId", petWithId.pet_id || "local_0");
-          localStorage.setItem("selectedPetData", JSON.stringify(petWithId));
+          
+          console.log("기본 반려동물 선택 완료:", firstPet);
         }
       }
     } catch (err) {
@@ -734,8 +788,16 @@ if (startBtn) {
 }
 
 // 페이지 로드 시 반려동물 정보 로드
-window.addEventListener("DOMContentLoaded", () => {
-  loadPetData();
+window.addEventListener("DOMContentLoaded", async () => {
+  // Supabase 스크립트 로드 대기
+  let attempts = 0;
+  const maxAttempts = 50; // 5초 대기
+  while (typeof SupabaseService === 'undefined' && attempts < maxAttempts) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    attempts++;
+  }
+  
+  await loadPetData();
 });
 
 // 페이지 포커스 시 데이터 새로고침 (pet_registration03에서 돌아왔을 때 업데이트 반영)

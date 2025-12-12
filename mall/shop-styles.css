@@ -245,12 +245,6 @@ html {
   gap: 2px;
 }
 
-.rating-stars::before {
-  content: '★';
-  color: #ffc107;
-  font-size: 12px;
-}
-
 .rating-reviews {
   font-size: 10px;
   color: #959595;

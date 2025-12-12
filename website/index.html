@@ -50,54 +50,104 @@
       <span class="sr-only">퍼펫트한 관리 카드</span>
     </div>
     
-    <div class="calendar-section">
-      <div class="calendar-header">
-        <svg class="calendar-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M7.5 3L4.5 6L7.5 9" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="calendar-month">12월</span>
-        <svg class="calendar-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M4.5 3L7.5 6L4.5 9" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+    <!-- 슬라이드 컨테이너 (일정 관리 섹션만 슬라이드) -->
+    <div class="management-slider-container">
+      <div class="management-slider-wrapper" id="managementSlider">
+        <!-- 첫 번째 슬라이드: 일정 관리 -->
+        <div class="management-slide active">
+          <div class="calendar-section">
+            <div class="calendar-header">
+              <svg class="calendar-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7.5 3L4.5 6L7.5 9" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="calendar-month">12월</span>
+              <svg class="calendar-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4.5 3L7.5 6L4.5 9" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            
+            <div class="schedule-list">
+              <div class="schedule-item">
+                <div class="schedule-icon">
+                  <img src="/svg/medicine.svg" alt="약" class="schedule-icon-img" />
+                </div>
+                <div class="schedule-text">05일(금) 외부 기생충약 투약</div>
+              </div>
+              <div class="schedule-item">
+                <div class="schedule-icon">
+                  <img src="/svg/checkup.svg" alt="병원" class="schedule-icon-img" />
+                </div>
+                <div class="schedule-text">22일(월) 병원 예약 - 정기검진 / 심장사상충</div>
+              </div>
+              <div class="schedule-item">
+                <div class="schedule-icon">
+                  <img src="/svg/bday.svg" alt="생일" class="schedule-icon-img" />
+                </div>
+                <div class="schedule-text">25일(목) 쿵이 생일 ❤️</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 두 번째 슬라이드: 체중 히스토리 -->
+        <div class="management-slide">
+          <div class="weight-history-section">
+            <div class="weight-history-title">체중 히스토리 / 비만도</div>
+            <div class="weight-history-content">
+              <div class="weight-graph-container">
+                <div class="weight-graph">
+                  <svg class="weight-graph-svg" viewBox="0 0 149 60" preserveAspectRatio="none">
+                    <!-- 그리드 라인 -->
+                    <line x1="0" y1="15" x2="128" y2="15" stroke="#000000" stroke-width="1"/>
+                    <line x1="0" y1="30" x2="128" y2="30" stroke="#000000" stroke-width="1"/>
+                    <line x1="0" y1="45" x2="128" y2="45" stroke="#000000" stroke-width="1"/>
+                    <line x1="0" y1="60" x2="128" y2="60" stroke="#000000" stroke-width="1"/>
+                    <!-- 데이터 포인트 -->
+                    <circle cx="2" cy="15" r="2" fill="#2065c0" stroke="#023e8c" stroke-width="1"/>
+                    <circle cx="43" cy="30" r="2" fill="#2065c0" stroke="#023e8c" stroke-width="1"/>
+                    <circle cx="83" cy="20" r="2" fill="#2065c0" stroke="#023e8c" stroke-width="1"/>
+                    <circle cx="120" cy="30" r="2" fill="#2065c0" stroke="#023e8c" stroke-width="1"/>
+                    <!-- 라인 -->
+                    <polyline points="2,15 43,30 83,20 120,30" fill="none" stroke="#2065c0" stroke-width="1.5"/>
+                  </svg>
+                  <div class="weight-graph-labels-x">
+                    <span>09월</span>
+                    <span>10월</span>
+                    <span>11월</span>
+                    <span>12월</span>
+                  </div>
+                  <div class="weight-graph-labels-y">
+                    <span>7.2kg</span>
+                    <span>7.0kg</span>
+                    <span>6.8kg</span>
+                  </div>
+                </div>
+                <div class="weight-status">
+                  <div class="weight-status-bar"></div>
+                  <div class="weight-status-text">적정<br>(4-5단계)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       
-      <div class="schedule-list">
-        <div class="schedule-item">
-          <div class="schedule-icon">
-            <img src="/svg/medicine.svg" alt="약" class="schedule-icon-img" />
-          </div>
-          <div class="schedule-text">05일(금) 외부 기생충약 투약</div>
-        </div>
-        <div class="schedule-item">
-          <div class="schedule-icon">
-            <img src="/svg/checkup.svg" alt="병원" class="schedule-icon-img" />
-          </div>
-          <div class="schedule-text">22일(월) 병원 예약 - 정기검진 / 심장사상충</div>
-        </div>
-        <div class="schedule-item">
-          <div class="schedule-icon">
-            <img src="/svg/bday.svg" alt="생일" class="schedule-icon-img" />
-          </div>
-          <div class="schedule-text">25일(목) 쿵이 생일 ❤️</div>
-        </div>
-      </div>
-      
-      <div class="schedule-nav">
-        <button class="schedule-nav-btn">
-          <svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="8.5" cy="8.5" r="8.5" fill="#d9d9d9"/>
-            <path d="M10 5L6 8.5L10 12" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <button class="schedule-nav-btn">
-          <svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="8.5" cy="8.5" r="8.5" fill="#d9d9d9"/>
-            <path d="M7 5L11 8.5L7 12" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-      </div>
+      <!-- 슬라이드 네비게이션 버튼 -->
+      <button class="management-slider-btn management-slider-btn-prev" id="sliderPrevBtn">
+        <svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="8.5" cy="8.5" r="8.5" fill="#d9d9d9"/>
+          <path d="M10 5L6 8.5L10 12" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button class="management-slider-btn management-slider-btn-next" id="sliderNextBtn">
+        <svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="8.5" cy="8.5" r="8.5" fill="#d9d9d9"/>
+          <path d="M7 5L11 8.5L7 12" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
     </div>
     
+    <!-- 활동 버튼 (고정) -->
     <div class="activity-buttons">
       <div class="activity-button">
         <div class="activity-button-container">

@@ -25,6 +25,18 @@ let currentCategoryId = 1; // 기본값: 종합관리
 let currentProductType = '사료'; // 기본값: 사료 (추천 섹션용)
 let currentCategoryProductType = '사료'; // 기본값: 사료 (카테고리 섹션용)
 
+// 별점 표시 함수 (빈 별과 꽉 찬 별)
+function getStarRating(rating) {
+  const numRating = parseFloat(rating) || 0;
+  const fullStars = Math.floor(numRating); // 정수 부분 (꽉 찬 별)
+  const emptyStars = 5 - fullStars; // 빈 별 개수
+  
+  let stars = '★'.repeat(fullStars); // 꽉 찬 별
+  stars += '☆'.repeat(emptyStars); // 빈 별
+  
+  return stars || '☆☆☆☆☆'; // rating이 0이면 모두 빈 별
+}
+
 // 제품 카드 생성 함수 (작은 카드)
 function createProductCardSmall(product) {
   // discount_percent는 null일 수 있음
@@ -45,7 +57,7 @@ function createProductCardSmall(product) {
         <span class="price">${price.toLocaleString()}원</span>
       </div>
       <div class="product-rating">
-        <span class="rating-stars">${rating > 0 ? '★'.repeat(Math.round(rating)) : '0'}</span>
+        <span class="rating-stars">${getStarRating(rating)}</span>
         <span class="rating-reviews">리뷰 ${reviewCount}</span>
       </div>
     </div>
@@ -72,7 +84,7 @@ function createProductCardLarge(product) {
         <span class="price">${price.toLocaleString()}원</span>
       </div>
       <div class="product-rating">
-        <span class="rating-stars">${rating > 0 ? '★'.repeat(Math.round(rating)) : '0'}</span>
+        <span class="rating-stars">${getStarRating(rating)}</span>
         <span class="rating-reviews">리뷰 ${reviewCount}</span>
       </div>
     </div>
@@ -281,16 +293,27 @@ document.addEventListener('DOMContentLoaded', async function() {
       const productTypeText = this.textContent.trim();
       const productType = productTypeMap[productTypeText] || '사료';
       
-      // 어떤 섹션인지 확인
-      const isRecommendedSection = section === document.querySelector('.recommendation-section:first-of-type');
+      // 어떤 섹션인지 확인 (더 정확한 방법)
+      const allSections = document.querySelectorAll('.recommendation-section');
+      const firstSection = allSections[0];
+      const isRecommendedSection = section === firstSection;
+      
+      console.log('섹션 탭 클릭:', {
+        productTypeText,
+        productType,
+        isRecommendedSection,
+        sectionIndex: Array.from(allSections).indexOf(section)
+      });
       
       if (isRecommendedSection) {
         // "내새꾸를 위한 냠냠 추천" 섹션 - 추천 알고리즘 사용
         currentProductType = productType;
+        console.log('추천 섹션 제품 타입 변경:', currentProductType);
         await loadProducts('recommended');
       } else {
         // "종합관리를 위한 냠냠" 섹션 - 필터만 적용 (추천 알고리즘 없음)
         currentCategoryProductType = productType;
+        console.log('카테고리 섹션 제품 타입 변경:', currentCategoryProductType);
         await loadProducts('category');
       }
     });

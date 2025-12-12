@@ -1,16 +1,5 @@
-// 탭 버튼 클릭 이벤트
+// 탭바 아이템 클릭 이벤트 (별도 처리)
 document.addEventListener('DOMContentLoaded', function() {
-  const tabButtons = document.querySelectorAll('.tab-btn');
-  
-  tabButtons.forEach(button => {
-    button.addEventListener('click', function() {
-      // 모든 탭에서 active 클래스 제거
-      tabButtons.forEach(btn => btn.classList.remove('active'));
-      // 클릭한 탭에 active 클래스 추가
-      this.classList.add('active');
-    });
-  });
-  
   // 탭바 아이템 클릭 이벤트
   const tabItems = document.querySelectorAll('.tab-item');
   
@@ -122,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // 선택된 반려동물 로드 및 표시
+  // 선택된 반려동물 로드 및 표시 (마이페이지에서 선택한 반려동물 우선 사용)
   async function loadSelectedPet() {
     const userId = localStorage.getItem('userId');
     if (!userId) {
@@ -130,43 +119,66 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    // 1) 로컬스토리지에서 우선 시도
-    let selectedPet = null;
-    const storedPet = localStorage.getItem('selectedPetData');
-    if (storedPet) {
-      try {
-        selectedPet = JSON.parse(storedPet);
-        console.log('로컬스토리지에서 반려동물 정보 로드:', selectedPet);
-      } catch (e) {
-        console.error('저장된 반려동물 파싱 실패:', e);
+    // Supabase 스크립트 로드 확인
+    if (typeof SupabaseService === 'undefined') {
+      console.error('SupabaseService가 로드되지 않았습니다.');
+      // Supabase 스크립트 로드 대기
+      let attempts = 0;
+      const maxAttempts = 50; // 5초 대기
+      while (typeof SupabaseService === 'undefined' && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+      
+      if (typeof SupabaseService === 'undefined') {
+        console.error('SupabaseService 로드 실패');
+        return;
       }
     }
 
-    // 2) 없으면 Supabase에서 조회 후 가장 작은 pet_id 선택
-    if (!selectedPet && typeof SupabaseService !== 'undefined' && SupabaseService.getPetsByUserId) {
-      try {
-        console.log('Supabase에서 반려동물 조회 시작, userId:', userId);
-        const pets = await SupabaseService.getPetsByUserId(userId);
-        console.log('조회된 반려동물 목록:', pets);
+    // DB에서 반려동물 정보 조회
+    let selectedPet = null;
+    try {
+      console.log('DB에서 반려동물 조회 시작, userId:', userId);
+      const pets = await SupabaseService.getPetsByUserId(userId);
+      console.log('조회된 반려동물 목록:', pets);
+      
+      if (pets && pets.length > 0) {
+        // pet_id 순서로 정렬
+        const sorted = [...pets].sort((a, b) => {
+          const aId = parseInt(a.pet_id, 10);
+          const bId = parseInt(b.pet_id, 10);
+          return (isNaN(aId) ? 0 : aId) - (isNaN(bId) ? 0 : bId);
+        });
         
-        if (pets && pets.length > 0) {
-          // pet_id를 숫자로 변환하여 정렬
-          const sorted = [...pets].sort((a, b) => {
-            const aId = parseInt(a.pet_id, 10);
-            const bId = parseInt(b.pet_id, 10);
-            return (isNaN(aId) ? 0 : aId) - (isNaN(bId) ? 0 : bId);
-          });
-          selectedPet = sorted[0];
-          console.log('선택된 반려동물 (가장 작은 pet_id):', selectedPet);
-          
-          localStorage.setItem('selectedPetId', selectedPet.pet_id);
-          localStorage.setItem('selectedPetData', JSON.stringify(selectedPet));
-        } else {
-          console.log('반려동물이 등록되지 않았습니다.');
+        // 로컬스토리지에서 선택된 반려동물 확인 (마이페이지에서 선택한 경우)
+        let selectedPetId = localStorage.getItem('selectedPetId');
+        
+        if (selectedPetId) {
+          // 선택된 pet_id가 있는 경우 해당 반려동물 찾기
+          selectedPet = sorted.find(p => p.pet_id === selectedPetId);
+          console.log('마이페이지에서 선택된 반려동물:', selectedPet);
         }
-      } catch (err) {
-        console.error('Supabase 반려동물 조회 실패:', err);
+        
+        // 선택된 반려동물이 없거나 찾을 수 없으면 가장 작은 pet_id 선택 (기본값)
+        if (!selectedPet) {
+          selectedPet = sorted[0];
+          selectedPetId = selectedPet.pet_id;
+          console.log('기본 반려동물 선택 (가장 작은 pet_id):', selectedPet);
+        }
+        
+        // 선택된 반려동물 정보를 로컬스토리지에 저장
+        localStorage.setItem('selectedPetId', selectedPet.pet_id);
+        localStorage.setItem('selectedPetData', JSON.stringify(selectedPet));
+      } else {
+        console.log('반려동물이 등록되지 않았습니다.');
+        // 반려동물이 없으면 기존 선택 정보 제거
+        localStorage.removeItem('selectedPetId');
+        localStorage.removeItem('selectedPetData');
       }
+    } catch (err) {
+      console.error('DB 반려동물 조회 실패:', err);
+      return;
     }
 
     if (!selectedPet) {
@@ -231,7 +243,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 초기 게이지 업데이트
   updateCircularChart();
-  loadSelectedPet();
+  
+  // 반려동물 정보 로드 후 추천 제품 로드
+  loadSelectedPet().then(() => {
+    // 반려동물 정보 로드 완료 후 추천 제품 로드
+    waitForSupabaseAndLoadProducts();
+  });
+  
+  // 페이지 포커스 시 반려동물 정보 새로고침 (마이페이지에서 돌아왔을 때)
+  window.addEventListener('focus', async function() {
+    console.log('페이지 포커스 - 반려동물 정보 새로고침');
+    await loadSelectedPet();
+    // 추천 제품도 다시 로드
+    const activeTab = document.querySelector('.recommendation-tabs .tab-btn.active');
+    const productType = activeTab ? activeTab.textContent.trim() : '사료';
+    await waitForSupabaseAndLoadProducts(productType);
+  });
+  
+  // 페이지 가시성 변경 시에도 새로고침
+  document.addEventListener('visibilitychange', async function() {
+    if (!document.hidden) {
+      console.log('페이지 가시성 변경 - 반려동물 정보 새로고침');
+      await loadSelectedPet();
+      // 추천 제품도 다시 로드
+      const activeTab = document.querySelector('.recommendation-tabs .tab-btn.active');
+      const productType = activeTab ? activeTab.textContent.trim() : '사료';
+      await waitForSupabaseAndLoadProducts(productType);
+    }
+  });
 
   // 마이페이지 버튼 클릭 이벤트
   const mypageBtn = document.querySelector('.mypage-btn');
@@ -243,7 +282,77 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 배너 광고 모달 표시
   showBannerModal();
+  
+  // 추천 탭 클릭 이벤트 (제품 로드 포함)
+  const recommendationTabButtons = document.querySelectorAll('.tab-btn');
+  recommendationTabButtons.forEach(button => {
+    button.addEventListener('click', async function() {
+      // 모든 탭에서 active 클래스 제거
+      recommendationTabButtons.forEach(btn => btn.classList.remove('active'));
+      // 클릭한 탭에 active 클래스 추가
+      this.classList.add('active');
+      
+      // 제품 타입에 따라 추천 제품 다시 로드
+      const productType = this.textContent.trim();
+      await waitForSupabaseAndLoadProducts(productType);
+    });
+  });
+  
+  // 관리 카드 슬라이드 기능
+  initManagementSlider();
 });
+
+// 관리 카드 슬라이드 초기화
+function initManagementSlider() {
+  const sliderWrapper = document.getElementById('managementSlider');
+  const prevBtn = document.getElementById('sliderPrevBtn');
+  const nextBtn = document.getElementById('sliderNextBtn');
+  const slides = document.querySelectorAll('.management-slide');
+  
+  if (!sliderWrapper || !prevBtn || !nextBtn || slides.length === 0) {
+    return;
+  }
+  
+  let currentSlide = 0;
+  const totalSlides = slides.length;
+  
+  // 슬라이드 이동 함수
+  function goToSlide(index) {
+    if (index < 0 || index >= totalSlides) return;
+    
+    currentSlide = index;
+    
+    // transform으로 슬라이드 이동
+    const translateX = -currentSlide * 100;
+    sliderWrapper.style.transform = `translateX(${translateX}%)`;
+    
+    // active 클래스 업데이트
+    slides.forEach((slide, i) => {
+      if (i === currentSlide) {
+        slide.classList.add('active');
+      } else {
+        slide.classList.remove('active');
+      }
+    });
+  }
+  
+  // 이전 버튼 클릭
+  prevBtn.addEventListener('click', function() {
+    if (currentSlide > 0) {
+      goToSlide(currentSlide - 1);
+    }
+  });
+  
+  // 다음 버튼 클릭
+  nextBtn.addEventListener('click', function() {
+    if (currentSlide < totalSlides - 1) {
+      goToSlide(currentSlide + 1);
+    }
+  });
+  
+  // 초기 슬라이드 설정
+  goToSlide(0);
+}
 
 // 배너 광고 모달 표시 함수
 function showBannerModal() {
@@ -306,6 +415,163 @@ function closeBannerModal() {
     bannerModal.classList.remove('show');
     // 로컬스토리지에 닫기 상태 저장 (이번 세션 동안만)
     localStorage.setItem('bannerClosed', 'true');
+  }
+}
+
+// 별점 표시 함수 (빈 별과 꽉 찬 별)
+function getStarRating(rating) {
+  const numRating = parseFloat(rating) || 0;
+  const fullStars = Math.floor(numRating); // 정수 부분 (꽉 찬 별)
+  const emptyStars = 5 - fullStars; // 빈 별 개수
+  
+  let stars = '★'.repeat(fullStars); // 꽉 찬 별
+  stars += '☆'.repeat(emptyStars); // 빈 별
+  
+  return stars || '☆☆☆☆☆'; // rating이 0이면 모두 빈 별
+}
+
+// Supabase 스크립트 로드 대기 함수
+async function waitForSupabaseAndLoadProducts(productType = '사료') {
+  // 최대 5초 동안 대기
+  let attempts = 0;
+  const maxAttempts = 50; // 5초 (100ms * 50)
+  
+  while (typeof SupabaseService === 'undefined' && attempts < maxAttempts) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    attempts++;
+  }
+  
+  if (typeof SupabaseService === 'undefined') {
+    console.error('SupabaseService가 로드되지 않았습니다. 스크립트를 확인해주세요.');
+    return;
+  }
+  
+  console.log('SupabaseService 로드 완료, 추천 제품 로드 시작');
+  await loadRecommendedProducts(productType);
+}
+
+// 홈 화면 추천 제품 로드 함수
+async function loadRecommendedProducts(productType = '사료') {
+  // Supabase 스크립트 로드 확인
+  if (typeof SupabaseService === 'undefined') {
+    console.error('SupabaseService가 로드되지 않았습니다.');
+    return;
+  }
+  
+  try {
+    const selectedPetId = localStorage.getItem('selectedPetId');
+    const productListContainer = document.querySelector('.product-list');
+    
+    console.log('제품 로드 시작:', {
+      selectedPetId,
+      productType,
+      container: productListContainer !== null
+    });
+    
+    if (!productListContainer) {
+      console.error('제품 리스트 컨테이너를 찾을 수 없습니다.');
+      return;
+    }
+    
+    // 제품 타입 매핑
+    const productTypeMap = {
+      '사료': '사료',
+      '영양제': '영양제',
+      '간식': '간식'
+    };
+    
+    const mappedProductType = productTypeMap[productType] || '사료';
+    
+    let products = [];
+    
+    if (selectedPetId) {
+      // 추천 알고리즘 사용
+      console.log('홈 화면 추천 제품 로드 시작, petId:', selectedPetId, 'productType:', mappedProductType);
+      products = await SupabaseService.getRecommendedProducts(selectedPetId, mappedProductType, 3);
+      console.log('추천 제품 로드 완료, 개수:', products?.length || 0, '제품:', products);
+    } else {
+      console.log('selectedPetId가 없어 기본 제품을 로드합니다.');
+    }
+    
+    // 추천 제품이 없거나 3개 미만이면 기본 제품으로 채우기
+    if (!products || products.length < 3) {
+      const neededCount = 3 - (products?.length || 0);
+      console.log('추천 제품이 부족하여 기본 제품을 추가합니다. 필요 개수:', neededCount);
+      const defaultProducts = await SupabaseService.getProducts(null, mappedProductType, neededCount, 'rating');
+      console.log('기본 제품 로드 완료, 개수:', defaultProducts?.length || 0, '제품:', defaultProducts);
+      if (defaultProducts && defaultProducts.length > 0) {
+        products = [...(products || []), ...defaultProducts].slice(0, 3);
+      }
+    }
+    
+    // selectedPetId가 없고 products도 없으면 전체 제품 로드
+    if ((!products || products.length === 0) && !selectedPetId) {
+      console.log('전체 제품을 로드합니다.');
+      products = await SupabaseService.getProducts(null, mappedProductType, 3, 'rating');
+      console.log('전체 제품 로드 완료, 개수:', products?.length || 0);
+    }
+    
+    if (products && products.length > 0) {
+      // 제품 카드 HTML 생성
+      const productCardsHTML = products.map(product => {
+        const discountPercent = product.discount_percent ? parseFloat(product.discount_percent) : 0;
+        const price = product.current_price ? parseFloat(product.current_price) : 0;
+        const rating = product.rating ? parseFloat(product.rating) : 0;
+        const reviewCount = product.review_count ? parseInt(product.review_count, 10) : 0;
+        const imageUrl = product.product_img || '';
+        
+        return `
+          <div class="product-card" data-product-id="${product.product_id}" style="cursor: pointer;">
+            <div class="product-image" style="background-image: url('${imageUrl}'); background-size: cover; background-position: center;"></div>
+            <div class="product-brand">${product.brand || ''}</div>
+            <p class="product-name">${product.product_name || ''}</p>
+            <div class="product-price">
+              ${discountPercent > 0 ? `<span class="discount">${Math.round(discountPercent)}%</span>` : ''}
+              <span class="price">${price.toLocaleString()}원</span>
+            </div>
+            <div class="product-rating">
+              <span class="rating-stars">${getStarRating(rating)}</span>
+              <span class="rating-reviews">리뷰 ${reviewCount}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      productListContainer.innerHTML = productCardsHTML;
+      
+      // 제품 카드 클릭 이벤트 추가
+      const productCards = productListContainer.querySelectorAll('.product-card');
+      productCards.forEach(card => {
+        card.addEventListener('click', function() {
+          const productId = this.getAttribute('data-product-id');
+          if (productId) {
+            window.location.href = `/PDP/product-detail.html?id=${productId}`;
+          }
+        });
+      });
+      
+      // 추천 제목 업데이트 (선택사항)
+      const selectedPetData = localStorage.getItem('selectedPetData');
+      if (selectedPetData) {
+        try {
+          const pet = JSON.parse(selectedPetData);
+          const petName = pet.pet_name || '내새꾸';
+          const subtitleEl = document.querySelector('.recommendation-subtitle');
+          if (subtitleEl) {
+            subtitleEl.textContent = `${petName}를 위한 최저가 ${mappedProductType} 추천`;
+          }
+        } catch (e) {
+          console.error('반려동물 데이터 파싱 실패:', e);
+        }
+      }
+      
+      console.log('홈 화면 추천 제품 표시 완료');
+    } else {
+      console.error('표시할 제품이 없습니다.');
+      productListContainer.innerHTML = '<p style="text-align: center; color: #959595; padding: 20px;">추천 제품을 찾을 수 없습니다.</p>';
+    }
+  } catch (error) {
+    console.error('추천 제품 로드 실패:', error);
   }
 }
 

@@ -426,23 +426,38 @@ const SupabaseService = {
   },
 
   // 질병 목록 가져오기
-  async getDiseases(categoryId = null) {
-    const client = await getSupabaseClient();
-    let query = client
-      .from('diseases')
-      .select('*');
+    async getDiseases(categoryId = null) {
+      const client = await getSupabaseClient();
+      let query = client
+        .from('diseases')
+        .select('*');
 
-    if (categoryId) {
-      query = query.eq('category_id', categoryId);
-    }
+      if (categoryId) {
+        query = query.eq('category_id', categoryId);
+      }
 
-    const { data, error } = await query;
-    if (error) {
-      console.error('Error fetching diseases:', error);
-      return [];
-    }
-    return data || [];
-  },
+      const { data, error } = await query;
+      if (error) {
+        console.error('Error fetching diseases:', error);
+        return [];
+      }
+      return data || [];
+    },
+
+    async getDiseaseById(diseaseId) {
+      const client = await getSupabaseClient();
+      const { data, error } = await client
+        .from('diseases')
+        .select('disease_id, disease_name, category_id')
+        .eq('disease_id', diseaseId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching disease by ID:', error);
+        return null;
+      }
+      return data;
+    },
 
   // 사용자 반려동물 목록 가져오기
   async getPets(userId) {
@@ -643,16 +658,22 @@ const SupabaseService = {
       if (disease) diseaseId = disease.disease_id;
     }
 
+    // 주의사항: cautionDetail을 pet_warning에 저장
+    const petWarning = (petData.cautionDetail && petData.caution === 'yes') 
+      ? petData.cautionDetail.trim() 
+      : null;
+
     const insertData = {
       pet_id: petId,
       user_id: petData.user_id || petData.userId || '',
       pet_name: petData.name || petData.pet_name || '',
       pet_species: petData.type || petData.pet_species || '',
       detailed_species: detailedSpecies, // 견종/묘종 상세명
-      pet_birth: petBirth,                // YYYYMMDD 형식
+      pet_birth: petBirth ? parseInt(petBirth, 10) : null, // bigint 타입에 맞게 숫자로 변환
       pet_gender: petGender,
       weight: petWeight,
       disease_id: diseaseId,
+      pet_warning: petWarning, // 주의사항 저장
       vaccination: null, // 추후 추가 가능
       vaccination_date: null // 추후 추가 가능
     };

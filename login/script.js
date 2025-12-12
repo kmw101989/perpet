@@ -41,6 +41,47 @@ googleBtn.addEventListener('click', function() {
     window.location.href = '../join_member/index.html';
 });
 
+// 사용자의 반려동물 정보 로드 함수
+async function loadUserPets(userId) {
+    try {
+        if (typeof SupabaseService === 'undefined') {
+            console.error('SupabaseService가 로드되지 않았습니다.');
+            return;
+        }
+        
+        console.log('반려동물 정보 로드 시작, userId:', userId);
+        
+        // Supabase에서 반려동물 목록 가져오기
+        const pets = await SupabaseService.getPetsByUserId(userId);
+        console.log('조회된 반려동물 목록:', pets);
+        
+        if (pets && pets.length > 0) {
+            // pet_id를 숫자로 변환하여 정렬 (가장 작은 pet_id 선택)
+            const sorted = [...pets].sort((a, b) => {
+                const aId = parseInt(a.pet_id, 10);
+                const bId = parseInt(b.pet_id, 10);
+                return (isNaN(aId) ? 0 : aId) - (isNaN(bId) ? 0 : bId);
+            });
+            
+            const selectedPet = sorted[0];
+            console.log('선택된 반려동물 (가장 작은 pet_id):', selectedPet);
+            
+            // localStorage에 저장
+            localStorage.setItem('selectedPetId', selectedPet.pet_id);
+            localStorage.setItem('selectedPetData', JSON.stringify(selectedPet));
+            
+            console.log('✅ 반려동물 정보 로드 완료');
+        } else {
+            console.log('반려동물이 등록되지 않았습니다.');
+            // 반려동물이 없으면 기존 선택 정보 제거
+            localStorage.removeItem('selectedPetId');
+            localStorage.removeItem('selectedPetData');
+        }
+    } catch (error) {
+        console.error('반려동물 정보 로드 실패:', error);
+    }
+}
+
 // 이메일/비밀번호 로그인 함수 (로컬스토리지 기반)
 async function loginWithEmail(email, password) {
     try {
@@ -75,6 +116,10 @@ async function loginWithEmail(email, password) {
             localStorage.setItem('userData', JSON.stringify(userData));
 
             console.log('✅ 로그인 성공 - User ID:', userId);
+            
+            // 반려동물 정보 가져오기
+            await loadUserPets(userId);
+            
             return true;
         } else {
             // Supabase가 없으면 로컬스토리지에서만 확인
@@ -205,6 +250,14 @@ if (emailLogin) {
         e.preventDefault();
         console.log('이메일 로그인 버튼 클릭');
         
+        // Supabase 스크립트 로드 대기
+        let attempts = 0;
+        const maxAttempts = 50; // 5초 대기
+        while (typeof SupabaseService === 'undefined' && attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        
         // 로컬스토리지에 사용자 정보가 있는지 확인
         const userId = localStorage.getItem('userId');
         const userData = localStorage.getItem('userData');
@@ -213,6 +266,14 @@ if (emailLogin) {
             try {
                 const parsedUserData = JSON.parse(userData);
                 console.log('✅ 기존 사용자 정보 발견, 자동 로그인:', parsedUserData);
+                
+                // 반려동물 정보 확인 및 로드
+                const selectedPetId = localStorage.getItem('selectedPetId');
+                if (!selectedPetId && typeof SupabaseService !== 'undefined') {
+                    // 반려동물 정보가 없으면 가져오기
+                    await loadUserPets(userId);
+                }
+                
                 // 바로 메인 페이지로 이동
                 window.location.href = '../website/index.html';
             } catch (error) {
@@ -297,7 +358,7 @@ style.textContent = `
 document.head.appendChild(style);
 
 // 페이지 로드 완료 시 초기화
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log('로그인 페이지 로드 완료');
     
     // Supabase 스크립트 로드
@@ -305,10 +366,26 @@ document.addEventListener('DOMContentLoaded', function() {
     supabaseScript.src = '/common/supabase-config.js';
     document.head.appendChild(supabaseScript);
     
+    // Supabase 스크립트 로드 대기
+    let attempts = 0;
+    const maxAttempts = 50; // 5초 대기
+    while (typeof SupabaseService === 'undefined' && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+    }
+    
     // 기존 사용자 ID 확인
     const existingUserId = localStorage.getItem('userId');
     if (existingUserId) {
         console.log('✅ 기존 사용자 ID 발견:', existingUserId);
+        
+        // 반려동물 정보 확인 및 로드
+        const selectedPetId = localStorage.getItem('selectedPetId');
+        if (!selectedPetId && typeof SupabaseService !== 'undefined') {
+            // 반려동물 정보가 없으면 가져오기
+            await loadUserPets(existingUserId);
+        }
+        
         // 기존 사용자가 있으면 메인페이지로 이동
         window.location.href = '../website/index.html';
         return;
