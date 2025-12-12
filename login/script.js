@@ -4,8 +4,6 @@ const naverBtn = document.getElementById('naverBtn');
 const googleBtn = document.getElementById('googleBtn');
 const emailLogin = document.getElementById('emailLogin');
 const emailSignup = document.getElementById('emailSignup');
-const mainLoginBtn = document.getElementById('mainLoginBtn');
-const mainSignupBtn = document.getElementById('mainSignupBtn');
 
 // 모든 데이터 초기화 함수
 function clearAllData() {
@@ -201,27 +199,11 @@ function showLoginModal() {
     });
 }
 
-// 이메일 로그인 링크 클릭 이벤트
-emailLogin.addEventListener('click', function(e) {
-    e.preventDefault();
-    console.log('이메일 로그인 클릭');
-    showLoginModal();
-});
-
-// 이메일 회원가입 링크 클릭 이벤트
-emailSignup.addEventListener('click', function(e) {
-    e.preventDefault();
-    console.log('이메일 회원가입 클릭');
-    clearAllData();
-    // join_member 페이지로 이동
-    window.location.href = '../join_member/index.html';
-});
-
-// 메인 로그인 버튼 클릭 이벤트
-if (mainLoginBtn) {
-    mainLoginBtn.addEventListener('click', async function(e) {
+// 이메일 로그인 버튼 클릭 이벤트
+if (emailLogin) {
+    emailLogin.addEventListener('click', async function(e) {
         e.preventDefault();
-        console.log('메인 로그인 버튼 클릭');
+        console.log('이메일 로그인 버튼 클릭');
         
         // 로컬스토리지에 사용자 정보가 있는지 확인
         const userId = localStorage.getItem('userId');
@@ -246,11 +228,11 @@ if (mainLoginBtn) {
     });
 }
 
-// 메인 회원가입 버튼 클릭 이벤트
-if (mainSignupBtn) {
-    mainSignupBtn.addEventListener('click', function(e) {
+// 이메일 회원가입 버튼 클릭 이벤트
+if (emailSignup) {
+    emailSignup.addEventListener('click', function(e) {
         e.preventDefault();
-        console.log('메인 회원가입 버튼 클릭');
+        console.log('이메일 회원가입 버튼 클릭');
         clearAllData();
         // join_member 페이지로 이동
         window.location.href = '../join_member/index.html';

@@ -179,9 +179,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const petDetailsEl = document.querySelector('.pet-details');
 
     if (petNameEl) {
-      const petName = selectedPet.pet_name || '내새꾸';
+      // 이름이 있으면 실제 이름만 표시, 없으면 빈 값 (기본값 "내새꾸" 제거)
+      const petName = selectedPet.pet_name || selectedPet.petName || '';
       petNameEl.textContent = petName;
-      console.log('반려동물 이름 표시:', petName);
+      console.log('반려동물 이름 표시:', {
+        pet_name: selectedPet.pet_name,
+        petName: selectedPet.petName,
+        최종표시: petName || '(이름 없음)',
+        전체데이터: selectedPet
+      });
+    } else {
+      console.error('pet-name 요소를 찾을 수 없습니다.');
     }
 
     if (petDetailsEl) {
@@ -195,25 +203,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
       
-      // 몸무게 정보
-      let weightText = '';
-      if (selectedPet.weight) {
-        const weight = selectedPet.weight.toString().trim();
-        // 이미 "kg"이 포함되어 있으면 그대로 사용, 없으면 추가
-        weightText = weight.includes('kg') ? weight : `${weight}kg`;
+      // 품종 정보 (detailed_species)
+      let speciesText = '';
+      if (selectedPet.detailed_species) {
+        speciesText = selectedPet.detailed_species.trim();
       }
       
-      // 나이와 몸무게 조합
+      // 나이와 품종 조합 (피그마 디자인: "10살 / 웰시코기")
       const details = [];
       if (ageText) details.push(ageText);
-      if (weightText) details.push(weightText);
+      if (speciesText) details.push(speciesText);
       
-      petDetailsEl.textContent = details.length > 0 ? details.join(' / ') : '정보 없음';
+      // 상세 정보가 있으면 표시, 없으면 빈 값
+      petDetailsEl.textContent = details.length > 0 ? details.join(' / ') : '';
       console.log('반려동물 상세 정보 표시:', {
+        이름: selectedPet.pet_name,
         나이: ageText,
-        몸무게: weightText,
-        생년월일: birth
+        품종: speciesText,
+        생년월일: birth,
+        detailed_species: selectedPet.detailed_species,
+        전체데이터: selectedPet
       });
+    } else {
+      console.error('pet-details 요소를 찾을 수 없습니다.');
     }
   }
 
