@@ -48,7 +48,8 @@ const SupabaseService = {
   // 제품 목록 가져오기
   // categoryId: bigint (category 필드 사용)
   // productType: '사료', '영양제', '간식' 등
-  async getProducts(categoryId = null, productType = null, limit = 100) {
+  // orderBy: 정렬 기준 (null이면 정렬 안 함, 'default'면 product_id 순서)
+  async getProducts(categoryId = null, productType = null, limit = 100, orderBy = 'default') {
     const client = await getSupabaseClient();
     let query = client
       .from('products')
@@ -61,6 +62,18 @@ const SupabaseService = {
 
     if (productType) {
       query = query.eq('product_type', productType);
+    }
+
+    // 정렬 옵션 (orderBy가 null이면 정렬 안 함)
+    if (orderBy === 'default') {
+      // 기본 정렬: product_id 순서대로
+      query = query.order('product_id', { ascending: true });
+    } else if (orderBy === 'rating') {
+      // 별점 순 정렬
+      query = query.order('rating', { ascending: false, nullsLast: true });
+    } else if (orderBy === 'review') {
+      // 리뷰수 순 정렬
+      query = query.order('review_count', { ascending: false, nullsLast: true });
     }
 
     const { data, error } = await query;
@@ -99,10 +112,15 @@ const SupabaseService = {
         .from('pets')
         .select('disease_id')
         .eq('pet_id', petId)
-        .single();
+        .maybeSingle(); // .single() 대신 .maybeSingle() 사용 (결과가 없어도 에러 발생 안 함)
 
-      if (petError || !pet || !pet.disease_id) {
-        console.error('반려동물 정보를 가져올 수 없거나 disease_id가 없습니다:', petError);
+      if (petError) {
+        console.error('반려동물 정보 조회 실패:', petError);
+        return [];
+      }
+
+      if (!pet || !pet.disease_id) {
+        console.log('반려동물 정보가 없거나 disease_id가 없습니다.');
         return [];
       }
 
@@ -111,10 +129,15 @@ const SupabaseService = {
         .from('diseases')
         .select('category_id')
         .eq('disease_id', pet.disease_id)
-        .single();
+        .maybeSingle(); // .single() 대신 .maybeSingle() 사용
 
-      if (diseaseError || !disease || !disease.category_id) {
-        console.error('질병 정보를 가져올 수 없거나 category_id가 없습니다:', diseaseError);
+      if (diseaseError) {
+        console.error('질병 정보 조회 실패:', diseaseError);
+        return [];
+      }
+
+      if (!disease || !disease.category_id) {
+        console.log('질병 정보가 없거나 category_id가 없습니다. disease_id:', pet.disease_id);
         return [];
       }
 

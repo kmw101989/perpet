@@ -84,11 +84,28 @@ async function loadProducts(sectionType = 'recommended') {
     if (sectionType === 'recommended') {
       // "내새꾸를 위한 냠냠 추천" 섹션 - 반려동물 기반 추천 알고리즘 사용
       const selectedPetId = localStorage.getItem('selectedPetId');
+      const selectedPetData = localStorage.getItem('selectedPetData');
+      
+      console.log('=== 추천 제품 로드 시작 ===');
+      console.log('selectedPetId:', selectedPetId);
+      
+      if (selectedPetData) {
+        try {
+          const petData = JSON.parse(selectedPetData);
+          console.log('선택된 반려동물 정보:', {
+            pet_id: petData.pet_id,
+            pet_name: petData.pet_name,
+            disease_id: petData.disease_id
+          });
+        } catch (e) {
+          console.error('반려동물 데이터 파싱 실패:', e);
+        }
+      }
       
       if (!selectedPetId) {
         console.log('선택된 반려동물이 없습니다. 기본 제품을 표시합니다.');
         // 반려동물이 없으면 전체 제품 중 상위 3개 표시
-        const products = await SupabaseService.getProducts(null, currentProductType, 3);
+        const products = await SupabaseService.getProducts(null, currentProductType, 3, 'rating');
         const container = document.querySelector('.recommendation-section:first-of-type .product-grid-small');
         if (container) {
           container.innerHTML = products.map(product => createProductCardSmall(product)).join('');
@@ -108,14 +125,15 @@ async function loadProducts(sectionType = 'recommended') {
           attachProductCardEvents(container, 'small');
         } else {
           // 추천 제품이 없으면 전체 제품 중 상위 3개 표시
-          const products = await SupabaseService.getProducts(null, currentProductType, 3);
+          console.log('추천 제품이 없어 기본 제품을 표시합니다.');
+          const products = await SupabaseService.getProducts(null, currentProductType, 3, 'rating');
           container.innerHTML = products.map(product => createProductCardSmall(product)).join('');
           attachProductCardEvents(container, 'small');
         }
       }
     } else if (sectionType === 'category') {
-      // "종합관리를 위한 냠냠" 섹션 - 현재 카테고리 기반
-      const products = await SupabaseService.getProducts(currentCategoryId, currentProductType, 20);
+      // "종합관리를 위한 냠냠" 섹션 - 현재 카테고리 기반, 순서대로 출력 (정렬 없음)
+      const products = await SupabaseService.getProducts(currentCategoryId, currentProductType, 20, null);
       console.log(`제품 로드 완료 (${sectionType}):`, products);
       
       const container = document.querySelector('.recommendation-section:last-of-type .product-grid-large');
