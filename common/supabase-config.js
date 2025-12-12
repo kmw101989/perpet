@@ -75,8 +75,20 @@ const SupabaseService = {
       // 리뷰수 순 정렬
       query = query.order('review_count', { ascending: false, nullsLast: true });
     }
+    // orderBy가 null이면 정렬하지 않음
 
     const { data, error } = await query;
+    
+    if (error) {
+      console.error('제품 조회 실패:', error);
+      console.error('에러 코드:', error.code);
+      console.error('에러 메시지:', error.message);
+      
+      // RLS 정책 오류인 경우 안내
+      if (error.code === '42501' || error.message?.includes('row-level security')) {
+        console.error('⚠️ RLS 정책 위반 오류입니다. Supabase Dashboard에서 products 테이블의 SELECT 정책을 설정해주세요.');
+      }
+    }
     if (error) {
       console.error('Error fetching products:', error);
       return [];
@@ -108,10 +120,17 @@ const SupabaseService = {
     
     try {
       // 1. 반려동물 정보 가져오기 (disease_id 포함)
+      console.log('=== 추천 알고리즘 시작 ===');
+      console.log('petId:', petId, '타입:', typeof petId);
+      
+      // pet_id가 문자열일 수 있으므로 숫자로 변환 시도
+      const numericPetId = typeof petId === 'string' ? petId : String(petId);
+      console.log('조회할 pet_id:', numericPetId);
+      
       const { data: pet, error: petError } = await client
         .from('pets')
-        .select('disease_id')
-        .eq('pet_id', petId)
+        .select('pet_id, disease_id, pet_name')
+        .eq('pet_id', numericPetId)
         .maybeSingle(); // .single() 대신 .maybeSingle() 사용 (결과가 없어도 에러 발생 안 함)
 
       if (petError) {
@@ -119,8 +138,21 @@ const SupabaseService = {
         return [];
       }
 
-      if (!pet || !pet.disease_id) {
-        console.log('반려동물 정보가 없거나 disease_id가 없습니다.');
+      console.log('반려동물 정보 조회 결과:', pet);
+
+      if (!pet) {
+        console.log('반려동물 정보를 찾을 수 없습니다. pet_id:', numericPetId);
+        // pets 테이블 샘플 데이터 확인
+        const { data: allPets } = await client
+          .from('pets')
+          .select('pet_id, disease_id, pet_name')
+          .limit(10);
+        console.log('pets 테이블 샘플 데이터:', allPets);
+        return [];
+      }
+
+      if (!pet.disease_id) {
+        console.log('반려동물 정보는 있지만 disease_id가 없습니다. pet:', pet);
         return [];
       }
 
@@ -130,9 +162,10 @@ const SupabaseService = {
       console.log('질병 정보 조회 시작, disease_id:', diseaseId, '타입:', typeof diseaseId);
       
       let categoryId = null;
+      let disease = null;
       
       // disease_id 컬럼으로 조회 (bigint 타입)
-      const { data: disease, error: diseaseError } = await client
+      const { data: diseaseData, error: diseaseError } = await client
         .from('diseases')
         .select('disease_id, disease_name, category_id')
         .eq('disease_id', diseaseId)
@@ -140,29 +173,89 @@ const SupabaseService = {
 
       if (diseaseError) {
         console.error('질병 정보 조회 실패:', diseaseError);
+        console.error('에러 코드:', diseaseError.code);
+        console.error('에러 메시지:', diseaseError.message);
+        console.error('에러 상세:', diseaseError);
+        
+        // RLS 정책 오류인 경우 안내
+        if (diseaseError.code === '42501' || diseaseError.message?.includes('row-level security')) {
+          console.error('⚠️ RLS 정책 위반 오류입니다. Supabase Dashboard에서 diseases 테이블의 SELECT 정책을 설정해주세요.');
+        }
         return [];
       }
 
+      disease = diseaseData;
+
+      // 질병 정보를 찾지 못한 경우 재시도
       if (!disease) {
-        console.log('질병 정보를 찾을 수 없습니다. disease_id:', diseaseId);
+        console.log('질병 정보를 찾을 수 없습니다. disease_id:', diseaseId, '타입:', typeof diseaseId);
+        
         // 모든 질병 목록 조회하여 디버깅
-        const { data: allDiseases } = await client
+        const { data: allDiseases, error: allDiseasesError } = await client
           .from('diseases')
           .select('disease_id, disease_name, category_id')
-          .limit(10);
-        console.log('diseases 테이블 샘플 데이터:', allDiseases);
-        return [];
+          .limit(20);
+        
+        if (allDiseasesError) {
+          console.error('diseases 테이블 조회 실패:', allDiseasesError);
+          console.error('에러 코드:', allDiseasesError.code);
+          console.error('에러 메시지:', allDiseasesError.message);
+          console.error('에러 상세:', allDiseasesError);
+        } else {
+          console.log('diseases 테이블 전체 데이터:', allDiseases);
+          console.log('diseases 테이블 데이터 개수:', allDiseases?.length || 0);
+          
+          if (!allDiseases || allDiseases.length === 0) {
+            console.error('⚠️ diseases 테이블이 비어있거나 RLS 정책으로 인해 조회할 수 없습니다.');
+            console.error('Supabase Dashboard에서 diseases 테이블의 RLS 정책을 확인하세요.');
+          }
+          
+          // disease_id 타입 확인 및 재시도
+          if (allDiseases && allDiseases.length > 0) {
+            console.log('첫 번째 질병 데이터 타입:', {
+              disease_id: allDiseases[0].disease_id,
+              disease_id_type: typeof allDiseases[0].disease_id,
+              찾는_disease_id: diseaseId,
+              찾는_disease_id_type: typeof diseaseId
+            });
+            
+            // 숫자로 변환해서 다시 시도
+            const numericDiseaseId = typeof diseaseId === 'string' ? parseInt(diseaseId, 10) : diseaseId;
+            console.log('숫자로 변환한 disease_id로 재시도:', numericDiseaseId);
+            
+            const { data: diseaseRetry, error: diseaseRetryError } = await client
+              .from('diseases')
+              .select('disease_id, disease_name, category_id')
+              .eq('disease_id', numericDiseaseId)
+              .maybeSingle();
+            
+            if (diseaseRetryError) {
+              console.error('재시도 실패:', diseaseRetryError);
+            } else if (diseaseRetry) {
+              console.log('재시도 성공! 질병 정보:', diseaseRetry);
+              disease = diseaseRetry; // disease 변수에 할당
+            } else {
+              console.log('재시도해도 질병 정보를 찾을 수 없습니다.');
+            }
+          }
+        }
       }
 
-      console.log('질병 정보 조회 성공:', disease);
-
-      if (!disease.category_id) {
-        console.log('질병 정보는 있지만 category_id가 없습니다. disease:', disease);
+      // 질병 정보 확인 및 category_id 추출
+      if (disease) {
+        console.log('질병 정보 조회 성공:', disease);
+        
+        if (disease.category_id) {
+          categoryId = disease.category_id;
+          console.log('category_id 추출 성공:', categoryId);
+        } else {
+          console.log('질병 정보는 있지만 category_id가 없습니다. disease:', disease);
+          return [];
+        }
+      } else {
+        console.log('질병 정보를 찾을 수 없어 추천을 수행할 수 없습니다.');
         return [];
       }
-
-      categoryId = disease.category_id;
-      console.log('category_id 추출 성공:', categoryId);
 
       if (!categoryId) {
         console.log('category_id를 찾을 수 없습니다.');
@@ -189,10 +282,15 @@ const SupabaseService = {
       }
 
       // 제품 평가 및 정렬 (리뷰수, 평점, 할인율 종합 평가)
+      // 최대 리뷰수 계산 (안전하게 처리)
+      const reviewCounts = products.map(p => parseFloat(p.review_count || 0));
+      const maxReviewCount = reviewCounts.length > 0 ? Math.max(...reviewCounts) : 1; // 0으로 나누기 방지
+      
+      console.log('제품 평가 시작, 총 제품 수:', products.length, '최대 리뷰수:', maxReviewCount);
+      
       const scoredProducts = products.map(product => {
         // 리뷰수 점수 (0-100점, 최대 리뷰수를 기준으로 정규화)
         const reviewCount = product.review_count ? parseFloat(product.review_count) : 0;
-        const maxReviewCount = Math.max(...products.map(p => parseFloat(p.review_count || 0)));
         const reviewScore = maxReviewCount > 0 ? (reviewCount / maxReviewCount) * 100 : 0;
 
         // 평점 점수 (0-100점, 5점 만점 기준)
@@ -207,26 +305,16 @@ const SupabaseService = {
         const totalScore = (reviewScore * 0.4) + (ratingScore * 0.4) + (discountScore * 0.2);
 
         return {
-          ...product,
-          _score: totalScore,
-          _reviewScore: reviewScore,
-          _ratingScore: ratingScore,
-          _discountScore: discountScore
+          product: product,
+          score: totalScore
         };
       });
 
       // 종합 점수 순으로 정렬하여 상위 limit개 반환
       const sortedProducts = scoredProducts
-        .sort((a, b) => b._score - a._score)
+        .sort((a, b) => b.score - a.score)
         .slice(0, limit)
-        .map(product => {
-          // 내부 점수 필드 제거
-          delete product._score;
-          delete product._reviewScore;
-          delete product._ratingScore;
-          delete product._discountScore;
-          return product;
-        });
+        .map(item => item.product); // 원본 제품 객체만 반환
 
       console.log('추천 제품 정렬 완료 (상위', limit, '개):', sortedProducts);
       return sortedProducts;

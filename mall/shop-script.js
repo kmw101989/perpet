@@ -116,32 +116,92 @@ async function loadProducts(sectionType = 'recommended') {
       }
 
       // 추천 알고리즘 사용 (currentProductType 사용)
+      console.log('추천 알고리즘 호출, selectedPetId:', selectedPetId, 'productType:', currentProductType);
       const recommendedProducts = await SupabaseService.getRecommendedProducts(selectedPetId, currentProductType, 3);
-      console.log('추천 제품 로드 완료:', recommendedProducts);
+      console.log('추천 제품 로드 완료, 개수:', recommendedProducts?.length || 0, '제품:', recommendedProducts);
       
-      const container = document.querySelector('.recommendation-section:first-of-type .product-grid-small');
+      // 컨테이너 찾기 (여러 방법 시도)
+      let container = document.querySelector('.recommendation-section:first-of-type .product-grid-small');
+      if (!container) {
+        // 대체 방법: 모든 recommendation-section 중 첫 번째 찾기
+        const sections = document.querySelectorAll('.recommendation-section');
+        if (sections.length > 0) {
+          container = sections[0].querySelector('.product-grid-small');
+        }
+      }
+      if (!container) {
+        // 또 다른 방법: 직접 클래스로 찾기
+        container = document.querySelector('.product-grid-small');
+      }
+      
+      console.log('추천 섹션 컨테이너:', container);
+      console.log('추천 섹션 컨테이너 존재 여부:', container !== null);
+      
       if (container) {
-        if (recommendedProducts.length > 0) {
-          container.innerHTML = recommendedProducts.map(product => createProductCardSmall(product)).join('');
+        if (recommendedProducts && recommendedProducts.length > 0) {
+          console.log('추천 제품 표시 중...');
+          const html = recommendedProducts.map(product => createProductCardSmall(product)).join('');
+          console.log('생성된 HTML 길이:', html.length);
+          container.innerHTML = html;
           attachProductCardEvents(container, 'small');
+          console.log('추천 제품 표시 완료');
         } else {
           // 추천 제품이 없으면 전체 제품 중 상위 3개 표시
           console.log('추천 제품이 없어 기본 제품을 표시합니다.');
           const products = await SupabaseService.getProducts(null, currentProductType, 3, 'rating');
-          container.innerHTML = products.map(product => createProductCardSmall(product)).join('');
-          attachProductCardEvents(container, 'small');
+          console.log('기본 제품 로드 완료, 개수:', products?.length || 0);
+          if (products && products.length > 0) {
+            container.innerHTML = products.map(product => createProductCardSmall(product)).join('');
+            attachProductCardEvents(container, 'small');
+          } else {
+            console.error('기본 제품도 없습니다.');
+            container.innerHTML = '<p style="text-align: center; color: #959595;">제품을 찾을 수 없습니다.</p>';
+          }
         }
+      } else {
+        console.error('추천 섹션 컨테이너를 찾을 수 없습니다.');
       }
     } else if (sectionType === 'category') {
       // "종합관리를 위한 냠냠" 섹션 - 카테고리 + 제품 타입 필터만 적용, 순서대로 출력 (추천 알고리즘 없음)
       console.log(`카테고리 필터 적용: category_id=${currentCategoryId}, product_type=${currentCategoryProductType}`);
-      const products = await SupabaseService.getProducts(currentCategoryId, currentCategoryProductType, 20, null);
-      console.log(`제품 로드 완료 (${sectionType}):`, products);
+      // orderBy를 'default'로 하면 product_id 순서대로 정렬
+      const products = await SupabaseService.getProducts(currentCategoryId, currentCategoryProductType, 20, 'default');
+      console.log(`제품 로드 완료 (${sectionType}), 개수:`, products?.length || 0, '제품:', products);
       
-      const container = document.querySelector('.recommendation-section:last-of-type .product-grid-large');
+      // 컨테이너 찾기 (여러 방법 시도)
+      let container = document.querySelector('.recommendation-section:last-of-type .product-grid-large');
+      if (!container) {
+        // 대체 방법: 모든 recommendation-section 중 마지막 찾기
+        const sections = document.querySelectorAll('.recommendation-section');
+        if (sections.length > 1) {
+          container = sections[sections.length - 1].querySelector('.product-grid-large');
+        }
+      }
+      if (!container) {
+        // 또 다른 방법: 직접 클래스로 찾기 (마지막 것)
+        const allLargeGrids = document.querySelectorAll('.product-grid-large');
+        if (allLargeGrids.length > 0) {
+          container = allLargeGrids[allLargeGrids.length - 1];
+        }
+      }
+      
+      console.log('카테고리 섹션 컨테이너:', container);
+      console.log('카테고리 섹션 컨테이너 존재 여부:', container !== null);
+      
       if (container) {
-        container.innerHTML = products.map(product => createProductCardLarge(product)).join('');
-        attachProductCardEvents(container, 'large');
+        if (products && products.length > 0) {
+          console.log('카테고리 제품 표시 중...');
+          const html = products.map(product => createProductCardLarge(product)).join('');
+          console.log('생성된 HTML 길이:', html.length);
+          container.innerHTML = html;
+          attachProductCardEvents(container, 'large');
+          console.log('카테고리 제품 표시 완료');
+        } else {
+          console.error('카테고리 제품이 없습니다.');
+          container.innerHTML = '<p style="text-align: center; color: #959595;">제품을 찾을 수 없습니다.</p>';
+        }
+      } else {
+        console.error('카테고리 섹션 컨테이너를 찾을 수 없습니다.');
       }
       
       // 섹션 제목 업데이트
