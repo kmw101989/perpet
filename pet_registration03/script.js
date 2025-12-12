@@ -92,8 +92,22 @@ window.addEventListener("DOMContentLoaded", () => {
   
   // 다음 버튼 클릭 이벤트 설정
   if (nextBtn) {
+    let isSubmitting = false; // 제출 중 플래그 (중복 클릭 방지)
+    
     nextBtn.addEventListener("click", async () => {
+      // 중복 클릭 방지
+      if (isSubmitting) {
+        console.log("이미 제출 중입니다. 중복 클릭 무시.");
+        return;
+      }
+      
       if (nextBtn.classList.contains("active")) {
+        // 제출 시작
+        isSubmitting = true;
+        nextBtn.disabled = true;
+        nextBtn.style.opacity = "0.6";
+        nextBtn.style.cursor = "not-allowed";
+        
         // 현재 등록 중인 반려동물 데이터 가져오기
         try {
           const currentPetData = JSON.parse(localStorage.getItem("currentPetData") || "{}");
@@ -151,6 +165,10 @@ window.addEventListener("DOMContentLoaded", () => {
           if (typeof SupabaseService === 'undefined') {
             console.error('SupabaseService가 로드되지 않았습니다.');
             alert('서비스 초기화 중 오류가 발생했습니다. 페이지를 새로고침해주세요.');
+            isSubmitting = false;
+            nextBtn.disabled = false;
+            nextBtn.style.opacity = "1";
+            nextBtn.style.cursor = "pointer";
             return;
           }
 
@@ -166,11 +184,19 @@ window.addEventListener("DOMContentLoaded", () => {
               } else {
                 console.error("❌ 반려동물 등록 실패");
                 alert('반려동물 등록 중 오류가 발생했습니다. 다시 시도해주세요.');
+                isSubmitting = false;
+                nextBtn.disabled = false;
+                nextBtn.style.opacity = "1";
+                nextBtn.style.cursor = "pointer";
                 return;
               }
             } catch (error) {
               console.error("반려동물 등록 중 오류:", error);
               alert('반려동물 등록 중 오류가 발생했습니다: ' + error.message);
+              isSubmitting = false;
+              nextBtn.disabled = false;
+              nextBtn.style.opacity = "1";
+              nextBtn.style.cursor = "pointer";
               return;
             }
           } else {
@@ -200,6 +226,11 @@ window.addEventListener("DOMContentLoaded", () => {
               console.error("❌ 유효하지 않은 인덱스:", editIndex, "petsData.length:", petsData.length);
               // 유효하지 않은 인덱스인 경우에도 신규 추가하지 않고 에러만 로그
               alert("수정할 반려동물 정보를 찾을 수 없습니다.");
+              isSubmitting = false;
+              nextBtn.disabled = false;
+              nextBtn.style.opacity = "1";
+              nextBtn.style.cursor = "pointer";
+              return;
             }
             // 수정 모드 플래그 제거
             localStorage.removeItem("editingPetIndex");
@@ -208,6 +239,10 @@ window.addEventListener("DOMContentLoaded", () => {
             if (currentPetData._isEditing) {
               console.warn("⚠️ 수정 플래그가 있지만 인덱스가 유효하지 않음. 신규 등록으로 처리하지 않음.");
               alert("수정 모드로 진입했지만 유효하지 않은 상태입니다. 다시 시도해주세요.");
+              isSubmitting = false;
+              nextBtn.disabled = false;
+              nextBtn.style.opacity = "1";
+              nextBtn.style.cursor = "pointer";
               return; // 함수 종료하여 새 카드 생성 방지
             }
             // 수정 플래그 제거

@@ -363,9 +363,16 @@ function setupSubmitButton() {
   if (!submitBtn) return;
   
   let isFirstClick = true; // 첫 클릭 여부 추적
+  let isSubmitting = false; // 제출 중 플래그 (중복 클릭 방지)
   
   submitBtn.addEventListener("click", async function (e) {
     e.preventDefault();
+
+    // 중복 클릭 방지
+    if (isSubmitting) {
+      console.log("이미 제출 중입니다. 중복 클릭 무시.");
+      return;
+    }
 
     if (!submitBtn.disabled) {
       if (isFirstClick) {
@@ -393,9 +400,23 @@ function setupSubmitButton() {
         console.log("필수 체크박스 선택 완료. 네 번째 체크박스 선택 후 다시 클릭해주세요.");
       } else {
         // 두 번째 클릭: 실제 폼 제출 및 페이지 이동
+        // 중복 제출 방지
+        if (isSubmitting) {
+          console.log("이미 제출 중입니다. 중복 클릭 무시.");
+          return;
+        }
+        
+        // 제출 시작
+        isSubmitting = true;
+        submitBtn.disabled = true;
+        submitBtn.textContent = "처리 중...";
+        
         // 비밀번호 일치 확인
         if (!checkPasswordMatch()) {
           alert('비밀번호가 일치하지 않습니다.');
+          isSubmitting = false;
+          submitBtn.disabled = false;
+          submitBtn.textContent = "가입하기";
           return;
         }
         
@@ -415,6 +436,9 @@ function setupSubmitButton() {
           if (typeof SupabaseService === 'undefined') {
             console.error('SupabaseService가 로드되지 않았습니다.');
             alert('서비스 초기화 중 오류가 발생했습니다. 페이지를 새로고침해주세요.');
+            isSubmitting = false;
+            submitBtn.disabled = false;
+            submitBtn.textContent = "가입하기";
             return;
           }
 
@@ -462,20 +486,26 @@ function setupSubmitButton() {
 
             // pet_registration01 페이지로 이동
             window.location.href = "../pet_registration01/index.html";
-          } else {
-            console.error("❌ 사용자 등록 실패");
-            alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
+            } else {
+              console.error("❌ 사용자 등록 실패");
+              alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
+              isSubmitting = false;
+              submitBtn.disabled = false;
+              submitBtn.textContent = "가입하기";
+              return;
+            }
+          } catch (error) {
+            console.error("데이터 저장 실패:", error);
+            alert('회원가입 중 오류가 발생했습니다: ' + error.message);
+            isSubmitting = false;
+            submitBtn.disabled = false;
+            submitBtn.textContent = "가입하기";
             return;
           }
-        } catch (error) {
-          console.error("데이터 저장 실패:", error);
-          alert('회원가입 중 오류가 발생했습니다: ' + error.message);
-          return;
         }
       }
-    }
-  });
-}
+    });
+  }
 
 // 보기 버튼 클릭 이벤트 설정 함수
 function setupViewButtons() {

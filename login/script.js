@@ -4,6 +4,8 @@ const naverBtn = document.getElementById('naverBtn');
 const googleBtn = document.getElementById('googleBtn');
 const emailLogin = document.getElementById('emailLogin');
 const emailSignup = document.getElementById('emailSignup');
+const mainLoginBtn = document.getElementById('mainLoginBtn');
+const mainSignupBtn = document.getElementById('mainSignupBtn');
 
 // 모든 데이터 초기화 함수
 function clearAllData() {
@@ -214,6 +216,46 @@ emailSignup.addEventListener('click', function(e) {
     // join_member 페이지로 이동
     window.location.href = '../join_member/index.html';
 });
+
+// 메인 로그인 버튼 클릭 이벤트
+if (mainLoginBtn) {
+    mainLoginBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        console.log('메인 로그인 버튼 클릭');
+        
+        // 로컬스토리지에 사용자 정보가 있는지 확인
+        const userId = localStorage.getItem('userId');
+        const userData = localStorage.getItem('userData');
+        
+        if (userId && userData) {
+            try {
+                const parsedUserData = JSON.parse(userData);
+                console.log('✅ 기존 사용자 정보 발견, 자동 로그인:', parsedUserData);
+                // 바로 메인 페이지로 이동
+                window.location.href = '../website/index.html';
+            } catch (error) {
+                console.error('사용자 정보 파싱 실패:', error);
+                // 파싱 실패 시 모달 표시
+                showLoginModal();
+            }
+        } else {
+            // 로컬스토리지에 정보가 없으면 로그인 모달 표시
+            console.log('로컬스토리지에 사용자 정보 없음, 로그인 모달 표시');
+            showLoginModal();
+        }
+    });
+}
+
+// 메인 회원가입 버튼 클릭 이벤트
+if (mainSignupBtn) {
+    mainSignupBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('메인 회원가입 버튼 클릭');
+        clearAllData();
+        // join_member 페이지로 이동
+        window.location.href = '../join_member/index.html';
+    });
+}
 
 // 메시지 표시 함수 (임시)
 function showMessage(message) {

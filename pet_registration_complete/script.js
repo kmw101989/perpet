@@ -676,12 +676,30 @@ if (addPetCard) {
 
 // 퍼펫트 시작하기 버튼
 if (startBtn) {
+  let isSubmitting = false; // 제출 중 플래그 (중복 클릭 방지)
+  
   startBtn.addEventListener("click", async () => {
+    // 중복 클릭 방지
+    if (isSubmitting) {
+      console.log("이미 처리 중입니다. 중복 클릭 무시.");
+      return;
+    }
+    
     console.log("퍼펫트 시작하기 클릭");
+    
+    // 제출 시작
+    isSubmitting = true;
+    startBtn.disabled = true;
+    startBtn.style.opacity = "0.6";
+    startBtn.style.cursor = "not-allowed";
 
     try {
       const userId = localStorage.getItem("userId");
       if (!userId) {
+        isSubmitting = false;
+        startBtn.disabled = false;
+        startBtn.style.opacity = "1";
+        startBtn.style.cursor = "pointer";
         window.location.href = "../login/index.html";
         return;
       }

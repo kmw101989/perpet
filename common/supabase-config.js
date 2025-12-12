@@ -206,6 +206,11 @@ const SupabaseService = {
     return data || [];
   },
 
+  // 사용자 반려동물 목록 가져오기 (별칭)
+  async getPetsByUserId(userId) {
+    return this.getPets(userId);
+  },
+
   // 반려동물 ID로 단일 반려동물 가져오기
   async getPetById(petId) {
     const client = await getSupabaseClient();

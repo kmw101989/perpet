@@ -89,10 +89,46 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
+  // 생년월일로부터 나이 계산 함수 (YYYYMMDD 형식)
+  function calculateAge(birthDateStr) {
+    if (!birthDateStr || birthDateStr.length !== 8) {
+      return null;
+    }
+    
+    try {
+      const year = parseInt(birthDateStr.slice(0, 4), 10);
+      const month = parseInt(birthDateStr.slice(4, 6), 10) - 1; // 월은 0부터 시작
+      const day = parseInt(birthDateStr.slice(6, 8), 10);
+      
+      if (isNaN(year) || isNaN(month) || isNaN(day)) {
+        return null;
+      }
+      
+      const birthDate = new Date(year, month, day);
+      const today = new Date();
+      
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      // 생일이 아직 지나지 않았으면 나이에서 1 빼기
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      return age >= 0 ? age : null;
+    } catch (e) {
+      console.error('나이 계산 실패:', e);
+      return null;
+    }
+  }
+
   // 선택된 반려동물 로드 및 표시
   async function loadSelectedPet() {
     const userId = localStorage.getItem('userId');
-    if (!userId) return;
+    if (!userId) {
+      console.log('userId가 없습니다.');
+      return;
+    }
 
     // 1) 로컬스토리지에서 우선 시도
     let selectedPet = null;
@@ -100,6 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (storedPet) {
       try {
         selectedPet = JSON.parse(storedPet);
+        console.log('로컬스토리지에서 반려동물 정보 로드:', selectedPet);
       } catch (e) {
         console.error('저장된 반려동물 파싱 실패:', e);
       }
@@ -108,40 +145,75 @@ document.addEventListener('DOMContentLoaded', function() {
     // 2) 없으면 Supabase에서 조회 후 가장 작은 pet_id 선택
     if (!selectedPet && typeof SupabaseService !== 'undefined' && SupabaseService.getPetsByUserId) {
       try {
+        console.log('Supabase에서 반려동물 조회 시작, userId:', userId);
         const pets = await SupabaseService.getPetsByUserId(userId);
+        console.log('조회된 반려동물 목록:', pets);
+        
         if (pets && pets.length > 0) {
-          const sorted = [...pets].sort((a, b) => Number(a.pet_id) - Number(b.pet_id));
+          // pet_id를 숫자로 변환하여 정렬
+          const sorted = [...pets].sort((a, b) => {
+            const aId = parseInt(a.pet_id, 10);
+            const bId = parseInt(b.pet_id, 10);
+            return (isNaN(aId) ? 0 : aId) - (isNaN(bId) ? 0 : bId);
+          });
           selectedPet = sorted[0];
+          console.log('선택된 반려동물 (가장 작은 pet_id):', selectedPet);
+          
           localStorage.setItem('selectedPetId', selectedPet.pet_id);
           localStorage.setItem('selectedPetData', JSON.stringify(selectedPet));
+        } else {
+          console.log('반려동물이 등록되지 않았습니다.');
         }
       } catch (err) {
         console.error('Supabase 반려동물 조회 실패:', err);
       }
     }
 
-    if (!selectedPet) return;
+    if (!selectedPet) {
+      console.log('표시할 반려동물 정보가 없습니다.');
+      return;
+    }
 
     // DOM 업데이트
     const petNameEl = document.querySelector('.pet-name');
     const petDetailsEl = document.querySelector('.pet-details');
 
     if (petNameEl) {
-      petNameEl.textContent = selectedPet.pet_name || '내새꾸';
+      const petName = selectedPet.pet_name || '내새꾸';
+      petNameEl.textContent = petName;
+      console.log('반려동물 이름 표시:', petName);
     }
 
     if (petDetailsEl) {
+      // 나이 계산
       const birth = selectedPet.pet_birth;
       let ageText = '';
-      if (birth && birth.length === 8) {
-        const year = parseInt(birth.slice(0, 4), 10);
-        const currentYear = new Date().getFullYear();
-        const age = currentYear - year;
-        if (!isNaN(age) && age >= 0) ageText = `${age}살 / `;
+      if (birth) {
+        const age = calculateAge(birth);
+        if (age !== null) {
+          ageText = `${age}살`;
+        }
       }
-      const species = selectedPet.pet_species || '';
-      const detailed = selectedPet.detailed_species ? ` ${selectedPet.detailed_species}` : '';
-      petDetailsEl.textContent = `${ageText}${species}${detailed}`.trim().replace(/^\/\s*/, '');
+      
+      // 몸무게 정보
+      let weightText = '';
+      if (selectedPet.weight) {
+        const weight = selectedPet.weight.toString().trim();
+        // 이미 "kg"이 포함되어 있으면 그대로 사용, 없으면 추가
+        weightText = weight.includes('kg') ? weight : `${weight}kg`;
+      }
+      
+      // 나이와 몸무게 조합
+      const details = [];
+      if (ageText) details.push(ageText);
+      if (weightText) details.push(weightText);
+      
+      petDetailsEl.textContent = details.length > 0 ? details.join(' / ') : '정보 없음';
+      console.log('반려동물 상세 정보 표시:', {
+        나이: ageText,
+        몸무게: weightText,
+        생년월일: birth
+      });
     }
   }
 
@@ -156,5 +228,72 @@ document.addEventListener('DOMContentLoaded', function() {
       window.location.href = '../mypage/mypage.html';
     });
   }
+
+  // 배너 광고 모달 표시
+  showBannerModal();
 });
+
+// 배너 광고 모달 표시 함수
+function showBannerModal() {
+  // 로컬스토리지에서 배너 닫기 상태 확인
+  const bannerClosed = localStorage.getItem('bannerClosed');
+  if (bannerClosed === 'true') {
+    return; // 이미 닫혔으면 표시하지 않음
+  }
+
+  const bannerModal = document.getElementById('bannerModal');
+  const bannerCloseBtn = document.getElementById('bannerCloseBtn');
+  const bannerImage = document.getElementById('bannerImage');
+
+  if (!bannerModal) return;
+
+  // 배너 모달 표시
+  bannerModal.classList.add('show');
+
+  // 닫기 버튼 클릭 이벤트
+  if (bannerCloseBtn) {
+    bannerCloseBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeBannerModal();
+    });
+  }
+
+  // 이미지 클릭 시 닫기 (이미지에 X가 포함되어 있을 수 있으므로)
+  if (bannerImage) {
+    bannerImage.addEventListener('click', function(e) {
+      // 이미지의 오른쪽 상단 영역 클릭 시 닫기 (X 버튼 영역)
+      const rect = this.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+      const imageWidth = rect.width;
+      const imageHeight = rect.height;
+      
+      // 오른쪽 상단 15% 영역 클릭 시 닫기 (X 버튼이 보통 그 위치에 있음)
+      if (clickX > imageWidth * 0.85 && clickY < imageHeight * 0.15) {
+        closeBannerModal();
+      }
+    });
+  }
+
+  // 배경 클릭 시 닫기
+  const overlay = bannerModal.querySelector('.banner-modal-overlay');
+  if (overlay) {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) {
+        closeBannerModal();
+      }
+    });
+  }
+}
+
+// 배너 모달 닫기 함수
+function closeBannerModal() {
+  const bannerModal = document.getElementById('bannerModal');
+  if (bannerModal) {
+    bannerModal.classList.remove('show');
+    // 로컬스토리지에 닫기 상태 저장 (이번 세션 동안만)
+    localStorage.setItem('bannerClosed', 'true');
+  }
+}
 
