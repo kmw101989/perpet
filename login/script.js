@@ -320,7 +320,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Supabase 스크립트 로드
     const supabaseScript = document.createElement('script');
-    supabaseScript.src = '../common/supabase-config.js';
+    supabaseScript.src = '/common/supabase-config.js';
     document.head.appendChild(supabaseScript);
     
     // 기존 사용자 ID 확인

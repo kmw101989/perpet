@@ -1,11 +1,11 @@
 /* Bazzi 폰트 */
 @font-face {
   font-family: "Bazzi";
-  src: url("../Bazzi.ttf") format("truetype"),
-    url("fonts/Bazzi-Regular.woff2") format("woff2"),
-    url("fonts/Bazzi-Regular.woff") format("woff"),
-    url("fonts/Bazzi.woff2") format("woff2"),
-    url("fonts/Bazzi.woff") format("woff"), local("Bazzi"),
+  src: url("/Bazzi.ttf") format("truetype"),
+    url("/fonts/Bazzi-Regular.woff2") format("woff2"),
+    url("/fonts/Bazzi-Regular.woff") format("woff"),
+    url("/fonts/Bazzi.woff2") format("woff2"),
+    url("/fonts/Bazzi.woff") format("woff"), local("Bazzi"),
     local("Bazzi-Regular");
   font-weight: 400;
   font-style: normal;
@@ -15,7 +15,7 @@
 /* JejuGothic 폰트 */
 @font-face {
   font-family: "JejuGothic";
-  src: url("../JejuGothic.ttf") format("truetype");
+  src: url("/JejuGothic.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -81,7 +81,7 @@ body:focus-visible {
 
 .login-screen {
   background-color: rgba(249, 249, 249, 0.8);
-  background-image: url("../svg/login_bg.svg");
+  background-image: url("/svg/login_bg.svg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
