@@ -170,23 +170,66 @@ const SupabaseService = {
       }
 
       // 3. 해당 category_id와 product_type에 맞는 제품 가져오기
-      // 리뷰수와 별점으로 정렬 (리뷰수가 많고 별점이 높은 순)
+      // 리뷰수, 별점, 할인율을 종합하여 평가하여 상위 3개 반환
       console.log('제품 조회 시작, category_id:', categoryId, 'product_type:', productType);
       const { data: products, error: productsError } = await client
         .from('products')
         .select('product_id, brand, product_name, current_price, original_price, discount_percent, rating, review_count, product_img, category, product_type')
         .eq('category', categoryId)
-        .eq('product_type', productType)
-        .order('review_count', { ascending: false, nullsLast: true })
-        .order('rating', { ascending: false, nullsLast: true })
-        .limit(limit);
+        .eq('product_type', productType);
 
       if (productsError) {
         console.error('제품 추천 실패:', productsError);
         return [];
       }
 
-      return products || [];
+      if (!products || products.length === 0) {
+        console.log('해당 조건의 제품이 없습니다.');
+        return [];
+      }
+
+      // 제품 평가 및 정렬 (리뷰수, 평점, 할인율 종합 평가)
+      const scoredProducts = products.map(product => {
+        // 리뷰수 점수 (0-100점, 최대 리뷰수를 기준으로 정규화)
+        const reviewCount = product.review_count ? parseFloat(product.review_count) : 0;
+        const maxReviewCount = Math.max(...products.map(p => parseFloat(p.review_count || 0)));
+        const reviewScore = maxReviewCount > 0 ? (reviewCount / maxReviewCount) * 100 : 0;
+
+        // 평점 점수 (0-100점, 5점 만점 기준)
+        const rating = product.rating ? parseFloat(product.rating) : 0;
+        const ratingScore = (rating / 5) * 100;
+
+        // 할인율 점수 (0-100점, 할인율이 높을수록 높은 점수)
+        const discountPercent = product.discount_percent ? parseFloat(product.discount_percent) : 0;
+        const discountScore = Math.min(discountPercent, 100); // 최대 100%까지
+
+        // 종합 점수 (리뷰수 40%, 평점 40%, 할인율 20%)
+        const totalScore = (reviewScore * 0.4) + (ratingScore * 0.4) + (discountScore * 0.2);
+
+        return {
+          ...product,
+          _score: totalScore,
+          _reviewScore: reviewScore,
+          _ratingScore: ratingScore,
+          _discountScore: discountScore
+        };
+      });
+
+      // 종합 점수 순으로 정렬하여 상위 limit개 반환
+      const sortedProducts = scoredProducts
+        .sort((a, b) => b._score - a._score)
+        .slice(0, limit)
+        .map(product => {
+          // 내부 점수 필드 제거
+          delete product._score;
+          delete product._reviewScore;
+          delete product._ratingScore;
+          delete product._discountScore;
+          return product;
+        });
+
+      console.log('추천 제품 정렬 완료 (상위', limit, '개):', sortedProducts);
+      return sortedProducts;
     } catch (error) {
       console.error('추천 알고리즘 실행 중 오류:', error);
       return [];

@@ -22,7 +22,8 @@ const productTypeMap = {
 
 // 현재 선택된 카테고리와 제품 타입
 let currentCategoryId = 1; // 기본값: 종합관리
-let currentProductType = '사료'; // 기본값: 사료
+let currentProductType = '사료'; // 기본값: 사료 (추천 섹션용)
+let currentCategoryProductType = '사료'; // 기본값: 사료 (카테고리 섹션용)
 
 // 제품 카드 생성 함수 (작은 카드)
 function createProductCardSmall(product) {
@@ -114,7 +115,7 @@ async function loadProducts(sectionType = 'recommended') {
         return;
       }
 
-      // 추천 알고리즘 사용
+      // 추천 알고리즘 사용 (currentProductType 사용)
       const recommendedProducts = await SupabaseService.getRecommendedProducts(selectedPetId, currentProductType, 3);
       console.log('추천 제품 로드 완료:', recommendedProducts);
       
@@ -132,8 +133,9 @@ async function loadProducts(sectionType = 'recommended') {
         }
       }
     } else if (sectionType === 'category') {
-      // "종합관리를 위한 냠냠" 섹션 - 현재 카테고리 기반, 순서대로 출력 (정렬 없음)
-      const products = await SupabaseService.getProducts(currentCategoryId, currentProductType, 20, null);
+      // "종합관리를 위한 냠냠" 섹션 - 카테고리 + 제품 타입 필터만 적용, 순서대로 출력 (추천 알고리즘 없음)
+      console.log(`카테고리 필터 적용: category_id=${currentCategoryId}, product_type=${currentCategoryProductType}`);
+      const products = await SupabaseService.getProducts(currentCategoryId, currentCategoryProductType, 20, null);
       console.log(`제품 로드 완료 (${sectionType}):`, products);
       
       const container = document.querySelector('.recommendation-section:last-of-type .product-grid-large');
@@ -183,7 +185,8 @@ document.addEventListener('DOMContentLoaded', async function() {
   await loadProducts('recommended');
   await loadProducts('category');
   
-  // 카테고리 탭 클릭 이벤트
+  // 카테고리 탭 클릭 이벤트 (상단 필터)
+  // 이 필터는 "종합관리를 위한 냠냠" 섹션에만 영향을 줌
   const categoryTabs = document.querySelectorAll('.category-tab');
   
   categoryTabs.forEach(tab => {
@@ -197,7 +200,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       const categoryName = this.textContent.trim();
       currentCategoryId = categoryMap[categoryName] || 1;
       
-      // 제품 다시 로드
+      // "종합관리를 위한 냠냠" 섹션만 업데이트 (추천 섹션은 영향 없음)
       await loadProducts('category');
     });
   });
@@ -216,11 +219,20 @@ document.addEventListener('DOMContentLoaded', async function() {
       
       // 제품 타입 업데이트
       const productTypeText = this.textContent.trim();
-      currentProductType = productTypeMap[productTypeText] || '사료';
+      const productType = productTypeMap[productTypeText] || '사료';
       
-      // 모든 섹션의 제품 다시 로드
-      await loadProducts('recommended');
-      await loadProducts('category');
+      // 어떤 섹션인지 확인
+      const isRecommendedSection = section === document.querySelector('.recommendation-section:first-of-type');
+      
+      if (isRecommendedSection) {
+        // "내새꾸를 위한 냠냠 추천" 섹션 - 추천 알고리즘 사용
+        currentProductType = productType;
+        await loadProducts('recommended');
+      } else {
+        // "종합관리를 위한 냠냠" 섹션 - 필터만 적용 (추천 알고리즘 없음)
+        currentCategoryProductType = productType;
+        await loadProducts('category');
+      }
     });
   });
   
