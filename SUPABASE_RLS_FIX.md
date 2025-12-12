@@ -79,3 +79,4 @@ SELECT * FROM pg_policies WHERE tablename = 'users';
 - `users` 테이블 외에 `pets` 테이블에도 동일한 정책이 필요할 수 있습니다.
 - 프로덕션 환경에서는 더 엄격한 정책을 설정하는 것이 좋습니다 (예: 인증된 사용자만 INSERT 허용).
 
+
