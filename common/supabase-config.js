@@ -616,13 +616,17 @@ const SupabaseService = {
     return String(maxId + 1);
   },
 
+  // 고유 pet_id 생성 (int8용: 타임스탬프 기반 + 랜덤)
+  generateNumericPetId() {
+    const base = Date.now() * 1000; // 마이크로초 비슷하게 확장
+    const rand = Math.floor(Math.random() * 1000); // 0~999
+    return base + rand; // int8 범위 내
+  },
+
   // 반려동물 등록
   async createPet(petData) {
     const client = await getSupabaseClient();
-    
-    // 다음 pet_id 가져오기
-    const petId = await this.getNextPetId();
-    
+
     // 생일을 문자열로 변환 (YYYYMMDD 형식)
     let petBirth = null;
     if (petData.birthday && petData.birthday.year && petData.birthday.month && petData.birthday.day) {
@@ -673,33 +677,56 @@ const SupabaseService = {
       ? petData.cautionDetail.trim() 
       : null;
 
-    const insertData = {
-      pet_id: petId,
-      user_id: petData.user_id || petData.userId || '',
-      pet_name: petData.name || petData.pet_name || '',
-      pet_species: petData.type || petData.pet_species || '',
-      detailed_species: detailedSpecies, // 견종/묘종 상세명
-      pet_birth: petBirth ? parseInt(petBirth, 10) : null, // bigint 타입에 맞게 숫자로 변환
-      pet_gender: petGender,
-      weight: petWeight,
-      disease_id: diseaseId,
-      pet_warning: petWarning, // 주의사항 저장
-      vaccination: null, // 추후 추가 가능
-      vaccination_date: null // 추후 추가 가능
-    };
+    // pet_id: DB에 identity가 없는 경우를 대비해 직접 생성 + 중복 재시도
+    let attempts = 0;
+    let lastError = null;
 
-    const { data, error } = await client
-      .from('pets')
-      .insert([insertData])
-      .select()
-      .single();
+    while (attempts < 5) {
+      const petId = petData.pet_id || petData.petId || this.generateNumericPetId();
 
-    if (error) {
+      const insertData = {
+        pet_id: petId,
+        user_id: petData.user_id || petData.userId || '',
+        pet_name: petData.name || petData.pet_name || '',
+        pet_species: petData.type || petData.pet_species || '',
+        detailed_species: detailedSpecies, // 견종/묘종 상세명
+        pet_birth: petBirth ? parseInt(petBirth, 10) : null, // bigint 타입에 맞게 숫자로 변환
+        pet_gender: petGender,
+        weight: petWeight,
+        disease_id: diseaseId,
+        pet_warning: petWarning, // 주의사항 저장
+        vaccination: null, // 추후 추가 가능
+        vaccination_date: null // 추후 추가 가능
+      };
+
+      const { data, error } = await client
+        .from('pets')
+        .insert([insertData])
+        .select()
+        .single();
+
+      if (!error) {
+        return data;
+      }
+
+      lastError = error;
+
+      const isDuplicate =
+        error.code === '23505' ||
+        (error.message && error.message.includes('duplicate key value'));
+
+      if (isDuplicate) {
+        attempts += 1;
+        // 중복이면 pet_id 재생성 후 재시도
+        continue;
+      }
+
       console.error('Error creating pet:', error);
-      return null;
+      throw error;
     }
 
-    return data;
+    console.error('Error creating pet after retries:', lastError);
+    throw lastError || new Error('Unknown error creating pet');
   },
 
   // 제품 ID로 단일 제품 가져오기

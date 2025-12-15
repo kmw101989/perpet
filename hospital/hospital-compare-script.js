@@ -622,12 +622,22 @@ function bindHospitalCardEvents() {
       const hospitalId = hospitalCard.getAttribute('data-hospital-id');
       console.log('병원 카드 클릭:', hospitalId);
       
-      // 지도 중심을 해당 마커로 이동
+      // 지도 중심을 해당 마커로 이동 (하단 시트에 가리지 않도록 오프셋)
       if (hospitalId && map) {
         const markerData = markers.find(m => m.hospital.hospital_id == hospitalId);
         if (markerData && markerData.marker) {
           map.setCenter(markerData.marker.getPosition());
           map.setZoom(16);
+          
+          // 하단 시트 높이만큼 위로 보정 (기본 50% 시트 높이 고려)
+          const bottomSheet = document.getElementById('bottomSheet');
+          const sheetHeight = bottomSheet ? bottomSheet.offsetHeight : window.innerHeight * 0.5;
+          const offsetY = -sheetHeight * 0.5; // 마커를 화면 상단 쪽으로 올림
+          
+          // setCenter 적용 후 살짝 지연하여 panBy 수행
+          setTimeout(() => {
+            map.panBy(new naver.maps.Point(0, offsetY));
+          }, 50);
         }
       }
     }

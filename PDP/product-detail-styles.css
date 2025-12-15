@@ -106,7 +106,8 @@ html {
 .product-info-section {
   background-color: #ffffff;
   padding: 32px 16px 24px;
-  margin-bottom: 0;
+  margin: 0 16px 12px;
+  border-radius: 10px;
 }
 
 .brand-header {

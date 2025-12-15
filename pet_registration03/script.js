@@ -192,7 +192,8 @@ window.addEventListener("DOMContentLoaded", () => {
               }
             } catch (error) {
               console.error("반려동물 등록 중 오류:", error);
-              alert('반려동물 등록 중 오류가 발생했습니다: ' + error.message);
+              const msg = error?.message || error?.hint || '다시 시도해주세요.';
+              alert('반려동물 등록 중 오류가 발생했습니다: ' + msg);
               isSubmitting = false;
               nextBtn.disabled = false;
               nextBtn.style.opacity = "1";

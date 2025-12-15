@@ -305,6 +305,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  // 내새꾸 추가 버튼 클릭 이벤트 -> 반려동물 등록 페이지로 이동
+  const addPetBtn = document.querySelector('.add-pet-btn');
+  if (addPetBtn) {
+    addPetBtn.addEventListener('click', function() {
+      window.location.href = '../pet_registration01/index.html';
+    });
+  }
+
   // 배너 광고 모달 표시
   showBannerModal();
   
