@@ -512,18 +512,14 @@ async function loadReservationSchedule() {
       return;
     }
     
-    // reservation_date 파싱 (timestamp 형식: ISO 8601 또는 timestamp)
-    // Supabase에서 반환되는 형식에 따라 처리
+    // reservation_date 파싱 (timestamp with timezone)
+    // Supabase timestampz는 ISO 8601(Z 포함)로 오므로 Asia/Seoul로 변환
     let reservationDate;
-    if (typeof userData.reservation_date === 'string') {
-      // 문자열인 경우 ISO 8601 형식으로 파싱
+    try {
       reservationDate = new Date(userData.reservation_date);
-    } else if (userData.reservation_date instanceof Date) {
-      // 이미 Date 객체인 경우
-      reservationDate = userData.reservation_date;
-    } else {
-      // timestamp 숫자인 경우
-      reservationDate = new Date(userData.reservation_date);
+    } catch (e) {
+      console.error('날짜 파싱 실패:', userData.reservation_date);
+      return;
     }
     
     // 유효한 날짜인지 확인
@@ -532,11 +528,24 @@ async function loadReservationSchedule() {
       return;
     }
     
-    const month = reservationDate.getMonth() + 1;
-    const day = reservationDate.getDate();
-    const dayName = getDayName(reservationDate.getDay());
-    const hours = String(reservationDate.getHours()).padStart(2, '0');
-    const minutes = String(reservationDate.getMinutes()).padStart(2, '0');
+    // KST로 표시
+    const formatterDate = new Intl.DateTimeFormat('ko-KR', {
+      timeZone: 'Asia/Seoul',
+      month: 'numeric',
+      day: 'numeric',
+      weekday: 'short'
+    });
+    const formatterTime = new Intl.DateTimeFormat('ko-KR', {
+      timeZone: 'Asia/Seoul',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    const dateParts = formatterDate.formatToParts(reservationDate);
+    const month = dateParts.find(p => p.type === 'month')?.value;
+    const day = dateParts.find(p => p.type === 'day')?.value;
+    const weekday = dateParts.find(p => p.type === 'weekday')?.value?.replace('요일','') || '';
+    const timeText = formatterTime.format(reservationDate);
     
     // 기존 예약 일정 제거 (이미 있는 경우)
     const existingReservation = scheduleList.querySelector('.schedule-item[data-reservation]');
@@ -552,7 +561,7 @@ async function loadReservationSchedule() {
       <div class="schedule-icon">
         <img src="/svg/checkup.svg" alt="병원" class="schedule-icon-img" />
       </div>
-      <div class="schedule-text">${day}일(${dayName}) 병원 예약 - ${userData.reservation} / ${hours}:${minutes}</div>
+      <div class="schedule-text">${day}일(${weekday}) 병원 예약 - ${userData.reservation} / ${timeText}</div>
     `;
     
     // 일정 리스트의 첫 번째 위치에 추가
