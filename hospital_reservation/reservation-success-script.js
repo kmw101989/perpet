@@ -167,8 +167,10 @@ document.addEventListener('DOMContentLoaded', function() {
       
       const client = await getSupabaseClient();
       
-      // reservation_date 형식: YYYY-MM-DD HH:MM (예: 2026-01-05 17:00)
-      const reservationDateTime = `${dateString} ${time}`;
+      // timestamp 형식으로 변환: YYYY-MM-DDTHH:MM:SS (ISO 8601 형식)
+      // 예: 2026-01-05T17:00:00
+      const [hours, minutes] = time.split(':');
+      const reservationDateTime = `${dateString}T${hours}:${minutes}:00`;
       
       const { data, error } = await client
         .from('users')

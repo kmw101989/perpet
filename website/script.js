@@ -512,8 +512,26 @@ async function loadReservationSchedule() {
       return;
     }
     
-    // reservation_date 파싱 (YYYY-MM-DD HH:MM 형식)
-    const reservationDate = new Date(userData.reservation_date);
+    // reservation_date 파싱 (timestamp 형식: ISO 8601 또는 timestamp)
+    // Supabase에서 반환되는 형식에 따라 처리
+    let reservationDate;
+    if (typeof userData.reservation_date === 'string') {
+      // 문자열인 경우 ISO 8601 형식으로 파싱
+      reservationDate = new Date(userData.reservation_date);
+    } else if (userData.reservation_date instanceof Date) {
+      // 이미 Date 객체인 경우
+      reservationDate = userData.reservation_date;
+    } else {
+      // timestamp 숫자인 경우
+      reservationDate = new Date(userData.reservation_date);
+    }
+    
+    // 유효한 날짜인지 확인
+    if (isNaN(reservationDate.getTime())) {
+      console.error('유효하지 않은 날짜 형식:', userData.reservation_date);
+      return;
+    }
+    
     const month = reservationDate.getMonth() + 1;
     const day = reservationDate.getDate();
     const dayName = getDayName(reservationDate.getDay());
