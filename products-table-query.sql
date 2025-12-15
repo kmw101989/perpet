@@ -17,3 +17,4 @@ ORDER BY ordinal_position;
 -- 제품 테이블의 샘플 데이터 조회 (모든 컬럼)
 SELECT * FROM products LIMIT 5;
 
+
