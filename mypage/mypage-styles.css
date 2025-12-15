@@ -437,10 +437,19 @@ html {
   color: #959595;
 }
 
-.edit-btn {
+.pet-actions {
   position: absolute;
   top: 16px;
   right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+  z-index: 10;
+}
+
+.edit-btn,
+.delete-pet-btn {
   background-color: transparent;
   border: none;
   color: #c5c5c5;
@@ -450,10 +459,10 @@ html {
   cursor: pointer;
   line-height: 9.77px;
   padding: 0;
-  z-index: 10;
 }
 
-.edit-btn:active {
+.edit-btn:active,
+.delete-pet-btn:active {
   opacity: 0.7;
 }
 

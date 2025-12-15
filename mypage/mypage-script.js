@@ -27,6 +27,14 @@ document.addEventListener('DOMContentLoaded', async function() {
       window.location.href = '/pet_registration01/index.html';
     });
   }
+
+  // 반려동물 삭제 버튼
+  const deletePetBtn = document.querySelector('.delete-pet-btn');
+  if (deletePetBtn) {
+    deletePetBtn.addEventListener('click', async function() {
+      await deleteSelectedPet();
+    });
+  }
 });
 
 // 반려동물 선택 UI 표시 함수
@@ -52,7 +60,7 @@ function displayPetSelectionUI(pets, currentSelectedId) {
     <div class="pet-selection-label">반려동물 선택</div>
     <div class="pet-selection-list">
       ${pets.map(pet => `
-        <div class="pet-selection-item ${pet.pet_id === currentSelectedId ? 'selected' : ''}" 
+        <div class="pet-selection-item ${String(pet.pet_id) === String(currentSelectedId) ? 'selected' : ''}" 
              data-pet-id="${pet.pet_id}">
           <div class="pet-selection-image"></div>
           <div class="pet-selection-name">${pet.pet_name || '이름 없음'}</div>
@@ -66,7 +74,7 @@ function displayPetSelectionUI(pets, currentSelectedId) {
   selectionItems.forEach(item => {
     item.addEventListener('click', async function() {
       const petId = this.getAttribute('data-pet-id');
-      const selectedPet = pets.find(p => p.pet_id === petId);
+      const selectedPet = pets.find(p => String(p.pet_id) === String(petId));
       
       if (selectedPet) {
         // 선택 상태 업데이트
@@ -74,7 +82,7 @@ function displayPetSelectionUI(pets, currentSelectedId) {
         this.classList.add('selected');
         
         // 로컬스토리지에 저장
-        localStorage.setItem('selectedPetId', petId);
+        localStorage.setItem('selectedPetId', String(petId));
         localStorage.setItem('selectedPetData', JSON.stringify(selectedPet));
         
         console.log('반려동물 선택 변경:', selectedPet);
@@ -125,6 +133,57 @@ async function loadUserInfo() {
   }
 }
 
+// 반려동물 삭제 처리
+async function deleteSelectedPet() {
+  try {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      alert('로그인이 필요합니다.');
+      window.location.href = '/login/index.html';
+      return;
+    }
+
+    const selectedPetId = localStorage.getItem('selectedPetId');
+    if (!selectedPetId) {
+      alert('삭제할 반려동물을 선택해주세요.');
+      return;
+    }
+
+    if (typeof SupabaseService === 'undefined' || !SupabaseService.deletePet) {
+      console.error('SupabaseService.deletePet가 없습니다.');
+      alert('삭제 기능을 사용할 수 없습니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+
+    if (!confirm('정말로 이 반려동물을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    await SupabaseService.deletePet(selectedPetId, userId);
+
+    // 로컬 스토리지에 저장된 선택 및 리스트 데이터 정리
+    localStorage.removeItem('selectedPetId');
+    localStorage.removeItem('selectedPetData');
+
+    // 로컬 petsData가 있다면 해당 pet_id 제거
+    try {
+      const petsData = JSON.parse(localStorage.getItem('petsData') || '[]');
+      const filtered = petsData.filter(p => String(p.pet_id) !== String(selectedPetId));
+      localStorage.setItem('petsData', JSON.stringify(filtered));
+    } catch (e) {
+      console.warn('로컬 petsData 정리 중 오류:', e);
+    }
+
+    // UI 다시 로드
+    await loadPetInfo();
+    alert('삭제가 완료되었습니다.');
+  } catch (error) {
+    console.error('반려동물 삭제 실패:', error);
+    const msg = error?.message || error?.hint || '삭제 중 오류가 발생했습니다.';
+    alert(msg);
+  }
+}
+
 // 반려동물 정보 로드 함수
 async function loadPetInfo() {
   try {
@@ -164,7 +223,7 @@ async function loadPetInfo() {
     
     if (selectedPetId) {
       // 선택된 pet_id가 있는 경우 해당 반려동물 찾기
-      selectedPet = sorted.find(p => p.pet_id === selectedPetId);
+      selectedPet = sorted.find(p => String(p.pet_id) === String(selectedPetId));
     }
     
     // 선택된 반려동물이 없거나 찾을 수 없으면 가장 작은 pet_id 선택

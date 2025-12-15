@@ -489,6 +489,21 @@ const SupabaseService = {
     return this.getPets(userId);
   },
 
+  // 반려동물 삭제
+  async deletePet(petId, userId = null) {
+    const client = await getSupabaseClient();
+    let query = client.from('pets').delete().eq('pet_id', petId);
+    if (userId) {
+      query = query.eq('user_id', userId);
+    }
+    const { error } = await query;
+    if (error) {
+      console.error('Error deleting pet:', error);
+      throw error;
+    }
+    return true;
+  },
+
   // 반려동물 ID로 단일 반려동물 가져오기
   async getPetById(petId) {
     const client = await getSupabaseClient();
@@ -616,14 +631,7 @@ const SupabaseService = {
     return String(maxId + 1);
   },
 
-  // 고유 pet_id 생성 (int8용: 타임스탬프 기반 + 랜덤)
-  generateNumericPetId() {
-    const base = Date.now() * 1000; // 마이크로초 비슷하게 확장
-    const rand = Math.floor(Math.random() * 1000); // 0~999
-    return base + rand; // int8 범위 내
-  },
-
-  // 반려동물 등록
+  // 반려동물 등록 (pet_id는 DB IDENTITY로 자동 생성)
   async createPet(petData) {
     const client = await getSupabaseClient();
 
@@ -677,56 +685,33 @@ const SupabaseService = {
       ? petData.cautionDetail.trim() 
       : null;
 
-    // pet_id: DB에 identity가 없는 경우를 대비해 직접 생성 + 중복 재시도
-    let attempts = 0;
-    let lastError = null;
+    // pet_id는 DB IDENTITY에 맡김
+    const insertData = {
+      user_id: petData.user_id || petData.userId || '',
+      pet_name: petData.name || petData.pet_name || '',
+      pet_species: petData.type || petData.pet_species || '',
+      detailed_species: detailedSpecies, // 견종/묘종 상세명
+      pet_birth: petBirth ? parseInt(petBirth, 10) : null, // bigint 타입에 맞게 숫자로 변환
+      pet_gender: petGender,
+      weight: petWeight,
+      disease_id: diseaseId,
+      pet_warning: petWarning, // 주의사항 저장
+      vaccination: null, // 추후 추가 가능
+      vaccination_date: null // 추후 추가 가능
+    };
 
-    while (attempts < 5) {
-      const petId = petData.pet_id || petData.petId || this.generateNumericPetId();
+    const { data, error } = await client
+      .from('pets')
+      .insert([insertData])
+      .select()
+      .single();
 
-      const insertData = {
-        pet_id: petId,
-        user_id: petData.user_id || petData.userId || '',
-        pet_name: petData.name || petData.pet_name || '',
-        pet_species: petData.type || petData.pet_species || '',
-        detailed_species: detailedSpecies, // 견종/묘종 상세명
-        pet_birth: petBirth ? parseInt(petBirth, 10) : null, // bigint 타입에 맞게 숫자로 변환
-        pet_gender: petGender,
-        weight: petWeight,
-        disease_id: diseaseId,
-        pet_warning: petWarning, // 주의사항 저장
-        vaccination: null, // 추후 추가 가능
-        vaccination_date: null // 추후 추가 가능
-      };
-
-      const { data, error } = await client
-        .from('pets')
-        .insert([insertData])
-        .select()
-        .single();
-
-      if (!error) {
-        return data;
-      }
-
-      lastError = error;
-
-      const isDuplicate =
-        error.code === '23505' ||
-        (error.message && error.message.includes('duplicate key value'));
-
-      if (isDuplicate) {
-        attempts += 1;
-        // 중복이면 pet_id 재생성 후 재시도
-        continue;
-      }
-
+    if (error) {
       console.error('Error creating pet:', error);
       throw error;
     }
 
-    console.error('Error creating pet after retries:', lastError);
-    throw lastError || new Error('Unknown error creating pet');
+    return data;
   },
 
   // 제품 ID로 단일 제품 가져오기

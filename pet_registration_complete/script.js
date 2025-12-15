@@ -98,13 +98,28 @@ function createPetCard(petData, index) {
 }
 
 // pet-card 삭제 함수
-function deletePetCard(petIndex) {
+async function deletePetCard(petIndex) {
   try {
-    // localStorage에서 petsData 가져오기
+    const userId = localStorage.getItem("userId");
     const petsData = JSON.parse(localStorage.getItem("petsData") || "[]");
-    
-    // 해당 인덱스의 데이터 제거
+
     if (petIndex >= 0 && petIndex < petsData.length) {
+      const targetPet = petsData[petIndex];
+      const petId = targetPet ? targetPet.pet_id : null;
+
+      // Supabase 삭제 (pet_id 존재 시)
+      if (petId && typeof SupabaseService !== 'undefined' && SupabaseService.deletePet) {
+        try {
+          await SupabaseService.deletePet(petId, userId);
+          console.log("DB 반려동물 삭제 완료:", petId);
+        } catch (dbErr) {
+          console.error("DB 반려동물 삭제 실패:", dbErr);
+          alert("반려동물 삭제 중 오류가 발생했습니다. 다시 시도해주세요.");
+          return;
+        }
+      }
+
+      // 로컬 데이터에서도 제거
       petsData.splice(petIndex, 1);
       localStorage.setItem("petsData", JSON.stringify(petsData));
       
@@ -116,11 +131,12 @@ function deletePetCard(petIndex) {
         selectedPetCard = null;
       }
       
-      // 페이지 새로고침하여 카드 목록 재렌더링
-      loadPetData();
+      // 목록 새로고침
+      await loadPetData();
     }
   } catch (error) {
     console.error("반려동물 삭제 실패:", error);
+    alert("반려동물 삭제 중 오류가 발생했습니다. 다시 시도해주세요.");
   }
 }
 
