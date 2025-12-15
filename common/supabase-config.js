@@ -345,9 +345,19 @@ const SupabaseService = {
 
     const { data, error } = await query;
     if (error) {
-      console.error('Error fetching hospitals:', error);
+      console.error('❌ Error fetching hospitals:', error);
+      console.error('에러 코드:', error.code);
+      console.error('에러 메시지:', error.message);
+      console.error('에러 상세:', error);
+      
+      // RLS 정책 오류인 경우 안내
+      if (error.code === '42501' || error.message?.includes('row-level security')) {
+        console.error('⚠️ RLS 정책 위반 오류입니다. Supabase Dashboard에서 hospitals 테이블의 SELECT 정책을 설정해주세요.');
+      }
       return [];
     }
+    
+    console.log('✅ 병원 데이터 조회 성공:', data?.length || 0, '개');
     return data || [];
   },
 

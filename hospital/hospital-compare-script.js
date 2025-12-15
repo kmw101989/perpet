@@ -1,26 +1,130 @@
 // 네이버 지도 초기화 및 병원 마커 표시
 let map = null;
 let markers = [];
+let hospitals = []; // Supabase에서 가져온 병원 데이터
+let allHospitals = []; // 전체 병원 데이터 (필터링 전)
+let currentCategoryId = null; // 현재 선택된 카테고리 ID (기본값: null = 종합관리)
 
-// 병원 데이터 예시 (실제 데이터는 서버에서 가져올 예정)
-const hospitals = [
-  {
-    name: '스마트동물병원',
-    address: '서울 강남구 도산대로 213 1층',
-    lat: 37.5172,
-    lng: 127.0473
-  },
-  {
-    name: '강남동물병원',
-    address: '서울 강남구 테헤란로 123',
-    lat: 37.5002,
-    lng: 127.0276
+// 카테고리 이름을 ID로 매핑
+const categoryMap = {
+  '종합관리': null, // null은 전체 조회
+  '심장': 1,
+  '간': 2,
+  '위/장': 3,
+  '피부': 4,
+  '치아': 5,
+  '뼈/관절': 6,
+  '눈': 7,
+  '면역력': 8,
+  '행동': 9,
+  '신장/방광': 10
+};
+
+// 카테고리 ID를 이름으로 역매핑
+const categoryIdToName = {
+  null: '종합관리',
+  1: '심장',
+  2: '간',
+  3: '위/장',
+  4: '피부',
+  5: '치아',
+  6: '뼈/관절',
+  7: '눈',
+  8: '면역력',
+  9: '행동',
+  10: '신장/방광'
+};
+
+// Supabase에서 병원 데이터 가져오기
+async function loadHospitalsFromSupabase() {
+  try {
+    console.log('Supabase에서 병원 데이터 로드 시작...');
+    
+    if (typeof SupabaseService === 'undefined') {
+      console.error('SupabaseService가 로드되지 않았습니다.');
+      return [];
+    }
+    
+    // Supabase 클라이언트 직접 사용하여 디버깅
+    try {
+      const client = await getSupabaseClient();
+      console.log('Supabase 클라이언트 확인:', client ? 'OK' : 'FAIL');
+      
+      // 직접 쿼리 실행하여 에러 확인
+      const { data: testData, error: testError } = await client
+        .from('hospitals')
+        .select('*')
+        .limit(5);
+      
+      if (testError) {
+        console.error('Supabase 쿼리 에러:', testError);
+        console.error('에러 코드:', testError.code);
+        console.error('에러 메시지:', testError.message);
+        console.error('에러 상세:', testError);
+        
+        if (testError.code === '42501' || testError.message?.includes('row-level security')) {
+          console.error('⚠️ RLS 정책 위반 오류입니다.');
+          console.error('Supabase Dashboard에서 hospitals 테이블의 SELECT 정책을 설정해주세요.');
+        }
+        return [];
+      }
+      
+      console.log('직접 쿼리 테스트 결과:', testData);
+    } catch (directError) {
+      console.error('직접 쿼리 실행 중 오류:', directError);
+    }
+    
+    // SupabaseService를 통한 데이터 가져오기
+    const hospitalData = await SupabaseService.getHospitals(null, null, 100);
+    console.log('가져온 병원 데이터:', hospitalData);
+    console.log('병원 데이터 개수:', hospitalData?.length || 0);
+    
+    if (!hospitalData || hospitalData.length === 0) {
+      console.warn('⚠️ 병원 데이터가 없습니다.');
+      console.warn('가능한 원인:');
+      console.warn('1. Supabase 테이블에 데이터가 없음');
+      console.warn('2. RLS 정책으로 인해 데이터 조회 불가');
+      console.warn('3. 테이블 이름 또는 컬럼 이름 불일치');
+      return [];
+    }
+    
+    // 데이터 변환 및 좌표 처리
+    const processedHospitals = hospitalData.map(hospital => {
+      // lat, lng가 있으면 사용, 없으면 null
+      const lat = hospital.lat || hospital.latitude || null;
+      const lng = hospital.lng || hospital.longitude || null;
+      
+      return {
+        hospital_id: hospital.hospital_id,
+        name: hospital.hospital_name,
+        address: hospital.address,
+        city: hospital.city,
+        phone: hospital.hospital_phone,
+        review_count: hospital.review_count,
+        rating: hospital.rating,
+        category_id: hospital.category_id,
+        img: hospital.hospital_img,
+        lat: lat,
+        lng: lng
+      };
+    });
+    
+    console.log('처리된 병원 데이터:', processedHospitals);
+    return processedHospitals;
+  } catch (error) {
+    console.error('병원 데이터 로드 실패:', error);
+    return [];
   }
-];
+}
 
 // 네이버 지도 API 콜백 함수 (전역 함수로 선언)
-function initNaverMap() {
-  console.log('initNaverMap 호출됨');
+async function initNaverMap() {
+  console.log('✅ initNaverMap 호출됨 - 네이버 지도 API 인증 성공');
+  window.naverMapCallbackCalled = true; // 콜백 호출됨을 표시
+  
+  // Supabase에서 병원 데이터 가져오기
+  hospitals = await loadHospitalsFromSupabase();
+  
   // 약간의 지연 후 지도 초기화 (DOM과 API가 완전히 로드되도록)
   setTimeout(function() {
     try {
@@ -31,6 +135,13 @@ function initNaverMap() {
         showMapPlaceholder();
         return;
       }
+      
+      // naver.maps.Map이 함수인지 확인
+      if (typeof naver.maps.Map !== 'function') {
+        console.error('naver.maps.Map이 함수가 아닙니다.');
+        showMapPlaceholder();
+        return;
+      }
 
       const mapContainer = document.getElementById('mapContainer');
       if (!mapContainer) {
@@ -38,9 +149,22 @@ function initNaverMap() {
         return;
       }
 
-      // 지도 초기화 (강남 지역 중심)
+      // 지도 중심점 계산 (병원 데이터가 있으면 첫 번째 병원 위치, 없으면 강남)
+      let centerLat = 37.5172;
+      let centerLng = 127.0473;
+      
+      if (hospitals.length > 0) {
+        // 좌표가 있는 병원 찾기
+        const hospitalWithCoords = hospitals.find(h => h.lat && h.lng);
+        if (hospitalWithCoords) {
+          centerLat = hospitalWithCoords.lat;
+          centerLng = hospitalWithCoords.lng;
+        }
+      }
+
+      // 지도 초기화
       const mapOptions = {
-        center: new naver.maps.LatLng(37.5172, 127.0473), // 강남구 중심 좌표
+        center: new naver.maps.LatLng(centerLat, centerLng),
         zoom: 14,
         zoomControl: true,
         zoomControlOptions: {
@@ -51,32 +175,201 @@ function initNaverMap() {
       map = new naver.maps.Map('mapContainer', mapOptions);
       
       // 병원 마커 추가
+      let markerCount = 0;
       hospitals.forEach(hospital => {
         try {
-          const marker = new naver.maps.Marker({
-            position: new naver.maps.LatLng(hospital.lat, hospital.lng),
-            map: map,
-            title: hospital.name
-          });
-          
-          // 마커 클릭 이벤트
-          naver.maps.Event.addListener(marker, 'click', function() {
-            // 해당 병원 카드로 스크롤하는 기능 추가 가능
-            console.log('병원 선택:', hospital.name);
-          });
-          
-          markers.push(marker);
+          // 좌표가 있는 병원만 마커 표시
+          if (hospital.lat && hospital.lng) {
+            const marker = new naver.maps.Marker({
+              position: new naver.maps.LatLng(hospital.lat, hospital.lng),
+              map: map,
+              title: hospital.name
+            });
+            
+            // 마커 클릭 이벤트
+            naver.maps.Event.addListener(marker, 'click', function() {
+              console.log('병원 선택:', hospital.name);
+              // 해당 병원 카드로 스크롤하는 기능 추가 가능
+              scrollToHospitalCard(hospital.hospital_id);
+            });
+            
+            markers.push({
+              marker: marker,
+              hospital: hospital
+            });
+            markerCount++;
+          } else {
+            console.warn('좌표가 없는 병원:', hospital.name, hospital.address);
+          }
         } catch (markerError) {
           console.error('마커 생성 오류:', markerError, hospital);
         }
       });
       
-      console.log('네이버 지도 초기화 완료');
+      console.log(`네이버 지도 초기화 완료 - 총 ${hospitals.length}개 병원 중 ${markerCount}개 마커 표시`);
+      
+      // 전체 병원 데이터 저장
+      allHospitals = [...hospitals];
+      
+      // 병원 카드 동적 생성
+      renderHospitalCards();
     } catch (error) {
       console.error('지도 초기화 오류:', error);
       showMapPlaceholder();
     }
   }, 100);
+}
+
+// 지도 마커 업데이트
+function updateMapMarkers() {
+  if (!map) return;
+  
+  // 기존 마커 제거
+  markers.forEach(m => m.marker.setMap(null));
+  markers = [];
+  
+  // 필터링된 병원의 마커만 표시
+  let markerCount = 0;
+  hospitals.forEach(hospital => {
+    try {
+      if (hospital.lat && hospital.lng) {
+        const marker = new naver.maps.Marker({
+          position: new naver.maps.LatLng(hospital.lat, hospital.lng),
+          map: map,
+          title: hospital.name
+        });
+        
+        naver.maps.Event.addListener(marker, 'click', function() {
+          console.log('병원 선택:', hospital.name);
+          scrollToHospitalCard(hospital.hospital_id);
+        });
+        
+        markers.push({
+          marker: marker,
+          hospital: hospital
+        });
+        markerCount++;
+      }
+    } catch (markerError) {
+      console.error('마커 생성 오류:', markerError, hospital);
+    }
+  });
+  
+  console.log(`마커 업데이트 완료 - ${markerCount}개 마커 표시`);
+}
+
+// 병원 카드로 스크롤
+function scrollToHospitalCard(hospitalId) {
+  const card = document.querySelector(`[data-hospital-id="${hospitalId}"]`);
+  if (card) {
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // 하이라이트 효과
+    card.style.transition = 'box-shadow 0.3s';
+    card.style.boxShadow = '0 4px 12px rgba(2, 62, 140, 0.3)';
+    setTimeout(() => {
+      card.style.boxShadow = '';
+    }, 2000);
+  }
+}
+
+// 카테고리별 병원 필터링 및 정렬
+function filterAndSortHospitals(categoryId) {
+  let filtered = [...allHospitals];
+  
+  // 카테고리 필터링
+  if (categoryId !== null) {
+    // 해당 카테고리에 특화된 병원 찾기
+    const specializedHospitals = filtered.filter(h => h.category_id === categoryId);
+    // 나머지 병원들
+    const otherHospitals = filtered.filter(h => h.category_id !== categoryId);
+    
+    // 특화 병원을 평점 순으로 정렬
+    specializedHospitals.sort((a, b) => {
+      const ratingA = a.rating || 0;
+      const ratingB = b.rating || 0;
+      return ratingB - ratingA;
+    });
+    
+    // 나머지 병원도 평점 순으로 정렬
+    otherHospitals.sort((a, b) => {
+      const ratingA = a.rating || 0;
+      const ratingB = b.rating || 0;
+      return ratingB - ratingA;
+    });
+    
+    // 특화 병원을 앞에, 나머지를 뒤에 배치
+    filtered = [...specializedHospitals, ...otherHospitals];
+  } else {
+    // 전체 조회 시 평점 순으로 정렬
+    filtered.sort((a, b) => {
+      const ratingA = a.rating || 0;
+      const ratingB = b.rating || 0;
+      return ratingB - ratingA;
+    });
+  }
+  
+  return filtered;
+}
+
+// 병원 카드 동적 생성
+function renderHospitalCards() {
+  const hospitalList = document.querySelector('.hospital-list');
+  if (!hospitalList) {
+    console.warn('병원 리스트 컨테이너를 찾을 수 없습니다.');
+    return;
+  }
+  
+  // 기존 카드 제거 (하드코딩된 카드 제거)
+  hospitalList.innerHTML = '';
+  
+  // 카테고리별 필터링 및 정렬
+  const filteredHospitals = filterAndSortHospitals(currentCategoryId);
+  
+  if (filteredHospitals.length === 0) {
+    hospitalList.innerHTML = '<div style="padding: 20px; text-align: center; color: #959595;">등록된 병원이 없습니다.</div>';
+    return;
+  }
+  
+  // 병원 카드 생성
+  filteredHospitals.forEach((hospital, index) => {
+    const card = document.createElement('div');
+    card.className = 'hospital-card';
+    card.setAttribute('data-hospital-id', hospital.hospital_id);
+    
+    const ratingText = hospital.rating ? `⭐ ${hospital.rating}(${hospital.review_count || 0})` : '⭐ -';
+    
+    // 현재 선택된 카테고리에 특화된 병원인지 확인
+    const isSpecialized = currentCategoryId !== null && hospital.category_id === currentCategoryId;
+    
+    // 카테고리 ID를 이름으로 변환
+    const categoryName = hospital.category_id ? (categoryIdToName[hospital.category_id] || '') : '';
+    
+    card.innerHTML = `
+      <div class="hospital-image" style="background-image: url('${hospital.img || ''}'); background-size: cover; background-position: center;"></div>
+      <div class="hospital-info">
+        <div class="hospital-header">
+          <div class="hospital-name">${hospital.name || '병원명 없음'}</div>
+          <div class="hospital-rating">${ratingText}</div>
+        </div>
+        <div class="hospital-details">
+          ${hospital.city ? `<div class="detail-item">${hospital.city}</div>` : ''}
+          <div class="detail-item">${hospital.address || '주소 없음'}</div>
+          <div class="detail-item">${hospital.phone || '전화번호 없음'}</div>
+          ${categoryName ? `<div class="detail-item">특화 분야: ${categoryName}</div>` : ''}
+        </div>
+        <div class="hospital-actions">
+          <button class="action-btn primary">예약하기</button>
+          <button class="action-btn secondary">상세정보</button>
+        </div>
+      </div>
+      ${isSpecialized ? '<div class="hospital-badge">퍼펫트맞춤</div>' : ''}
+    `;
+    
+    hospitalList.appendChild(card);
+  });
+  
+  // 카드 이벤트 바인딩
+  bindHospitalCardEvents();
 }
 
 // 지도 로딩 실패 시 플레이스홀더 표시
@@ -105,12 +398,13 @@ document.addEventListener('DOMContentLoaded', function() {
   let currentY = 0;
   let initialHeight = 0;
   
-  // 시트의 초기 높이 설정 (60vh)
-  const minHeight = 200; // 최소 높이 (px)
-  const maxHeight = window.innerHeight * 0.9; // 최대 높이 (90vh)
-  const defaultHeight = window.innerHeight * 0.6; // 기본 높이 (60vh)
+  // 시트의 높이 설정 (상/중/하)
+  const minHeight = 200; // 하: 최소 높이 (px)
+  const midHeight = window.innerHeight * 0.5; // 중: 50% 높이
+  const maxHeight = window.innerHeight * 0.9; // 상: 최대 높이 (90vh)
+  const defaultHeight = midHeight; // 기본 높이 (중간)
   
-  // 초기 높이 설정
+  // 초기 높이 설정 (중간)
   bottomSheet.style.height = defaultHeight + 'px';
   
   // 드래그 시작
@@ -139,7 +433,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const deltaY = startY - clientY; // 위로 드래그하면 양수
     const newHeight = initialHeight + deltaY;
     
-    // 높이 제한
+    // 높이 제한 (하/중/상 범위 내)
     if (newHeight >= minHeight && newHeight <= maxHeight) {
       bottomSheet.style.height = newHeight + 'px';
       bottomSheet.style.transition = 'none';
@@ -153,20 +447,32 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!isDragging) return;
     
     isDragging = false;
-    bottomSheet.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+    bottomSheet.style.transition = 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
     
     const currentHeight = bottomSheet.offsetHeight;
-    const threshold = (minHeight + maxHeight) / 2;
     
-    // 중간 지점을 기준으로 확장/축소
-    if (currentHeight > threshold) {
+    // 상/중/하 3단계로 스냅
+    const threshold1 = (minHeight + midHeight) / 2; // 하와 중 사이
+    const threshold2 = (midHeight + maxHeight) / 2; // 중과 상 사이
+    
+    if (currentHeight < threshold1) {
+      // 하 (최소)
+      bottomSheet.style.height = minHeight + 'px';
+      bottomSheet.classList.add('collapsed');
+      bottomSheet.classList.remove('mid');
+      bottomSheet.classList.remove('expanded');
+    } else if (currentHeight < threshold2) {
+      // 중 (50%)
+      bottomSheet.style.height = midHeight + 'px';
+      bottomSheet.classList.add('mid');
+      bottomSheet.classList.remove('collapsed');
+      bottomSheet.classList.remove('expanded');
+    } else {
+      // 상 (최대)
       bottomSheet.style.height = maxHeight + 'px';
       bottomSheet.classList.add('expanded');
       bottomSheet.classList.remove('collapsed');
-    } else {
-      bottomSheet.style.height = minHeight + 'px';
-      bottomSheet.classList.add('collapsed');
-      bottomSheet.classList.remove('expanded');
+      bottomSheet.classList.remove('mid');
     }
     
     document.removeEventListener('mousemove', drag);
@@ -177,20 +483,31 @@ document.addEventListener('DOMContentLoaded', function() {
     e.preventDefault();
   }
   
-  // 핸들 클릭으로 토글
+  // 핸들 클릭으로 토글 (하 -> 중 -> 상 -> 하 순환)
   sheetHandle.addEventListener('click', function(e) {
     if (!isDragging) {
       const currentHeight = bottomSheet.offsetHeight;
-      const threshold = (minHeight + maxHeight) / 2;
+      const threshold1 = (minHeight + midHeight) / 2;
+      const threshold2 = (midHeight + maxHeight) / 2;
       
-      if (currentHeight > threshold) {
-        bottomSheet.style.height = minHeight + 'px';
-        bottomSheet.classList.add('collapsed');
+      if (currentHeight < threshold1) {
+        // 하 -> 중
+        bottomSheet.style.height = midHeight + 'px';
+        bottomSheet.classList.add('mid');
+        bottomSheet.classList.remove('collapsed');
         bottomSheet.classList.remove('expanded');
-      } else {
+      } else if (currentHeight < threshold2) {
+        // 중 -> 상
         bottomSheet.style.height = maxHeight + 'px';
         bottomSheet.classList.add('expanded');
         bottomSheet.classList.remove('collapsed');
+        bottomSheet.classList.remove('mid');
+      } else {
+        // 상 -> 하
+        bottomSheet.style.height = minHeight + 'px';
+        bottomSheet.classList.add('collapsed');
+        bottomSheet.classList.remove('expanded');
+        bottomSheet.classList.remove('mid');
       }
     }
   });
@@ -202,6 +519,22 @@ document.addEventListener('DOMContentLoaded', function() {
     tab.addEventListener('click', function() {
       categoryTabs.forEach(t => t.classList.remove('active'));
       this.classList.add('active');
+      
+      // 카테고리 이름으로 ID 찾기
+      const categoryName = this.textContent.trim();
+      currentCategoryId = categoryMap[categoryName] !== undefined ? categoryMap[categoryName] : null;
+      
+      console.log('카테고리 선택:', categoryName, 'ID:', currentCategoryId);
+      
+      // 병원 필터링 및 재렌더링
+      const filteredHospitals = filterAndSortHospitals(currentCategoryId);
+      hospitals = filteredHospitals;
+      
+      // 지도 마커 업데이트
+      updateMapMarkers();
+      
+      // 병원 카드 재렌더링
+      renderHospitalCards();
     });
   });
   
@@ -212,33 +545,6 @@ document.addEventListener('DOMContentLoaded', function() {
       this.classList.toggle('active');
     });
   }
-  
-  // 액션 버튼 클릭 이벤트
-  const actionButtons = document.querySelectorAll('.action-btn');
-  actionButtons.forEach(button => {
-    button.addEventListener('click', function(e) {
-      e.stopPropagation();
-      const buttonText = this.textContent.trim();
-      
-      if (buttonText === '예약하기') {
-        // 예약 페이지로 이동
-        window.location.href = '../hospital_reservation/reservation.html';
-      } else if (buttonText === '상세정보') {
-        // 상세 정보 표시
-        console.log('상세 정보');
-      }
-    });
-  });
-  
-  // 병원 카드 클릭 이벤트
-  const hospitalCards = document.querySelectorAll('.hospital-card');
-  hospitalCards.forEach(card => {
-    card.addEventListener('click', function(e) {
-      if (!e.target.classList.contains('action-btn')) {
-        console.log('병원 상세');
-      }
-    });
-  });
   
   // 탭바 아이템 클릭 이벤트
   const tabItems = document.querySelectorAll('.tab-item');
@@ -252,16 +558,78 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // 윈도우 리사이즈 시 높이 재조정
   window.addEventListener('resize', function() {
-    const currentHeight = bottomSheet.offsetHeight;
+    const newMidHeight = window.innerHeight * 0.5;
     const newMaxHeight = window.innerHeight * 0.9;
-    const newDefaultHeight = window.innerHeight * 0.6;
     
     if (bottomSheet.classList.contains('expanded')) {
       bottomSheet.style.height = newMaxHeight + 'px';
+    } else if (bottomSheet.classList.contains('mid')) {
+      bottomSheet.style.height = newMidHeight + 'px';
     } else if (bottomSheet.classList.contains('collapsed')) {
       bottomSheet.style.height = minHeight + 'px';
     } else {
-      bottomSheet.style.height = newDefaultHeight + 'px';
+      // 기본값 (중간)
+      bottomSheet.style.height = newMidHeight + 'px';
     }
   });
+  
+  // 초기 병원 카드 이벤트 바인딩 (하드코딩된 카드용)
+  bindHospitalCardEvents();
 });
+
+// 병원 카드 이벤트 바인딩 함수
+function bindHospitalCardEvents() {
+  // 기존 이벤트 리스너 제거를 위해 이벤트 위임 방식 사용
+  const hospitalList = document.querySelector('.hospital-list');
+  if (!hospitalList) return;
+  
+  // 이벤트 위임: hospital-list에 이벤트 리스너 추가
+  hospitalList.addEventListener('click', function(e) {
+    const actionBtn = e.target.closest('.action-btn');
+    const hospitalCard = e.target.closest('.hospital-card');
+    
+    if (actionBtn) {
+      // 액션 버튼 클릭
+      e.stopPropagation();
+      const buttonText = actionBtn.textContent.trim();
+      const hospitalId = hospitalCard ? hospitalCard.getAttribute('data-hospital-id') : null;
+      
+      console.log('액션 버튼 클릭:', buttonText, '병원 ID:', hospitalId);
+      
+      if (buttonText === '예약하기') {
+        // 예약 페이지로 이동 (병원 ID 전달)
+        if (hospitalId) {
+          localStorage.setItem('selectedHospitalId', hospitalId);
+          // 병원 정보도 함께 저장
+          const hospital = hospitals.find(h => h.hospital_id == hospitalId);
+          if (hospital) {
+            localStorage.setItem('selectedHospital', JSON.stringify({
+              hospital_id: hospital.hospital_id,
+              hospital_name: hospital.name,
+              address: hospital.address,
+              phone: hospital.phone
+            }));
+          }
+        }
+        window.location.href = '../hospital_reservation/reservation.html';
+      } else if (buttonText === '상세정보') {
+        // 상세 정보 표시
+        console.log('병원 상세 정보:', hospitalId);
+        // TODO: 상세 정보 모달 또는 페이지 구현
+      }
+    } else if (hospitalCard && !actionBtn) {
+      // 병원 카드 클릭 (버튼이 아닌 영역)
+      const hospitalId = hospitalCard.getAttribute('data-hospital-id');
+      console.log('병원 카드 클릭:', hospitalId);
+      
+      // 지도 중심을 해당 마커로 이동
+      if (hospitalId && map) {
+        const markerData = markers.find(m => m.hospital.hospital_id == hospitalId);
+        if (markerData && markerData.marker) {
+          map.setCenter(markerData.marker.getPosition());
+          map.setZoom(16);
+        }
+      }
+    }
+  });
+}

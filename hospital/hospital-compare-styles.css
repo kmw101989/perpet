@@ -122,6 +122,11 @@ html {
   transform: translateX(-50%) translateY(0);
 }
 
+.bottom-sheet.mid {
+  height: 50vh;
+  transform: translateX(-50%) translateY(0);
+}
+
 .bottom-sheet.collapsed {
   height: 200px;
   transform: translateX(-50%) translateY(calc(100% - 200px));

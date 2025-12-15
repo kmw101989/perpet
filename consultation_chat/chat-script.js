@@ -1,5 +1,42 @@
+// Supabase에서 병원 이미지 가져오기
+async function loadHospitalImage(hospitalName) {
+  try {
+    if (typeof SupabaseService === 'undefined') {
+      console.warn('SupabaseService가 로드되지 않았습니다.');
+      return null;
+    }
+    
+    const client = await getSupabaseClient();
+    const { data: hospitals, error } = await client
+      .from('hospitals')
+      .select('hospital_name, hospital_img');
+    
+    if (error) {
+      console.error('병원 이미지 로드 실패:', error);
+      return null;
+    }
+    
+    // 부분 매칭으로 병원 찾기
+    const matchedHospital = hospitals.find(hospital => {
+      return hospital.hospital_name.includes(hospitalName) || 
+             hospitalName.includes(hospital.hospital_name);
+    });
+    
+    if (matchedHospital) {
+      console.log(`병원 이미지 매칭 성공: ${hospitalName} → ${matchedHospital.hospital_name}`);
+      return matchedHospital.hospital_img;
+    } else {
+      console.warn(`병원 이미지 매칭 실패: ${hospitalName}`);
+      return null;
+    }
+  } catch (error) {
+    console.error('병원 이미지 로드 중 오류:', error);
+    return null;
+  }
+}
+
 // 선택된 수의사 정보 로드 및 표시
-function loadVetInfo() {
+async function loadVetInfo() {
   const vetInfoStr = localStorage.getItem('selectedVet');
   
   if (vetInfoStr) {
@@ -18,6 +55,24 @@ function loadVetInfo() {
       vetRating.textContent = `⭐ ${vetInfo.satisfaction}`;
     }
     
+    // 병원 이미지 로드 및 표시
+    const hospitalImageUrl = await loadHospitalImage(vetInfo.hospital);
+    const vetProfileImage = document.querySelector('.vet-profile-image');
+    const vetAvatarImage = document.querySelector('.vet-avatar-image');
+    
+    if (hospitalImageUrl) {
+      if (vetProfileImage) {
+        vetProfileImage.style.backgroundImage = `url('${hospitalImageUrl}')`;
+        vetProfileImage.style.backgroundSize = 'cover';
+        vetProfileImage.style.backgroundPosition = 'center';
+      }
+      if (vetAvatarImage) {
+        vetAvatarImage.style.backgroundImage = `url('${hospitalImageUrl}')`;
+        vetAvatarImage.style.backgroundSize = 'cover';
+        vetAvatarImage.style.backgroundPosition = 'center';
+      }
+    }
+    
     // 초기 메시지에 수의사 이름 반영
     const initialMessage = document.querySelector('.vet-message .message-bubble');
     if (initialMessage) {
@@ -30,11 +85,11 @@ function loadVetInfo() {
 }
 
 // 채팅 기능
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
   console.log('=== 채팅 스크립트 시작 ===');
   
-  // 수의사 정보 로드
-  loadVetInfo();
+  // 수의사 정보 로드 (비동기)
+  await loadVetInfo();
   
   // 요소 선택
   const chatInput = document.getElementById('chatInput') || document.querySelector('.chat-input');

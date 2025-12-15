@@ -337,6 +337,9 @@ html {
   line-height: 10px;
   font-family: 'JejuGothic', sans-serif;
   flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* 슬라이드 네비게이션 버튼 */

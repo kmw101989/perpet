@@ -13,12 +13,7 @@
 </head>
 <body>
   <!-- 지도 레이어 (배경) -->
-  <div class="map-container" id="mapContainer">
-    <!-- 실제 지도 API는 여기에 추가 -->
-    <div class="map-placeholder">
-      <div class="map-marker"></div>
-    </div>
-  </div>
+  <div class="map-container" id="mapContainer"></div>
 
   <!-- 하단 시트 (드래그 가능) -->
   <div class="bottom-sheet" id="bottomSheet">
@@ -40,8 +35,8 @@
 
       <!-- 카테고리 탭 -->
       <div class="category-tabs">
-        <div class="category-tab">종합관리</div>
-        <div class="category-tab active">심장</div>
+        <div class="category-tab active">종합관리</div>
+        <div class="category-tab">심장</div>
         <div class="category-tab">간</div>
         <div class="category-tab">위/장</div>
         <div class="category-tab">피부</div>
@@ -153,10 +148,75 @@
     </div>
   </div>
 
-  <!-- 네이버 지도 API -->
-  <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=f3qp1zkzgn&callback=initNaverMap"></script>
   <script src="../common/auth-check.js"></script>
+  <script src="../common/supabase-config.js"></script>
   <script src="hospital-compare-script.js"></script>
+  <!-- 네이버 지도 API - 스크립트 로드 후에 추가 -->
+  <script type="text/javascript">
+    // hospital-compare-script.js가 먼저 로드된 후 네이버 지도 API 로드
+    (function() {
+      console.log('네이버 지도 API 스크립트 로드 시작');
+      console.log('현재 URL:', window.location.href);
+      console.log('Client ID: f3qp1zkzgn');
+      
+      // 전역 변수로 콜백 호출 여부 추적
+      window.naverMapCallbackCalled = false;
+      
+      // 네이버 지도 API 스크립트 로드 (에러 처리 포함)
+      const naverMapScript = document.createElement('script');
+      naverMapScript.type = 'text/javascript';
+      naverMapScript.src = 'https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=f3qp1zkzgn&callback=initNaverMap';
+      
+      naverMapScript.onload = function() {
+        console.log('네이버 지도 API 스크립트 로드 완료');
+      };
+      
+      naverMapScript.onerror = function(e) {
+        console.error('네이버 지도 API 스크립트 로드 실패:', e);
+        window.naverMapCallbackCalled = true;
+        setTimeout(function() {
+          if (typeof showMapPlaceholder === 'function') {
+            showMapPlaceholder();
+          } else {
+            const mapContainer = document.getElementById('mapContainer');
+            if (mapContainer) {
+              mapContainer.innerHTML = '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg, #a5d6a7 0%, #81c784 50%, #66bb6a 100%);color:#fff;font-family:\'JejuGothic\',sans-serif;"><div style="font-size:16px;margin-bottom:8px;">🗺️</div><div style="font-size:14px;text-align:center;padding:0 20px;">지도를 불러올 수 없습니다</div></div>';
+            }
+          }
+        }, 500);
+      };
+      
+      document.head.appendChild(naverMapScript);
+      
+      // 전역 에러 핸들러로 네이버 지도 API 인증 오류 캐치
+      window.addEventListener('error', function(e) {
+        if (e.message && e.message.includes('NAVER Maps') || 
+            e.message && e.message.includes('Authentication Failed') ||
+            e.filename && e.filename.includes('maps.js')) {
+          console.error('네이버 지도 API 인증 오류 감지:', e.message);
+          window.naverMapCallbackCalled = true;
+          setTimeout(function() {
+            if (typeof showMapPlaceholder === 'function') {
+              showMapPlaceholder();
+            }
+          }, 1000);
+        }
+      }, true);
+      
+      // 일정 시간 후 콜백이 호출되지 않으면 타임아웃 처리 (인증 실패 가능성)
+      setTimeout(function() {
+        if (!window.naverMapCallbackCalled && (typeof naver === 'undefined' || !naver.maps)) {
+          console.warn('⚠️ 네이버 지도 API 콜백이 호출되지 않았습니다.');
+          console.warn('현재 URL:', window.location.href);
+          console.warn('Client ID: f3qp1zkzgn');
+          console.warn('등록된 URL 확인 필요: https://perpet.netlify.app (도메인만, 경로 제외)');
+          if (typeof showMapPlaceholder === 'function') {
+            showMapPlaceholder();
+          }
+        }
+      }, 5000);
+    })();
+  </script>
   <script src="../common/tabbar.js"></script>
   <script>
     // 인증 체크

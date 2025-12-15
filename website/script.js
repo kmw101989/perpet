@@ -1,4 +1,17 @@
 // 탭바 아이템 클릭 이벤트 (별도 처리)
+const LOG_ENABLED = false;
+const __originalConsoleLog = console.log;
+console.log = (...args) => {
+  if (LOG_ENABLED) {
+    __originalConsoleLog(...args);
+  }
+};
+const log = (...args) => {
+  if (LOG_ENABLED) {
+    __originalConsoleLog(...args);
+  }
+};
+
 document.addEventListener('DOMContentLoaded', function() {
   // 탭바 아이템 클릭 이벤트
   const tabItems = document.querySelectorAll('.tab-item');
@@ -250,25 +263,32 @@ document.addEventListener('DOMContentLoaded', function() {
     waitForSupabaseAndLoadProducts();
   });
   
+  // 예약 일정 로드
+  loadReservationSchedule();
+  
   // 페이지 포커스 시 반려동물 정보 새로고침 (마이페이지에서 돌아왔을 때)
   window.addEventListener('focus', async function() {
-    console.log('페이지 포커스 - 반려동물 정보 새로고침');
+    log('페이지 포커스 - 반려동물 정보 새로고침');
     await loadSelectedPet();
     // 추천 제품도 다시 로드
     const activeTab = document.querySelector('.recommendation-tabs .tab-btn.active');
     const productType = activeTab ? activeTab.textContent.trim() : '사료';
     await waitForSupabaseAndLoadProducts(productType);
+    // 예약 일정도 새로고침
+    await loadReservationSchedule();
   });
   
   // 페이지 가시성 변경 시에도 새로고침
   document.addEventListener('visibilitychange', async function() {
     if (!document.hidden) {
-      console.log('페이지 가시성 변경 - 반려동물 정보 새로고침');
+      log('페이지 가시성 변경 - 반려동물 정보 새로고침');
       await loadSelectedPet();
       // 추천 제품도 다시 로드
       const activeTab = document.querySelector('.recommendation-tabs .tab-btn.active');
       const productType = activeTab ? activeTab.textContent.trim() : '사료';
       await waitForSupabaseAndLoadProducts(productType);
+      // 예약 일정도 새로고침
+      await loadReservationSchedule();
     }
   });
 
@@ -452,6 +472,84 @@ async function waitForSupabaseAndLoadProducts(productType = '사료') {
   
   console.log('SupabaseService 로드 완료, 추천 제품 로드 시작');
   await loadRecommendedProducts(productType);
+}
+
+// 예약 일정 로드 함수
+async function loadReservationSchedule() {
+  try {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      console.log('userId가 없어 예약 일정을 로드할 수 없습니다.');
+      return;
+    }
+    
+    if (typeof SupabaseService === 'undefined') {
+      console.error('SupabaseService가 로드되지 않았습니다.');
+      return;
+    }
+    
+    const client = await getSupabaseClient();
+    const { data: userData, error } = await client
+      .from('users')
+      .select('reservation, reservation_date')
+      .eq('user_id', userId)
+      .single();
+    
+    if (error) {
+      console.error('예약 일정 로드 실패:', error);
+      return;
+    }
+    
+    if (!userData || !userData.reservation || !userData.reservation_date) {
+      console.log('예약 일정이 없습니다.');
+      return;
+    }
+    
+    // 예약 일정을 일정 리스트에 추가
+    const scheduleList = document.querySelector('.schedule-list');
+    if (!scheduleList) {
+      console.error('일정 리스트 컨테이너를 찾을 수 없습니다.');
+      return;
+    }
+    
+    // reservation_date 파싱 (YYYY-MM-DD HH:MM 형식)
+    const reservationDate = new Date(userData.reservation_date);
+    const month = reservationDate.getMonth() + 1;
+    const day = reservationDate.getDate();
+    const dayName = getDayName(reservationDate.getDay());
+    const hours = String(reservationDate.getHours()).padStart(2, '0');
+    const minutes = String(reservationDate.getMinutes()).padStart(2, '0');
+    
+    // 기존 예약 일정 제거 (이미 있는 경우)
+    const existingReservation = scheduleList.querySelector('.schedule-item[data-reservation]');
+    if (existingReservation) {
+      existingReservation.remove();
+    }
+    
+    // 예약 일정 아이템 생성 (한 줄로 표시)
+    const reservationItem = document.createElement('div');
+    reservationItem.className = 'schedule-item';
+    reservationItem.setAttribute('data-reservation', 'true');
+    reservationItem.innerHTML = `
+      <div class="schedule-icon">
+        <img src="/svg/checkup.svg" alt="병원" class="schedule-icon-img" />
+      </div>
+      <div class="schedule-text">${day}일(${dayName}) 병원 예약 - ${userData.reservation} / ${hours}:${minutes}</div>
+    `;
+    
+    // 일정 리스트의 첫 번째 위치에 추가
+    scheduleList.insertBefore(reservationItem, scheduleList.firstChild);
+    
+    console.log('예약 일정 로드 완료:', userData);
+  } catch (error) {
+    console.error('예약 일정 로드 중 오류:', error);
+  }
+}
+
+// 요일 이름 반환 함수
+function getDayName(dayIndex) {
+  const days = ['일', '월', '화', '수', '목', '금', '토'];
+  return days[dayIndex];
 }
 
 // 홈 화면 추천 제품 로드 함수

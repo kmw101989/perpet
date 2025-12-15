@@ -49,6 +49,12 @@ function createVetCard(vet) {
     ? '<button class="consult-button">최근 상담</button>' 
     : '';
   
+  // 병원 이미지 URL (Supabase에서 가져온 이미지 또는 기본값)
+  const hospitalImageUrl = vet.hospital_img || '';
+  const imageStyle = hospitalImageUrl 
+    ? `background-image: url('${hospitalImageUrl}'); background-size: cover; background-position: center;`
+    : '';
+  
   return `
     <div class="vet-card" data-vet="${vet.id}">
       <div class="vet-info">
@@ -74,17 +80,63 @@ function createVetCard(vet) {
         </div>
       </div>
       <div class="vet-right-section">
-        <div class="vet-profile-image"></div>
+        <div class="vet-profile-image" style="${imageStyle}"></div>
         ${recentConsultButton}
       </div>
     </div>
   `;
 }
 
+// Supabase에서 병원 이미지 가져오기
+async function loadHospitalImages() {
+  try {
+    if (typeof SupabaseService === 'undefined') {
+      console.warn('SupabaseService가 로드되지 않았습니다.');
+      return;
+    }
+    
+    // 모든 병원 데이터 가져오기
+    const client = await getSupabaseClient();
+    const { data: allHospitals, error } = await client
+      .from('hospitals')
+      .select('hospital_name, hospital_img');
+    
+    if (error) {
+      console.error('병원 이미지 로드 실패:', error);
+      return;
+    }
+    
+    // 부분 매칭으로 병원 이미지 찾기
+    vetData.forEach(vet => {
+      // 병원 이름으로 부분 매칭 검색
+      const matchedHospital = allHospitals.find(hospital => {
+        // vetData의 병원 이름이 Supabase 병원 이름에 포함되거나
+        // Supabase 병원 이름이 vetData 병원 이름에 포함되는 경우
+        return hospital.hospital_name.includes(vet.hospital) || 
+               vet.hospital.includes(hospital.hospital_name);
+      });
+      
+      if (matchedHospital) {
+        vet.hospital_img = matchedHospital.hospital_img;
+        console.log(`병원 이미지 매칭 성공: ${vet.hospital} → ${matchedHospital.hospital_name}`);
+      } else {
+        vet.hospital_img = null;
+        console.warn(`병원 이미지 매칭 실패: ${vet.hospital}`);
+      }
+    });
+    
+    console.log('병원 이미지 로드 완료');
+  } catch (error) {
+    console.error('병원 이미지 로드 중 오류:', error);
+  }
+}
+
 // 수의사 카드 리스트 렌더링
-function renderVetList() {
+async function renderVetList() {
   const vetList = document.getElementById('vetList');
   if (vetList) {
+    // 병원 이미지 로드 후 렌더링
+    await loadHospitalImages();
     vetList.innerHTML = vetData.map(vet => createVetCard(vet)).join('');
     
     // 카드 클릭 이벤트 다시 바인딩

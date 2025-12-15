@@ -98,19 +98,115 @@ document.addEventListener('DOMContentLoaded', function() {
     return days[dayIndex];
   }
   
+  // users 테이블에서 예약 정보 삭제
+  async function cancelReservation() {
+    try {
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        console.error('userId가 없습니다.');
+        return false;
+      }
+      
+      if (typeof SupabaseService === 'undefined') {
+        console.error('SupabaseService가 로드되지 않았습니다.');
+        return false;
+      }
+      
+      const client = await getSupabaseClient();
+      
+      const { data, error } = await client
+        .from('users')
+        .update({
+          reservation: null,
+          reservation_date: null
+        })
+        .eq('user_id', userId)
+        .select();
+      
+      if (error) {
+        console.error('예약 취소 실패:', error);
+        return false;
+      }
+      
+      console.log('예약 취소 성공:', data);
+      return true;
+    } catch (error) {
+      console.error('예약 취소 중 오류:', error);
+      return false;
+    }
+  }
+  
   // 예약 취소 버튼 클릭
-  document.getElementById('cancelReservationBtn').addEventListener('click', function() {
+  document.getElementById('cancelReservationBtn').addEventListener('click', async function() {
     if (confirm('예약을 취소하시겠습니까?')) {
-      // 여기에 예약 취소 API 호출 로직 추가
-      alert('예약이 취소되었습니다.');
-      // 예약 페이지로 돌아가기
-      window.location.href = 'reservation.html';
+      const cancelled = await cancelReservation();
+      
+      if (cancelled) {
+        alert('예약이 취소되었습니다.');
+        // 홈으로 이동
+        window.location.href = '../website/index.html';
+      } else {
+        alert('예약 취소에 실패했습니다. 다시 시도해주세요.');
+      }
     }
   });
   
+  // users 테이블에 예약 정보 저장
+  async function saveReservationToUser(hospitalName, dateString, time) {
+    try {
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        console.error('userId가 없습니다.');
+        return false;
+      }
+      
+      if (typeof SupabaseService === 'undefined') {
+        console.error('SupabaseService가 로드되지 않았습니다.');
+        return false;
+      }
+      
+      const client = await getSupabaseClient();
+      
+      // reservation_date 형식: YYYY-MM-DD HH:MM (예: 2026-01-05 17:00)
+      const reservationDateTime = `${dateString} ${time}`;
+      
+      const { data, error } = await client
+        .from('users')
+        .update({
+          reservation: hospitalName,
+          reservation_date: reservationDateTime
+        })
+        .eq('user_id', userId)
+        .select();
+      
+      if (error) {
+        console.error('예약 정보 저장 실패:', error);
+        return false;
+      }
+      
+      console.log('예약 정보 저장 성공:', data);
+      return true;
+    } catch (error) {
+      console.error('예약 정보 저장 중 오류:', error);
+      return false;
+    }
+  }
+  
   // 예약완료 버튼 클릭
-  document.getElementById('completeBtn').addEventListener('click', function() {
-    // 여기에 예약 완료 후 처리 로직 추가 (예: 홈으로 이동)
+  document.getElementById('completeBtn').addEventListener('click', async function() {
+    // users 테이블에 예약 정보 저장
+    if (date && time) {
+      const hospitalName = urlParams.get('hospital') || '예은동물의료센터';
+      const saved = await saveReservationToUser(hospitalName, date, time);
+      
+      if (saved) {
+        console.log('예약 정보가 저장되었습니다.');
+      } else {
+        console.warn('예약 정보 저장에 실패했습니다.');
+      }
+    }
+    
+    // 홈으로 이동
     window.location.href = '../website/index.html';
   });
 });

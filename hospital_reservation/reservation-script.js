@@ -246,11 +246,24 @@ document.addEventListener('DOMContentLoaded', function() {
         time: selectedTime
       });
       
+      // localStorage에서 병원 정보 가져오기
+      const selectedHospital = localStorage.getItem('selectedHospital');
+      let hospitalName = '예은동물의료센터';
+      
+      if (selectedHospital) {
+        try {
+          const hospital = JSON.parse(selectedHospital);
+          hospitalName = hospital.hospital_name || hospitalName;
+        } catch (e) {
+          console.error('병원 정보 파싱 실패:', e);
+        }
+      }
+      
       // 예약 완료 페이지로 이동 (URL 파라미터로 정보 전달)
       const params = new URLSearchParams({
         date: dateString,
         time: selectedTime,
-        hospital: '예은동물의료센터'
+        hospital: hospitalName
       });
       
       window.location.href = `reservation-success.html?${params.toString()}`;
