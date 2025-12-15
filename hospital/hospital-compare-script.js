@@ -20,46 +20,61 @@ const hospitals = [
 
 // 네이버 지도 API 콜백 함수 (전역 함수로 선언)
 function initNaverMap() {
-  try {
-    // naver 객체 체크
-    if (typeof naver === 'undefined' || !naver.maps) {
-      throw new Error('네이버 지도 API를 불러올 수 없습니다.');
-    }
-
-    // 지도 초기화 (강남 지역 중심)
-    const mapOptions = {
-      center: new naver.maps.LatLng(37.5172, 127.0473), // 강남구 중심 좌표
-      zoom: 14,
-      zoomControl: true,
-      zoomControlOptions: {
-        position: naver.maps.Position.TOP_RIGHT
+  // 약간의 지연 후 지도 초기화 (DOM과 API가 완전히 로드되도록)
+  setTimeout(function() {
+    try {
+      // naver 객체가 있는지 다시 한 번 확인
+      if (typeof naver === 'undefined' || typeof naver.maps === 'undefined') {
+        console.warn('네이버 지도 API가 아직 로드되지 않았습니다.');
+        showMapPlaceholder();
+        return;
       }
-    };
-    
-    map = new naver.maps.Map('mapContainer', mapOptions);
-    
-    // 병원 마커 추가
-    hospitals.forEach(hospital => {
-      const marker = new naver.maps.Marker({
-        position: new naver.maps.LatLng(hospital.lat, hospital.lng),
-        map: map,
-        title: hospital.name
+
+      const mapContainer = document.getElementById('mapContainer');
+      if (!mapContainer) {
+        console.error('지도 컨테이너를 찾을 수 없습니다.');
+        return;
+      }
+
+      // 지도 초기화 (강남 지역 중심)
+      const mapOptions = {
+        center: new naver.maps.LatLng(37.5172, 127.0473), // 강남구 중심 좌표
+        zoom: 14,
+        zoomControl: true,
+        zoomControlOptions: {
+          position: naver.maps.Position.TOP_RIGHT
+        }
+      };
+      
+      map = new naver.maps.Map('mapContainer', mapOptions);
+      
+      // 병원 마커 추가
+      hospitals.forEach(hospital => {
+        try {
+          const marker = new naver.maps.Marker({
+            position: new naver.maps.LatLng(hospital.lat, hospital.lng),
+            map: map,
+            title: hospital.name
+          });
+          
+          // 마커 클릭 이벤트
+          naver.maps.Event.addListener(marker, 'click', function() {
+            // 해당 병원 카드로 스크롤하는 기능 추가 가능
+            console.log('병원 선택:', hospital.name);
+          });
+          
+          markers.push(marker);
+        } catch (markerError) {
+          console.error('마커 생성 오류:', markerError, hospital);
+        }
       });
       
-      // 마커 클릭 이벤트
-      naver.maps.Event.addListener(marker, 'click', function() {
-        // 해당 병원 카드로 스크롤하는 기능 추가 가능
-        console.log('병원 선택:', hospital.name);
-      });
-      
-      markers.push(marker);
-    });
-    
-    console.log('네이버 지도 초기화 완료');
-  } catch (error) {
-    console.error('지도 초기화 오류:', error);
-    showMapPlaceholder();
-  }
+      console.log('네이버 지도 초기화 완료');
+    } catch (error) {
+      console.error('지도 초기화 오류:', error);
+      showMapPlaceholder();
+    }
+  }, 100);
 }
 
 // 지도 로딩 실패 시 플레이스홀더 표시
@@ -70,24 +85,12 @@ function showMapPlaceholder() {
       <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg, #a5d6a7 0%, #81c784 50%, #66bb6a 100%);color:#fff;font-family:'JejuGothic',sans-serif;">
         <div style="font-size:16px;margin-bottom:8px;">🗺️</div>
         <div style="font-size:14px;text-align:center;padding:0 20px;">
-          지도는 배포 환경에서 확인하실 수 있습니다
-        </div>
-        <div style="font-size:12px;margin-top:8px;opacity:0.8;">
-          (로컬: Netlify 배포 주소 필요)
+          지도를 불러올 수 없습니다
         </div>
       </div>
     `;
   }
 }
-
-// 지도 API 로딩 실패 시 대비 (약간의 지연 후 체크)
-setTimeout(function() {
-  if (typeof naver === 'undefined' || !naver.maps) {
-    console.warn('네이버 지도 API 인증 실패 - 로컬 환경에서는 배포된 URL에서만 지도가 표시됩니다.');
-    console.warn('해결 방법: 네이버 클라우드 플랫폼 콘솔에서 서비스 URL에 localhost와 127.0.0.1을 추가하세요.');
-    showMapPlaceholder();
-  }
-}, 2000);
 
 // Bottom Sheet 드래그 기능
 document.addEventListener('DOMContentLoaded', function() {
