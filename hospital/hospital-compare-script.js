@@ -20,9 +20,11 @@ const hospitals = [
 
 // 네이버 지도 API 콜백 함수 (전역 함수로 선언)
 function initNaverMap() {
+  console.log('initNaverMap 호출됨');
   // 약간의 지연 후 지도 초기화 (DOM과 API가 완전히 로드되도록)
   setTimeout(function() {
     try {
+      console.log('지도 초기화 시작, naver 객체 체크:', typeof naver, typeof naver?.maps);
       // naver 객체가 있는지 다시 한 번 확인
       if (typeof naver === 'undefined' || typeof naver.maps === 'undefined') {
         console.warn('네이버 지도 API가 아직 로드되지 않았습니다.');
