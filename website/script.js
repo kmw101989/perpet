@@ -266,6 +266,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // 예약 일정 로드
   loadReservationSchedule();
   
+  // 생일 일정 로드
+  loadBirthdaySchedule();
+  
   // 페이지 포커스 시 반려동물 정보 새로고침 (마이페이지에서 돌아왔을 때)
   window.addEventListener('focus', async function() {
     log('페이지 포커스 - 반려동물 정보 새로고침');
@@ -289,6 +292,8 @@ document.addEventListener('DOMContentLoaded', function() {
       await waitForSupabaseAndLoadProducts(productType);
       // 예약 일정도 새로고침
       await loadReservationSchedule();
+      // 생일 일정도 새로고침
+      await loadBirthdaySchedule();
     }
   });
 
@@ -577,6 +582,110 @@ async function loadReservationSchedule() {
 function getDayName(dayIndex) {
   const days = ['일', '월', '화', '수', '목', '금', '토'];
   return days[dayIndex];
+}
+
+// 생일 일정 로드 함수
+async function loadBirthdaySchedule() {
+  try {
+    const selectedPetData = localStorage.getItem('selectedPetData');
+    if (!selectedPetData) {
+      // 생일 일정이 없으면 기존 항목 제거
+      const existingBirthday = document.querySelector('.schedule-item[data-birthday]');
+      if (existingBirthday) {
+        existingBirthday.remove();
+      }
+      return;
+    }
+    
+    const pet = JSON.parse(selectedPetData);
+    const petName = pet.pet_name || pet.petName || '내새꾸';
+    
+    // 생일 정보 확인 (pet_birth: YYYYMMDD 형식의 숫자 또는 birth_date 등)
+    let birthDate = null;
+    
+    if (pet.pet_birth) {
+      // pet_birth가 숫자 형식인 경우 (YYYYMMDD)
+      const birthStr = pet.pet_birth.toString();
+      if (birthStr.length === 8) {
+        const year = parseInt(birthStr.slice(0, 4), 10);
+        const month = parseInt(birthStr.slice(4, 6), 10) - 1;
+        const day = parseInt(birthStr.slice(6, 8), 10);
+        birthDate = new Date(year, month, day);
+      }
+    } else if (pet.birth_date) {
+      // timestamp 형식인 경우
+      if (typeof pet.birth_date === 'string') {
+        birthDate = new Date(pet.birth_date);
+      } else if (pet.birth_date instanceof Date) {
+        birthDate = pet.birth_date;
+      } else {
+        birthDate = new Date(pet.birth_date);
+      }
+    } else if (pet.birth_date_str) {
+      // 문자열 형식인 경우 (YYYYMMDD)
+      const birthStr = pet.birth_date_str.toString();
+      if (birthStr.length === 8) {
+        const year = parseInt(birthStr.slice(0, 4), 10);
+        const month = parseInt(birthStr.slice(4, 6), 10) - 1;
+        const day = parseInt(birthStr.slice(6, 8), 10);
+        birthDate = new Date(year, month, day);
+      }
+    }
+    
+    if (!birthDate || isNaN(birthDate.getTime())) {
+      // 생일 정보가 없으면 기존 항목 제거
+      const existingBirthday = document.querySelector('.schedule-item[data-birthday]');
+      if (existingBirthday) {
+        existingBirthday.remove();
+      }
+      return;
+    }
+    
+    // 올해 생일 날짜 계산
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const birthdayThisYear = new Date(currentYear, birthDate.getMonth(), birthDate.getDate());
+    
+    // 올해 생일이 지났으면 내년 생일로 설정
+    const displayBirthday = birthdayThisYear < today 
+      ? new Date(currentYear + 1, birthDate.getMonth(), birthDate.getDate())
+      : birthdayThisYear;
+    
+    const month = displayBirthday.getMonth() + 1;
+    const day = displayBirthday.getDate();
+    const dayName = getDayName(displayBirthday.getDay());
+    
+    // 일정 리스트 가져오기
+    const scheduleList = document.querySelector('.schedule-list');
+    if (!scheduleList) {
+      console.error('일정 리스트 컨테이너를 찾을 수 없습니다.');
+      return;
+    }
+    
+    // 기존 생일 일정 제거
+    const existingBirthday = scheduleList.querySelector('.schedule-item[data-birthday]');
+    if (existingBirthday) {
+      existingBirthday.remove();
+    }
+    
+    // 생일 일정 아이템 생성
+    const birthdayItem = document.createElement('div');
+    birthdayItem.className = 'schedule-item';
+    birthdayItem.setAttribute('data-birthday', 'true');
+    birthdayItem.innerHTML = `
+      <div class="schedule-icon">
+        <img src="/svg/bday.svg" alt="생일" class="schedule-icon-img" />
+      </div>
+      <div class="schedule-text">${day}일(${dayName}) ${petName} 생일 ❤️</div>
+    `;
+    
+    // 일정 리스트의 마지막에 추가 (예약 일정 다음)
+    scheduleList.appendChild(birthdayItem);
+    
+    console.log('생일 일정 로드 완료:', { petName, birthday: displayBirthday });
+  } catch (error) {
+    console.error('생일 일정 로드 중 오류:', error);
+  }
 }
 
 // 홈 화면 추천 제품 로드 함수
