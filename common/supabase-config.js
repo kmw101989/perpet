@@ -539,15 +539,15 @@ const SupabaseService = {
   // 다음 사용자 ID 생성 (1부터 시작하는 순차 번호)
   async getNextUserId() {
     const client = await getSupabaseClient();
-    // 가장 큰 user_id를 숫자로 변환하여 찾기
+    
+    // 모든 user_id를 가져와서 JavaScript에서 최대값 계산
+    // text 타입이어도 숫자로 변환하여 정확한 최대값 구하기
     const { data, error } = await client
       .from('users')
-      .select('user_id')
-      .order('user_id', { ascending: false })
-      .limit(1);
+      .select('user_id');
 
     if (error) {
-      console.error('Error fetching max user_id:', error);
+      console.error('Error fetching user_id list:', error);
       return '1'; // 에러 시 1 반환
     }
 
@@ -555,12 +555,12 @@ const SupabaseService = {
       return '1'; // 첫 번째 사용자
     }
 
-    // user_id를 숫자로 변환하여 최대값 찾기
-    const maxId = Math.max(...data.map(u => {
-      const numId = parseInt(u.user_id);
-      return isNaN(numId) ? 0 : numId;
-    }));
+    // 숫자로 변환 가능한 것만 필터링하고 최대값 구하기
+    const numericIds = data
+      .map(u => parseInt(u.user_id))
+      .filter(id => !isNaN(id) && id > 0);
 
+    const maxId = numericIds.length > 0 ? Math.max(...numericIds) : 0;
     return String(maxId + 1);
   },
 
