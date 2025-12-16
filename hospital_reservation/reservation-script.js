@@ -246,18 +246,29 @@ document.addEventListener('DOMContentLoaded', function() {
         time: selectedTime
       });
       
-      // localStorage에서 병원 정보 가져오기
-      const selectedHospital = localStorage.getItem('selectedHospital');
-      let hospitalName = '예은동물의료센터';
+      // URL 파라미터에서 병원 정보 가져오기 (우선순위 1)
+      const urlParams = new URLSearchParams(window.location.search);
+      let hospitalName = urlParams.get('hospital_name');
       
-      if (selectedHospital) {
-        try {
-          const hospital = JSON.parse(selectedHospital);
-          hospitalName = hospital.hospital_name || hospitalName;
-        } catch (e) {
-          console.error('병원 정보 파싱 실패:', e);
+      // URL 파라미터에 없으면 localStorage에서 가져오기 (우선순위 2)
+      if (!hospitalName) {
+        const selectedHospital = localStorage.getItem('selectedHospital');
+        if (selectedHospital) {
+          try {
+            const hospital = JSON.parse(selectedHospital);
+            hospitalName = hospital.hospital_name;
+          } catch (e) {
+            console.error('병원 정보 파싱 실패:', e);
+          }
         }
       }
+      
+      // 둘 다 없으면 기본값 사용
+      if (!hospitalName) {
+        hospitalName = '예은동물의료센터';
+      }
+      
+      console.log('예약 병원명:', hospitalName);
       
       // 예약 완료 페이지로 이동 (URL 파라미터로 정보 전달)
       const params = new URLSearchParams({

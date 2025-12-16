@@ -3,7 +3,17 @@ document.addEventListener('DOMContentLoaded', function() {
   const urlParams = new URLSearchParams(window.location.search);
   const date = urlParams.get('date');
   const time = urlParams.get('time');
-  const hospital = urlParams.get('hospital') || '예은동물의료센터';
+  let hospital = urlParams.get('hospital');
+  
+  // URL 파라미터에서 hospital이 없으면 기본값 사용
+  if (!hospital) {
+    hospital = '예은동물의료센터';
+  } else {
+    // URL 디코딩 (한글 병원명이 인코딩되어 있을 수 있음)
+    hospital = decodeURIComponent(hospital);
+  }
+  
+  console.log('예약 완료 페이지 - 병원명:', hospital);
   
   // 예약 정보 표시
   if (date && time) {
@@ -198,8 +208,8 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('completeBtn').addEventListener('click', async function() {
     // users 테이블에 예약 정보 저장
     if (date && time) {
-      const hospitalName = urlParams.get('hospital') || '예은동물의료센터';
-      const saved = await saveReservationToUser(hospitalName, date, time);
+      // hospital 변수는 이미 위에서 정의됨 (URL 파라미터에서 가져온 값)
+      const saved = await saveReservationToUser(hospital, date, time);
       
       if (saved) {
         console.log('예약 정보가 저장되었습니다.');

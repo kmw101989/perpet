@@ -821,3 +821,155 @@ async function loadRecommendedProducts(productType = '사료') {
   }
 }
 
+// 반려동물 질병 기반 병원 추천 로드
+async function loadRecommendedHospitals() {
+  // Supabase 스크립트 로드 확인
+  if (typeof SupabaseService === 'undefined') {
+    console.error('SupabaseService가 로드되지 않았습니다.');
+    return;
+  }
+  
+  try {
+    const selectedPetId = localStorage.getItem('selectedPetId');
+    const productListContainer = document.querySelector('.product-list');
+    
+    console.log('병원 추천 로드 시작:', {
+      selectedPetId,
+      container: productListContainer !== null
+    });
+    
+    if (!productListContainer) {
+      console.error('제품 리스트 컨테이너를 찾을 수 없습니다.');
+      return;
+    }
+    
+    let hospitals = [];
+    let categoryId = null;
+    
+    if (selectedPetId) {
+      // 1. 반려동물 정보 가져오기 (disease_id 포함)
+      // getSupabaseClient는 전역 함수 (common/supabase-config.js에서 로드됨)
+      if (typeof getSupabaseClient === 'function') {
+        const client = await getSupabaseClient();
+        
+        const { data: pet, error: petError } = await client
+          .from('pets')
+          .select('pet_id, disease_id, pet_name')
+          .eq('pet_id', selectedPetId)
+          .maybeSingle();
+        
+        if (petError) {
+          console.error('반려동물 정보 조회 실패:', petError);
+        } else if (pet && pet.disease_id) {
+          // 2. 질병 정보 가져오기 (category_id 포함)
+          const { data: disease, error: diseaseError } = await client
+            .from('diseases')
+            .select('disease_id, disease_name, category_id')
+            .eq('disease_id', pet.disease_id)
+            .maybeSingle();
+          
+          if (diseaseError) {
+            console.error('질병 정보 조회 실패:', diseaseError);
+          } else if (disease && disease.category_id) {
+            categoryId = disease.category_id;
+            console.log('질병 기반 category_id 추출:', categoryId);
+            
+            // 3. category_id로 병원 추천
+            hospitals = await SupabaseService.getHospitals(null, categoryId, 3);
+            console.log('질병 기반 병원 추천 완료, 개수:', hospitals?.length || 0);
+          }
+        }
+      } else {
+        console.warn('getSupabaseClient 함수를 찾을 수 없습니다.');
+      }
+    }
+    
+    // 병원이 없거나 3개 미만이면 기본 병원으로 채우기
+    if (!hospitals || hospitals.length < 3) {
+      const neededCount = 3 - (hospitals?.length || 0);
+      console.log('추천 병원이 부족하여 기본 병원을 추가합니다. 필요 개수:', neededCount);
+      const defaultHospitals = await SupabaseService.getHospitals(null, null, neededCount);
+      console.log('기본 병원 로드 완료, 개수:', defaultHospitals?.length || 0);
+      if (defaultHospitals && defaultHospitals.length > 0) {
+        hospitals = [...(hospitals || []), ...defaultHospitals].slice(0, 3);
+      }
+    }
+    
+    // selectedPetId가 없고 hospitals도 없으면 전체 병원 로드
+    if ((!hospitals || hospitals.length === 0) && !selectedPetId) {
+      console.log('전체 병원을 로드합니다.');
+      hospitals = await SupabaseService.getHospitals(null, null, 3);
+      console.log('전체 병원 로드 완료, 개수:', hospitals?.length || 0);
+    }
+    
+    if (hospitals && hospitals.length > 0) {
+      // 병원 카드 HTML 생성 (제품 카드 스타일 재활용)
+      const hospitalCardsHTML = hospitals.map(hospital => {
+        const rating = hospital.rating ? parseFloat(hospital.rating) : 0;
+        const reviewCount = hospital.review_count ? parseInt(hospital.review_count, 10) : 0;
+        const imageUrl = hospital.hospital_img || '';
+        
+        return `
+          <div class="product-card" data-hospital-id="${hospital.hospital_id}" style="cursor: pointer;">
+            <div class="product-image" style="background-image: url('${imageUrl}'); background-size: cover; background-position: center;"></div>
+            <div class="product-brand">${hospital.hospital_name || ''}</div>
+            <p class="product-name">${hospital.address || ''}</p>
+            <div class="product-price">
+              <span class="price">⭐ ${rating.toFixed(1)}</span>
+            </div>
+            <div class="product-rating">
+              <span class="rating-reviews">리뷰 ${reviewCount}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      productListContainer.innerHTML = hospitalCardsHTML;
+      
+      // 병원 카드 클릭 이벤트 추가
+      const hospitalCards = productListContainer.querySelectorAll('.product-card[data-hospital-id]');
+      hospitalCards.forEach(card => {
+        card.addEventListener('click', function() {
+          const hospitalId = this.getAttribute('data-hospital-id');
+          // 병원 이름 가져오기 (카드 내에서)
+          const hospitalNameElement = this.querySelector('.product-brand');
+          const hospitalName = hospitalNameElement ? hospitalNameElement.textContent.trim() : '';
+          
+          if (hospitalId) {
+            // 상대 경로로 수정하고 병원 이름도 함께 전달
+            const params = new URLSearchParams({
+              hospital_id: hospitalId
+            });
+            if (hospitalName) {
+              params.set('hospital_name', hospitalName);
+            }
+            window.location.href = `../hospital_reservation/reservation.html?${params.toString()}`;
+          }
+        });
+      });
+      
+      // 추천 제목 업데이트
+      const selectedPetData = localStorage.getItem('selectedPetData');
+      if (selectedPetData) {
+        try {
+          const pet = JSON.parse(selectedPetData);
+          const petName = pet.pet_name || '내새꾸';
+          const subtitleEl = document.querySelector('.recommendation-subtitle');
+          if (subtitleEl) {
+            subtitleEl.textContent = `${petName}를 위한 맞춤 병원 추천`;
+          }
+        } catch (e) {
+          console.error('반려동물 데이터 파싱 실패:', e);
+        }
+      }
+      
+      console.log('홈 화면 병원 추천 표시 완료');
+    } else {
+      console.error('표시할 병원이 없습니다.');
+      productListContainer.innerHTML = '<p style="text-align: center; color: #959595; padding: 20px;">추천 병원을 찾을 수 없습니다.</p>';
+    }
+  } catch (error) {
+    console.error('병원 추천 로드 실패:', error);
+  }
+}
+

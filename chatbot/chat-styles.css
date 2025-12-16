@@ -228,6 +228,7 @@ body {
   padding: 0;
   z-index: 10;
   border-top: 1px solid #e5e5e5;
+  transition: bottom 0.3s ease-out;
 }
 
 /* 반응형 - 태블릿 이상 */
@@ -292,7 +293,7 @@ body {
   background: #ffffff;
   border-radius: 50px;
   padding: 8px 12px;
-  font-size: 10px;
+  font-size: 14px;
   color: #202027;
   font-family: 'Noto Sans KR', sans-serif;
   font-weight: 400;
@@ -348,5 +349,333 @@ body {
 
 .chat-container::-webkit-scrollbar-thumb:hover {
   background: #b3b3b3;
+}
+
+/* 추천 섹션 스타일 */
+.recommendation-section {
+  margin-top: 8px;
+}
+
+.recommendation-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #000000;
+  margin-bottom: 8px;
+  line-height: 15.19px;
+}
+
+.recommendation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recommendation-item {
+  background-color: #f5f5f5;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.recommendation-item:hover {
+  background-color: #eeeeee;
+  border-color: #2065c0;
+}
+
+.recommendation-item.hospital-item {
+  border-left: 3px solid #2065c0;
+}
+
+.recommendation-item.product-item {
+  border-left: 3px solid #4caf50;
+}
+
+.recommendation-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #000000;
+  margin-bottom: 4px;
+  line-height: 14.11px;
+}
+
+.recommendation-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: #666666;
+  line-height: 11.93px;
+}
+
+.recommendation-details span {
+  display: inline-block;
+}
+
+/* 추천 버튼 스타일 */
+.recommendation-btn {
+  margin-top: 8px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.hospital-reservation-btn {
+  background-color: #2065c0;
+  color: #ffffff;
+}
+
+.hospital-reservation-btn:hover {
+  background-color: #1a5499;
+}
+
+.hospital-reservation-btn:active {
+  background-color: #164080;
+}
+
+/* 병원 추천 카드 (hospital-card 스타일 재활용) */
+.chat-hospital-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.chat-hospital-card {
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 18px;
+  position: relative;
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  border: 1px solid #e5e5e5;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chat-hospital-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chat-hospital-image {
+  width: 125px;
+  height: 125px;
+  background-color: #d9d9d9;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+
+.chat-hospital-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.chat-hospital-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.chat-hospital-name {
+  font-size: 16px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 17.36px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.chat-hospital-rating {
+  font-size: 12px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 13.02px;
+}
+
+.chat-hospital-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chat-detail-item {
+  font-size: 12px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 13.02px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.chat-hospital-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.chat-action-btn {
+  height: 23px;
+  padding: 0 12px;
+  background-color: #d9d9d9;
+  border: 1px solid #d9d9d9;
+  border-radius: 5px;
+  color: #000000;
+  font-size: 13px;
+  font-weight: 400;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.chat-action-btn-primary {
+  background-color: #023e8c;
+  border-color: #023e8c;
+  color: #ffffff;
+}
+
+.chat-action-btn-primary:hover {
+  background-color: #022d6b;
+}
+
+.chat-action-btn-primary:active {
+  background-color: #011d4a;
+}
+
+/* 제품 추천 카드 (product-card 스타일 재활용) */
+.chat-product-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.chat-product-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chat-product-card:hover {
+  opacity: 0.8;
+}
+
+.chat-product-image {
+  width: 100%;
+  height: 100px;
+  background-color: #e8f4f8;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.chat-product-name {
+  font-size: 12px;
+  color: #202027;
+  margin: 0 0 6px 0;
+  line-height: 14px;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+  font-weight: 400;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 28px;
+}
+
+.chat-product-price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.chat-discount {
+  font-size: 12px;
+  color: #e64f30;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+  font-weight: 400;
+  line-height: 14px;
+}
+
+.chat-price {
+  font-size: 14px;
+  color: #202027;
+  font-family: 'JejuGothic', 'Noto Sans KR', sans-serif;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+/* 맨 아래로 스크롤 버튼 */
+.scroll-to-bottom-btn {
+  position: fixed;
+  bottom: 120px;
+  right: 50%;
+  transform: translateX(calc(195px - 50%));
+  width: 40px;
+  height: 40px;
+  background-color: #2065c0;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  transform: translateX(calc(195px - 50%)) rotate(180deg);
+}
+
+.scroll-to-bottom-btn.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.scroll-to-bottom-btn:hover {
+  background-color: #1a5499;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.scroll-to-bottom-btn:active {
+  background-color: #164080;
+  transform: translateX(calc(195px - 50%)) rotate(180deg) scale(0.95);
+}
+
+.scroll-to-bottom-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 390px) {
+  .scroll-to-bottom-btn {
+    right: 20px;
+    transform: translateX(0) rotate(180deg);
+  }
+  
+  .scroll-to-bottom-btn:active {
+    transform: translateX(0) rotate(180deg) scale(0.95);
+  }
 }
 
