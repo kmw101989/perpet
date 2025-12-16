@@ -202,6 +202,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // DOM 업데이트
     const petNameEl = document.querySelector('.pet-name');
     const petDetailsEl = document.querySelector('.pet-details');
+    const petProfileImageEl = document.querySelector('.pet-profile-image');
+
+    // 반려동물 프로필 이미지 표시
+    if (petProfileImageEl) {
+      if (selectedPet.pet_img && selectedPet.pet_img.trim() !== '') {
+        // 이미지가 있으면 표시
+        petProfileImageEl.style.backgroundImage = `url('${selectedPet.pet_img}')`;
+        petProfileImageEl.style.backgroundSize = 'cover';
+        petProfileImageEl.style.backgroundPosition = 'center';
+        console.log('반려동물 프로필 이미지 표시:', selectedPet.pet_img);
+      } else {
+        // 이미지가 없으면 기본 배경색 유지
+        petProfileImageEl.style.backgroundImage = '';
+        console.log('반려동물 프로필 이미지 없음');
+      }
+    }
 
     if (petNameEl) {
       // 이름이 있으면 실제 이름만 표시, 없으면 빈 값 (기본값 "내새꾸" 제거)
