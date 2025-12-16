@@ -176,11 +176,19 @@ window.addEventListener("DOMContentLoaded", () => {
           if (!isEditMode || editIndex === null || isNaN(editIndex)) {
             // 신규 등록: Supabase에 저장
             try {
+              // 이미지 URL을 pet_img 필드에 추가 (profileImage가 있으면 사용)
+              if (currentPetData.profileImage && !currentPetData.pet_img) {
+                currentPetData.pet_img = currentPetData.profileImage;
+              }
+              
               createdPet = await SupabaseService.createPet(currentPetData);
               if (createdPet) {
                 console.log("✅ Supabase에 반려동물 등록 완료:", createdPet);
                 // Supabase에서 받은 pet_id를 currentPetData에 추가
                 currentPetData.pet_id = createdPet.pet_id;
+                
+                // temp_ 접두사로 업로드된 이미지가 있으면 pet_id로 파일명 업데이트 (선택사항)
+                // 현재는 그대로 사용해도 됨
               } else {
                 console.error("❌ 반려동물 등록 실패");
                 alert('반려동물 등록 중 오류가 발생했습니다. 다시 시도해주세요.');
@@ -201,16 +209,60 @@ window.addEventListener("DOMContentLoaded", () => {
               return;
             }
           } else {
-            // 수정 모드: 기존 pet_id 사용 (petsData에서 가져오기)
-            if (editIndex >= 0 && editIndex < petsData.length && petsData[editIndex].pet_id) {
-              currentPetData.pet_id = petsData[editIndex].pet_id;
-              // TODO: Supabase 업데이트 로직 추가 (필요시)
-              console.log("수정 모드: 기존 pet_id 사용:", currentPetData.pet_id);
+            // 수정 모드: Supabase 업데이트
+            const editingPetId = currentPetData._editingPetId || currentPetData.pet_id;
+            
+            if (editingPetId) {
+              try {
+                // 이미지 URL을 pet_img 필드에 추가 (profileImage가 있으면 사용)
+                if (currentPetData.profileImage && !currentPetData.pet_img) {
+                  currentPetData.pet_img = currentPetData.profileImage;
+                }
+                
+                // Supabase에 업데이트
+                if (typeof SupabaseService !== 'undefined' && SupabaseService.updatePet) {
+                  const updatedPet = await SupabaseService.updatePet(editingPetId, currentPetData);
+                  if (updatedPet) {
+                    console.log("✅ Supabase에 반려동물 수정 완료:", updatedPet);
+                    currentPetData.pet_id = updatedPet.pet_id;
+                  } else {
+                    console.error("❌ 반려동물 수정 실패");
+                    alert('반려동물 수정 중 오류가 발생했습니다. 다시 시도해주세요.');
+                    isSubmitting = false;
+                    nextBtn.disabled = false;
+                    nextBtn.style.opacity = "1";
+                    nextBtn.style.cursor = "pointer";
+                    return;
+                  }
+                } else {
+                  console.warn("SupabaseService.updatePet이 없습니다. 로컬 데이터만 업데이트합니다.");
+                }
+              } catch (error) {
+                console.error("반려동물 수정 중 오류:", error);
+                const msg = error?.message || error?.hint || '다시 시도해주세요.';
+                alert('반려동물 수정 중 오류가 발생했습니다: ' + msg);
+                isSubmitting = false;
+                nextBtn.disabled = false;
+                nextBtn.style.opacity = "1";
+                nextBtn.style.cursor = "pointer";
+                return;
+              }
+            } else {
+              console.warn("수정 모드이지만 pet_id를 찾을 수 없습니다.");
             }
           }
           
-          if (isEditMode && editIndex !== null && !isNaN(editIndex)) {
-            // 수정 모드: 해당 인덱스의 데이터 업데이트
+          // 수정 모드 처리 (Supabase pet_id를 사용하는 경우와 petsData 배열 인덱스를 사용하는 경우 구분)
+          const editingPetId = currentPetData._editingPetId;
+          
+          if (isEditMode && editingPetId) {
+            // 마이페이지에서 수정한 경우: Supabase만 업데이트 (이미 위에서 처리됨)
+            // petsData 배열은 건너뛰기
+            console.log("✅ 마이페이지 수정 모드: Supabase 업데이트 완료");
+            delete currentPetData._isEditing;
+            delete currentPetData._editingPetId;
+          } else if (isEditMode && editIndex !== null && !isNaN(editIndex)) {
+            // pet_registration_complete에서 수정한 경우: petsData 배열 업데이트
             console.log("파싱된 인덱스:", editIndex);
             console.log("인덱스 유효성:", !isNaN(editIndex), "범위:", editIndex >= 0, editIndex < petsData.length);
             
@@ -253,9 +305,11 @@ window.addEventListener("DOMContentLoaded", () => {
             console.log("✅ 신규 등록 모드: 새 카드 추가");
           }
           
-          // petsData 배열 저장
-          localStorage.setItem("petsData", JSON.stringify(petsData));
-          console.log("저장된 petsData 길이:", petsData.length);
+          // petsData 배열 저장 (마이페이지에서 수정한 경우가 아닐 때만)
+          if (!editingPetId) {
+            localStorage.setItem("petsData", JSON.stringify(petsData));
+            console.log("저장된 petsData 길이:", petsData.length);
+          }
           
           // 정상적인 플로우(login부터 시작)인지 확인
           // login 페이지에서는 clearAllData()로 모든 데이터를 초기화하므로

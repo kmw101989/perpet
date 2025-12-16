@@ -160,25 +160,68 @@ function setupProfileImage() {
     });
   }
 
-  imageInput.addEventListener("change", (e) => {
+  imageInput.addEventListener("change", async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = document.createElement("img");
-        img.src = e.target.result;
-        profileImage.innerHTML = "";
-        profileImage.appendChild(img);
-        
-        try {
-          const currentPetData = JSON.parse(localStorage.getItem("currentPetData") || "{}");
-          currentPetData.profileImage = e.target.result;
-          localStorage.setItem("currentPetData", JSON.stringify(currentPetData));
-        } catch (error) {
-          console.error("이미지 저장 실패:", error);
-        }
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    
+    // 파일 유효성 검사
+    if (!file.type.startsWith('image/')) {
+      alert('이미지 파일만 업로드 가능합니다.');
+      return;
+    }
+    
+    // 파일 크기 제한 (5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert('파일 크기는 5MB 이하여야 합니다.');
+      return;
+    }
+    
+    // 로딩 표시
+    const uploadIcon = profileImage.querySelector('.upload-icon');
+    if (uploadIcon) {
+      uploadIcon.textContent = '업로드 중...';
+    }
+    
+    try {
+      // Supabase Storage에 업로드
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+      
+      // SupabaseService가 로드되었는지 확인
+      if (typeof SupabaseService === 'undefined') {
+        console.error('SupabaseService가 로드되지 않았습니다.');
+        alert('서비스 초기화 중 오류가 발생했습니다. 페이지를 새로고침해주세요.');
+        return;
+      }
+      
+      // 이미지 업로드
+      const imageUrl = await SupabaseService.uploadPetImage(file, userId);
+      
+      // 미리보기 표시
+      const img = document.createElement("img");
+      img.src = imageUrl;
+      profileImage.innerHTML = "";
+      profileImage.appendChild(img);
+      
+      // currentPetData에 이미지 URL 저장 (base64 대신 URL 저장)
+      const currentPetData = JSON.parse(localStorage.getItem("currentPetData") || "{}");
+      currentPetData.profileImage = imageUrl; // Supabase Storage URL 저장
+      currentPetData.pet_img = imageUrl; // DB 저장용 필드도 추가
+      localStorage.setItem("currentPetData", JSON.stringify(currentPetData));
+      
+      console.log("이미지 업로드 완료:", imageUrl);
+    } catch (error) {
+      console.error("이미지 업로드 실패:", error);
+      alert('이미지 업로드 중 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류'));
+      
+      // 업로드 아이콘 복원
+      if (uploadIcon) {
+        uploadIcon.textContent = '+';
+      }
     }
   });
 }
@@ -269,6 +312,8 @@ function saveFormData(profileImageData) {
       weight: weightInput.value.trim().replace(/\s*\(kg\)/g, ""),
       bodyType: selectedBodyType,
       profileImage: profileImageData,
+      // profileImage가 Supabase Storage URL인 경우 pet_img에도 저장
+      pet_img: (profileImageData && profileImageData.startsWith('http')) ? profileImageData : null
     });
     
     // currentPetData 업데이트
@@ -320,24 +365,24 @@ window.addEventListener("DOMContentLoaded", () => {
       // profileImage 컨테이너에 실제 이미지(img 태그)가 있는지 확인
       const hasImageInContainer = profileImage && profileImage.querySelector("img") !== null;
       
-      // 이미지가 있으면 로컬 스토리지에 저장
+      // 이미지가 있으면 로컬 스토리지에서 가져오기 (이미 Supabase Storage에 업로드됨)
       let profileImageData = null;
-      if (hasImageInContainer && imageInput && imageInput.files[0]) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          profileImageData = e.target.result;
-          saveFormData(profileImageData);
-        };
-        reader.readAsDataURL(imageInput.files[0]);
-      } else if (hasImageInContainer) {
-        // 파일 입력은 없지만 컨테이너에 이미지가 있는 경우 (이전에 업로드한 이미지)
+      if (hasImageInContainer) {
+        // currentPetData에서 이미지 URL 가져오기 (이미 Supabase Storage에 업로드된 경우)
         const savedPetData = localStorage.getItem("currentPetData");
         if (savedPetData) {
           try {
             const currentPetData = JSON.parse(savedPetData);
-            profileImageData = currentPetData.profileImage || null;
+            profileImageData = currentPetData.profileImage || currentPetData.pet_img || null;
           } catch (error) {
             console.error("데이터 읽기 실패:", error);
+          }
+        }
+        // 이미지가 img 태그의 src에 있는 경우 (직접 가져오기)
+        if (!profileImageData) {
+          const imgElement = profileImage.querySelector("img");
+          if (imgElement && imgElement.src) {
+            profileImageData = imgElement.src;
           }
         }
         saveFormData(profileImageData);
@@ -384,9 +429,15 @@ window.addEventListener("DOMContentLoaded", () => {
     }
     
     // 뒤로가기로 돌아온 경우인지 최종 판단
+    // 마이페이지에서 신규 등록으로 시작한 경우는 데이터 복원하지 않음
+    const isNewRegistrationFromMypage = localStorage.getItem("isNewRegistrationFromMypage") === "true";
+    
+    // 수정 모드인지 확인
+    const isEditMode = currentPetData._isEditing === true || currentPetData._editingPetId;
+    
     // pet_registration에서 돌아온 경우: currentPetData에 breed, birthday, gender, weight, bodyType 등 추가 정보가 있으면 뒤로가기로 판단
     let isBackNavigation = isBackFrom03 || isBackFromComplete;
-    if (isBackFromPetRegistration) {
+    if (isBackFromPetRegistration && !isNewRegistrationFromMypage) {
       // currentPetData에 추가 정보가 있으면 뒤로가기로 판단
       if (currentPetData.breed || currentPetData.birthday || currentPetData.gender || 
           currentPetData.weight || currentPetData.bodyType || currentPetData.profileImage) {
@@ -395,6 +446,18 @@ window.addEventListener("DOMContentLoaded", () => {
       } else {
         console.log("pet_registration에서 왔지만, 추가 정보가 없어서 정상 플로우로 판단");
       }
+    }
+    
+    // 수정 모드이거나 뒤로가기인 경우 데이터 복원
+    if (isEditMode) {
+      isBackNavigation = true;
+      console.log("수정 모드: 데이터 복원");
+    }
+    
+    // 마이페이지에서 신규 등록으로 시작한 경우 플래그 제거
+    if (isNewRegistrationFromMypage) {
+      localStorage.removeItem("isNewRegistrationFromMypage");
+      console.log("마이페이지에서 시작한 신규 등록: 데이터 복원하지 않음");
     }
     
     // 뒤로 가기로 돌아온 경우에만 입력 필드 복원

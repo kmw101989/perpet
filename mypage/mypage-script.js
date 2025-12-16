@@ -23,8 +23,22 @@ document.addEventListener('DOMContentLoaded', async function() {
   const addPetButton = document.querySelector('.add-pet-button');
   if (addPetButton) {
     addPetButton.addEventListener('click', function() {
+      // 신규 등록을 위한 완전한 초기화
+      localStorage.removeItem("currentPetData");
+      localStorage.removeItem("editingPetIndex");
+      // 마이페이지에서 시작한 신규 등록임을 표시하는 플래그 추가
+      localStorage.setItem("isNewRegistrationFromMypage", "true");
+      console.log("마이페이지에서 신규 등록 시작: 데이터 초기화 완료");
       // 반려동물 등록 페이지로 이동
       window.location.href = '/pet_registration01/index.html';
+    });
+  }
+
+  // 반려동물 수정 버튼
+  const editPetBtn = document.querySelector('.edit-btn');
+  if (editPetBtn) {
+    editPetBtn.addEventListener('click', async function() {
+      await editSelectedPet();
     });
   }
 
@@ -131,6 +145,114 @@ async function loadUserInfo() {
   } catch (error) {
     console.error('사용자 정보 로드 실패:', error);
   }
+}
+
+// 반려동물 수정 처리
+async function editSelectedPet() {
+  try {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      alert('로그인이 필요합니다.');
+      window.location.href = '/login/index.html';
+      return;
+    }
+
+    const selectedPetId = localStorage.getItem('selectedPetId');
+    if (!selectedPetId) {
+      alert('수정할 반려동물을 선택해주세요.');
+      return;
+    }
+
+    if (typeof SupabaseService === 'undefined' || !SupabaseService.getPetById) {
+      console.error('SupabaseService.getPetById가 없습니다.');
+      alert('수정 기능을 사용할 수 없습니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+
+    // Supabase에서 반려동물 정보 가져오기
+    const pet = await SupabaseService.getPetById(selectedPetId);
+    
+    if (!pet) {
+      alert('반려동물 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    console.log('수정할 반려동물 정보:', pet);
+
+    // Supabase 데이터를 반려동물 등록 폼 형식으로 변환
+    const petDataToEdit = convertPetDataForEdit(pet);
+    
+    // 수정 모드 플래그 설정
+    petDataToEdit._isEditing = true;
+    petDataToEdit._editingPetId = selectedPetId; // Supabase pet_id 저장
+    
+    // currentPetData에 저장
+    localStorage.setItem("currentPetData", JSON.stringify(petDataToEdit));
+    
+    // 신규 등록 플래그 제거 (수정 모드이므로)
+    localStorage.removeItem("isNewRegistrationFromMypage");
+    
+    console.log("수정 모드 진입:", petDataToEdit);
+    
+    // 반려동물 등록 페이지로 이동 (pet_registration01부터 시작)
+    window.location.href = '/pet_registration01/index.html';
+    
+  } catch (error) {
+    console.error('반려동물 수정 모드 진입 실패:', error);
+    const msg = error?.message || error?.hint || '수정 모드 진입 중 오류가 발생했습니다.';
+    alert(msg);
+  }
+}
+
+// Supabase 반려동물 데이터를 등록 폼 형식으로 변환
+function convertPetDataForEdit(pet) {
+  // 생일 파싱 (YYYYMMDD 형식)
+  let birthday = null;
+  if (pet.pet_birth) {
+    const birthStr = String(pet.pet_birth);
+    if (birthStr.length >= 8) {
+      birthday = {
+        year: birthStr.slice(0, 4),
+        month: birthStr.slice(4, 6),
+        day: birthStr.slice(6, 8)
+      };
+    }
+  }
+
+  // 질병 정보를 healthInterests 형식으로 변환
+  // disease_id를 healthInterests 키로 매핑
+  const diseaseMap = {
+    1: 'rhinitis',           // 비염
+    2: 'heartworm',          // 심장사상충
+    3: 'kidney_failure',     // 신부전
+    4: 'cystitis',           // 방광염
+    5: 'hepatitis',          // 간염
+    6: 'enteritis',          // 장염
+    7: 'dermatitis',         // 피부염
+    8: 'periodontitis',      // 치주염
+    9: 'patellar_luxation',  // 슬개골탈구
+    10: 'keratitis',         // 각막염
+    11: 'allergy',           // 알레르기
+    12: 'dementia'           // 치매
+  };
+  
+  const healthInterests = pet.disease_id ? [diseaseMap[pet.disease_id] || ''] : [];
+
+  return {
+    name: pet.pet_name || '',
+    type: pet.pet_species || 'dog',
+    breed: pet.detailed_species || '',
+    birthday: birthday,
+    gender: pet.pet_gender || 'male',
+    weight: pet.weight ? String(pet.weight).replace(/kg/g, '').trim() : '',
+    bodyType: null, // DB에 없으므로 null
+    healthInterests: healthInterests,
+    caution: pet.pet_warning ? 'yes' : 'no',
+    cautionDetail: pet.pet_warning || '',
+    profileImage: pet.pet_img || null,
+    pet_img: pet.pet_img || null,
+    user_id: pet.user_id || localStorage.getItem('userId')
+  };
 }
 
 // 반려동물 삭제 처리

@@ -52,9 +52,9 @@ function createPetCard(petData, index) {
                    petData.profileImage !== undefined && petData.profileImage.trim() !== "";
   
   const cardHtml = `
-    <div class="pet-card" data-pet-index="${index}">
+    <div class="pet-card" data-pet-index="${index}" data-pet-id="${petData.pet_id || ''}">
       <button class="edit-btn">수정</button>
-      <button class="delete-btn">삭제</button>
+      <button class="delete-btn" data-pet-id="${petData.pet_id || ''}">삭제</button>
       <div class="pet-info">
         <div class="pet-profile">
           <div class="pet-image" id="petImageContainer-${index}">
@@ -97,43 +97,57 @@ function createPetCard(petData, index) {
   return cardHtml;
 }
 
-// pet-card 삭제 함수
-async function deletePetCard(petIndex) {
+// pet-card 삭제 함수 (pet_id를 직접 사용)
+async function deletePetCard(petId) {
   try {
     const userId = localStorage.getItem("userId");
-    const petsData = JSON.parse(localStorage.getItem("petsData") || "[]");
-
-    if (petIndex >= 0 && petIndex < petsData.length) {
-      const targetPet = petsData[petIndex];
-      const petId = targetPet ? targetPet.pet_id : null;
-
-      // Supabase 삭제 (pet_id 존재 시)
-      if (petId && typeof SupabaseService !== 'undefined' && SupabaseService.deletePet) {
-        try {
-          await SupabaseService.deletePet(petId, userId);
-          console.log("DB 반려동물 삭제 완료:", petId);
-        } catch (dbErr) {
-          console.error("DB 반려동물 삭제 실패:", dbErr);
-          alert("반려동물 삭제 중 오류가 발생했습니다. 다시 시도해주세요.");
-          return;
-        }
-      }
-
-      // 로컬 데이터에서도 제거
-      petsData.splice(petIndex, 1);
-      localStorage.setItem("petsData", JSON.stringify(petsData));
-      
-      // 편집 상태 초기화
-      delete isEditing[petIndex];
-      
-      // 선택된 카드가 삭제된 카드인 경우 선택 해제
-      if (selectedPetCard && selectedPetCard.getAttribute("data-pet-index") === String(petIndex)) {
-        selectedPetCard = null;
-      }
-      
-      // 목록 새로고침
-      await loadPetData();
+    if (!userId) {
+      alert('로그인이 필요합니다.');
+      return;
     }
+
+    if (!petId) {
+      console.error("pet_id가 없습니다.");
+      alert("삭제할 반려동물 정보를 찾을 수 없습니다.");
+      return;
+    }
+
+    // Supabase 삭제
+    if (typeof SupabaseService !== 'undefined' && SupabaseService.deletePet) {
+      try {
+        await SupabaseService.deletePet(petId, userId);
+        console.log("DB 반려동물 삭제 완료:", petId);
+      } catch (dbErr) {
+        console.error("DB 반려동물 삭제 실패:", dbErr);
+        alert("반려동물 삭제 중 오류가 발생했습니다. 다시 시도해주세요.");
+        return;
+      }
+    } else {
+      console.error("SupabaseService.deletePet이 없습니다.");
+      alert("삭제 기능을 사용할 수 없습니다. 잠시 후 다시 시도해주세요.");
+      return;
+    }
+
+    // 로컬 petsData에서도 제거 (있는 경우)
+    try {
+      const petsData = JSON.parse(localStorage.getItem("petsData") || "[]");
+      const filteredPetsData = petsData.filter(p => String(p.pet_id) !== String(petId));
+      localStorage.setItem("petsData", JSON.stringify(filteredPetsData));
+    } catch (e) {
+      console.warn("로컬 petsData 정리 중 오류:", e);
+    }
+
+    // 선택된 반려동물이 삭제된 경우 선택 해제
+    const selectedPetId = localStorage.getItem("selectedPetId");
+    if (selectedPetId && String(selectedPetId) === String(petId)) {
+      localStorage.removeItem("selectedPetId");
+      localStorage.removeItem("selectedPetData");
+    }
+    
+    // 목록 새로고침
+    await loadPetData();
+    
+    alert("반려동물이 삭제되었습니다.");
   } catch (error) {
     console.error("반려동물 삭제 실패:", error);
     alert("반려동물 삭제 중 오류가 발생했습니다. 다시 시도해주세요.");
@@ -246,9 +260,19 @@ function setupPetCardClickHandlers() {
         e.preventDefault();
         e.stopPropagation();
         
+        // pet_id 가져오기 (버튼의 data-pet-id 또는 카드의 data-pet-id)
+        const petId = deleteBtn.getAttribute("data-pet-id") || 
+                     petCard.getAttribute("data-pet-id");
+        
+        if (!petId || petId === '') {
+          alert("삭제할 반려동물 정보를 찾을 수 없습니다.");
+          console.error("pet_id를 찾을 수 없습니다. deleteBtn:", deleteBtn, "petCard:", petCard);
+          return;
+        }
+        
         // 확인 다이얼로그
         if (confirm("정말로 이 반려동물 정보를 삭제하시겠습니까?")) {
-          deletePetCard(petIndex);
+          deletePetCard(petId);
         }
       });
     }
@@ -679,7 +703,7 @@ function convertPetDataForCard(pet) {
     caution: pet.pet_warning ? "yes" : "no",
     cautionDetail: pet.pet_warning || "",
     pet_id: pet.pet_id,
-    profileImage: null // 프로필 이미지는 추후 추가 가능
+    profileImage: pet.pet_img || null // Supabase Storage에서 가져온 이미지 URL
   };
 }
 
@@ -738,6 +762,8 @@ if (addPetCard) {
     // currentPetData와 editingPetIndex 모두 초기화하여 신규 등록임을 명확히 표시
     localStorage.removeItem("currentPetData");
     localStorage.removeItem("editingPetIndex");
+    // 마이페이지에서 시작한 신규 등록임을 표시하는 플래그 추가
+    localStorage.setItem("isNewRegistrationFromMypage", "true");
     console.log("신규 등록: currentPetData 및 editingPetIndex 초기화 완료");
     // 기존 petsData는 유지 (새 카드가 추가되도록)
     // pet_registration 페이지로 이동

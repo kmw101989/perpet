@@ -443,7 +443,7 @@ html {
   right: 16px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 12px;
   align-items: flex-end;
   z-index: 10;
 }
@@ -453,12 +453,13 @@ html {
   background-color: transparent;
   border: none;
   color: #c5c5c5;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 400;
   font-family: 'JejuGothic', sans-serif;
   cursor: pointer;
-  line-height: 9.77px;
-  padding: 0;
+  line-height: 13.02px;
+  padding: 6px 12px;
+  min-width: 50px;
 }
 
 .edit-btn:active,

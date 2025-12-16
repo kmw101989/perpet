@@ -631,6 +631,86 @@ const SupabaseService = {
     return String(maxId + 1);
   },
 
+  // 반려동물 이미지 업로드 (Supabase Storage)
+  async uploadPetImage(file, userId, petId = null) {
+    const client = await getSupabaseClient();
+    
+    try {
+      // 파일 유효성 검사
+      if (!file || !file.type.startsWith('image/')) {
+        throw new Error('이미지 파일만 업로드 가능합니다.');
+      }
+      
+      // 파일 크기 제한 (5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        throw new Error('파일 크기는 5MB 이하여야 합니다.');
+      }
+      
+      // 파일명 생성: userId_petId_timestamp.확장자
+      const fileExt = file.name.split('.').pop();
+      const timestamp = Date.now();
+      const fileName = petId 
+        ? `${userId}/${petId}_${timestamp}.${fileExt}`
+        : `${userId}/temp_${timestamp}.${fileExt}`;
+      
+      // Storage에 업로드 (버킷 이름: pics)
+      const { data, error } = await client.storage
+        .from('pics')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false // 기존 파일 덮어쓰기 방지
+        });
+      
+      if (error) {
+        console.error('이미지 업로드 실패:', error);
+        throw error;
+      }
+      
+      // Public URL 가져오기
+      const { data: urlData } = client.storage
+        .from('pics')
+        .getPublicUrl(fileName);
+      
+      return urlData.publicUrl;
+      
+    } catch (error) {
+      console.error('이미지 업로드 오류:', error);
+      throw error;
+    }
+  },
+
+  // 반려동물 이미지 삭제
+  async deletePetImage(imageUrl) {
+    const client = await getSupabaseClient();
+    
+    try {
+      // URL에서 파일 경로 추출
+      // 예: https://xxx.supabase.co/storage/v1/object/public/pics/userId/petId_timestamp.jpg
+      const urlParts = imageUrl.split('/pics/');
+      if (urlParts.length < 2) {
+        console.warn('잘못된 이미지 URL:', imageUrl);
+        return false;
+      }
+      
+      const filePath = urlParts[1];
+      
+      const { error } = await client.storage
+        .from('pics')
+        .remove([filePath]);
+      
+      if (error) {
+        console.error('이미지 삭제 실패:', error);
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('이미지 삭제 오류:', error);
+      return false;
+    }
+  },
+
   // 반려동물 등록 (pet_id는 DB IDENTITY로 자동 생성)
   async createPet(petData) {
     const client = await getSupabaseClient();
@@ -696,6 +776,7 @@ const SupabaseService = {
       weight: petWeight,
       disease_id: diseaseId,
       pet_warning: petWarning, // 주의사항 저장
+      pet_img: petData.pet_img || null, // 이미지 URL 추가
       vaccination: null, // 추후 추가 가능
       vaccination_date: null // 추후 추가 가능
     };
@@ -708,6 +789,82 @@ const SupabaseService = {
 
     if (error) {
       console.error('Error creating pet:', error);
+      throw error;
+    }
+
+    return data;
+  },
+
+  // 반려동물 정보 수정
+  async updatePet(petId, petData) {
+    const client = await getSupabaseClient();
+
+    // 생일을 문자열로 변환 (YYYYMMDD 형식)
+    let petBirth = null;
+    if (petData.birthday && petData.birthday.year && petData.birthday.month && petData.birthday.day) {
+      petBirth = `${petData.birthday.year}${petData.birthday.month.padStart(2, '0')}${petData.birthday.day.padStart(2, '0')}`;
+    }
+
+    // 질병 ID: healthInterests 배열의 첫 번째 질병을 disease_id로 사용
+    let diseaseId = null;
+    if (petData.healthInterests && petData.healthInterests.length > 0) {
+      const diseaseMap = {
+        'rhinitis': 1,
+        'heartworm': 2,
+        'kidney_failure': 3,
+        'cystitis': 4,
+        'hepatitis': 5,
+        'enteritis': 6,
+        'dermatitis': 7,
+        'periodontitis': 8,
+        'patellar_luxation': 9,
+        'keratitis': 10,
+        'allergy': 11,
+        'dementia': 12
+      };
+      
+      const diseaseKey = petData.healthInterests[0];
+      diseaseId = diseaseMap[diseaseKey] || null;
+    }
+
+    // 상세 종(견종/묘종) 텍스트
+    const detailedSpecies = petData.breed || petData.detailedSpecies || null;
+    const petGender = petData.gender || petData.pet_gender || null;
+    const petWeight = petData.weight ? String(petData.weight) : null;
+
+    // 주의사항
+    const petWarning = (petData.cautionDetail && petData.caution === 'yes') 
+      ? petData.cautionDetail.trim() 
+      : null;
+
+    const updateData = {
+      pet_name: petData.name || petData.pet_name || '',
+      pet_species: petData.type || petData.pet_species || '',
+      detailed_species: detailedSpecies,
+      pet_birth: petBirth ? parseInt(petBirth, 10) : null,
+      pet_gender: petGender,
+      weight: petWeight,
+      disease_id: diseaseId,
+      pet_warning: petWarning,
+      pet_img: petData.pet_img || null
+    };
+
+    // null이 아닌 값만 업데이트
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === null || updateData[key] === undefined) {
+        delete updateData[key];
+      }
+    });
+
+    const { data, error } = await client
+      .from('pets')
+      .update(updateData)
+      .eq('pet_id', petId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating pet:', error);
       throw error;
     }
 
