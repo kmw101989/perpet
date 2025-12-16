@@ -622,22 +622,66 @@ function bindHospitalCardEvents() {
       const hospitalId = hospitalCard.getAttribute('data-hospital-id');
       console.log('병원 카드 클릭:', hospitalId);
       
-      // 지도 중심을 해당 마커로 이동 (하단 시트에 가리지 않도록 오프셋)
+      // 지도 중심을 해당 마커로 이동 (마커가 화면 상단 65% 위치에 오도록)
       if (hospitalId && map) {
-        const markerData = markers.find(m => m.hospital.hospital_id == hospitalId);
+        // 마커 데이터 찾기
+        const markerData = markers.find(m => {
+          // hospital_id를 문자열과 숫자 모두 비교
+          const markerHospitalId = m.hospital.hospital_id;
+          return markerHospitalId == hospitalId || String(markerHospitalId) === String(hospitalId);
+        });
+        
+        // 지도 컨테이너의 실제 높이 가져오기
+        const mapContainer = document.getElementById('mapContainer');
+        const mapHeight = mapContainer ? mapContainer.offsetHeight : window.innerHeight;
+        
+        // 마커가 화면 하단에서 65% 올라온 지점에 오도록 계산
+        // 하단에서 65% 올라온 지점 = 화면 높이의 65% 지점
+        // 현재 중앙(50%)에서 아래로 15% 이동 필요 (65% - 50% = 15%)
+        const targetOffsetPercent = 0.15; // 50% -> 65% = 15% 아래로 이동
+        const offsetY = mapHeight * targetOffsetPercent; // 양수로 아래로 이동
+        
+        console.log('지도 이동 계산:', {
+          mapHeight,
+          offsetY,
+          targetOffsetPercent,
+          '계산된 오프셋(px)': offsetY
+        });
+        
         if (markerData && markerData.marker) {
-          map.setCenter(markerData.marker.getPosition());
+          // 마커 위치 가져오기
+          const markerPosition = markerData.marker.getPosition();
+          
+          // 줌 레벨 설정
           map.setZoom(16);
           
-          // 하단 시트 높이만큼 위로 보정 (기본 50% 시트 높이 고려)
-          const bottomSheet = document.getElementById('bottomSheet');
-          const sheetHeight = bottomSheet ? bottomSheet.offsetHeight : window.innerHeight * 0.5;
-          const offsetY = -sheetHeight * 0.5; // 마커를 화면 상단 쪽으로 올림
+          // 마커 위치로 중심 이동 (오프셋 미리 적용하여 한 번에 이동)
+          // 네이버 지도 API의 panTo를 사용하여 부드럽게 이동
+          map.setCenter(markerPosition);
           
-          // setCenter 적용 후 살짝 지연하여 panBy 수행
-          setTimeout(() => {
+          // setCenter 직후 즉시 panBy를 실행하여 두 번 움직이는 것을 방지
+          // 동기적으로 실행하여 애니메이션이 겹치지 않도록 함
+          map.panBy(new naver.maps.Point(0, offsetY));
+          console.log('지도 이동 완료, 오프셋:', offsetY, 'px');
+        } else {
+          // 마커가 없는 경우 (좌표가 없는 병원) - 병원 정보에서 직접 좌표 가져오기
+          const hospital = hospitals.find(h => {
+            const hId = h.hospital_id;
+            return hId == hospitalId || String(hId) === String(hospitalId);
+          });
+          
+          if (hospital && hospital.lat && hospital.lng) {
+            // 좌표가 있으면 직접 지도 중심 이동
+            const hospitalPosition = new naver.maps.LatLng(hospital.lat, hospital.lng);
+            map.setZoom(16);
+            map.setCenter(hospitalPosition);
+            
+            // setCenter 직후 즉시 panBy를 실행하여 두 번 움직이는 것을 방지
             map.panBy(new naver.maps.Point(0, offsetY));
-          }, 50);
+            console.log('지도 이동 완료 (마커 없음), 오프셋:', offsetY, 'px');
+          } else {
+            console.warn('병원 좌표를 찾을 수 없습니다:', hospitalId);
+          }
         }
       }
     }

@@ -716,11 +716,31 @@ html {
   margin-bottom: 2px;
 }
 
+/* 병원 카드의 병원 이름 (볼드) */
+.hospital-card .hospital-name {
+  font-size: 12px;
+  color: #202027;
+  margin-bottom: 4px;
+  font-family: 'JejuGothic', sans-serif;
+  font-weight: 500;
+  line-height: 14px;
+}
+
 .product-name {
   font-size: 10px;
   color: #414147;
   font-weight: 400;
   line-height: 10.85px;
+  font-family: 'JejuGothic', sans-serif;
+  margin-bottom: 4px;
+}
+
+/* 병원 카드의 주소 (작고 회색) */
+.hospital-card .hospital-address {
+  font-size: 9px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 11px;
   font-family: 'JejuGothic', sans-serif;
   margin-bottom: 4px;
 }

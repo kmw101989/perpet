@@ -168,9 +168,9 @@ document.addEventListener('DOMContentLoaded', function() {
         let selectedPetId = localStorage.getItem('selectedPetId');
         
         if (selectedPetId) {
-          // 선택된 pet_id가 있는 경우 해당 반려동물 찾기
-          selectedPet = sorted.find(p => p.pet_id === selectedPetId);
-          console.log('마이페이지에서 선택된 반려동물:', selectedPet);
+          // 선택된 pet_id가 있는 경우 해당 반려동물 찾기 (타입 변환하여 비교)
+          selectedPet = sorted.find(p => String(p.pet_id) === String(selectedPetId));
+          console.log('마이페이지에서 선택된 반려동물:', selectedPet, 'selectedPetId:', selectedPetId);
         }
         
         // 선택된 반려동물이 없거나 찾을 수 없으면 가장 작은 pet_id 선택 (기본값)
@@ -273,10 +273,19 @@ document.addEventListener('DOMContentLoaded', function() {
   window.addEventListener('focus', async function() {
     log('페이지 포커스 - 반려동물 정보 새로고침');
     await loadSelectedPet();
-    // 추천 제품도 다시 로드
+    
+    // 현재 활성 탭에 맞는 추천 다시 로드
     const activeTab = document.querySelector('.recommendation-tabs .tab-btn.active');
-    const productType = activeTab ? activeTab.textContent.trim() : '사료';
-    await waitForSupabaseAndLoadProducts(productType);
+    const tabType = activeTab ? activeTab.textContent.trim() : '사료';
+    
+    if (tabType === '병원') {
+      // 병원 탭인 경우
+      await loadRecommendedHospitals();
+    } else {
+      // 제품 탭인 경우 (사료, 영양제, 간식)
+      await waitForSupabaseAndLoadProducts(tabType);
+    }
+    
     // 예약 일정도 새로고침
     await loadReservationSchedule();
   });
@@ -286,10 +295,19 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!document.hidden) {
       log('페이지 가시성 변경 - 반려동물 정보 새로고침');
       await loadSelectedPet();
-      // 추천 제품도 다시 로드
+      
+      // 현재 활성 탭에 맞는 추천 다시 로드
       const activeTab = document.querySelector('.recommendation-tabs .tab-btn.active');
-      const productType = activeTab ? activeTab.textContent.trim() : '사료';
-      await waitForSupabaseAndLoadProducts(productType);
+      const tabType = activeTab ? activeTab.textContent.trim() : '사료';
+      
+      if (tabType === '병원') {
+        // 병원 탭인 경우
+        await loadRecommendedHospitals();
+      } else {
+        // 제품 탭인 경우 (사료, 영양제, 간식)
+        await waitForSupabaseAndLoadProducts(tabType);
+      }
+      
       // 예약 일정도 새로고침
       await loadReservationSchedule();
       // 생일 일정도 새로고침
@@ -325,9 +343,16 @@ document.addEventListener('DOMContentLoaded', function() {
       // 클릭한 탭에 active 클래스 추가
       this.classList.add('active');
       
-      // 제품 타입에 따라 추천 제품 다시 로드
-      const productType = this.textContent.trim();
-      await waitForSupabaseAndLoadProducts(productType);
+      // 탭 타입에 따라 추천 로드
+      const tabType = this.textContent.trim();
+      
+      if (tabType === '병원') {
+        // 병원 탭 클릭 시
+        await loadRecommendedHospitals();
+      } else {
+        // 제품 탭 클릭 시 (사료, 영양제, 간식)
+        await waitForSupabaseAndLoadProducts(tabType);
+      }
     });
   });
   
@@ -733,27 +758,27 @@ async function loadRecommendedProducts(productType = '사료') {
     if (selectedPetId) {
       // 추천 알고리즘 사용
       console.log('홈 화면 추천 제품 로드 시작, petId:', selectedPetId, 'productType:', mappedProductType);
-      products = await SupabaseService.getRecommendedProducts(selectedPetId, mappedProductType, 3);
+      products = await SupabaseService.getRecommendedProducts(selectedPetId, mappedProductType, 6);
       console.log('추천 제품 로드 완료, 개수:', products?.length || 0, '제품:', products);
     } else {
       console.log('selectedPetId가 없어 기본 제품을 로드합니다.');
     }
     
-    // 추천 제품이 없거나 3개 미만이면 기본 제품으로 채우기
-    if (!products || products.length < 3) {
-      const neededCount = 3 - (products?.length || 0);
+    // 추천 제품이 없거나 6개 미만이면 기본 제품으로 채우기
+    if (!products || products.length < 6) {
+      const neededCount = 6 - (products?.length || 0);
       console.log('추천 제품이 부족하여 기본 제품을 추가합니다. 필요 개수:', neededCount);
       const defaultProducts = await SupabaseService.getProducts(null, mappedProductType, neededCount, 'rating');
       console.log('기본 제품 로드 완료, 개수:', defaultProducts?.length || 0, '제품:', defaultProducts);
       if (defaultProducts && defaultProducts.length > 0) {
-        products = [...(products || []), ...defaultProducts].slice(0, 3);
+        products = [...(products || []), ...defaultProducts].slice(0, 6);
       }
     }
     
     // selectedPetId가 없고 products도 없으면 전체 제품 로드
     if ((!products || products.length === 0) && !selectedPetId) {
       console.log('전체 제품을 로드합니다.');
-      products = await SupabaseService.getProducts(null, mappedProductType, 3, 'rating');
+      products = await SupabaseService.getProducts(null, mappedProductType, 6, 'rating');
       console.log('전체 제품 로드 완료, 개수:', products?.length || 0);
     }
     
@@ -910,10 +935,10 @@ async function loadRecommendedHospitals() {
         const imageUrl = hospital.hospital_img || '';
         
         return `
-          <div class="product-card" data-hospital-id="${hospital.hospital_id}" style="cursor: pointer;">
+          <div class="product-card hospital-card" data-hospital-id="${hospital.hospital_id}" style="cursor: pointer;">
             <div class="product-image" style="background-image: url('${imageUrl}'); background-size: cover; background-position: center;"></div>
-            <div class="product-brand">${hospital.hospital_name || ''}</div>
-            <p class="product-name">${hospital.address || ''}</p>
+            <div class="product-brand hospital-name">${hospital.hospital_name || ''}</div>
+            <p class="product-name hospital-address">${hospital.address || ''}</p>
             <div class="product-price">
               <span class="price">⭐ ${rating.toFixed(1)}</span>
             </div>
