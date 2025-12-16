@@ -76,7 +76,7 @@ function displayPetSelectionUI(pets, currentSelectedId) {
       ${pets.map(pet => `
         <div class="pet-selection-item ${String(pet.pet_id) === String(currentSelectedId) ? 'selected' : ''}" 
              data-pet-id="${pet.pet_id}">
-          <div class="pet-selection-image"></div>
+          <div class="pet-selection-image" style="${pet.pet_img && pet.pet_img.trim() !== '' ? `background-image: url('${pet.pet_img}'); background-size: cover; background-position: center;` : ''}"></div>
           <div class="pet-selection-name">${pet.pet_name || '이름 없음'}</div>
         </div>
       `).join('')}
@@ -366,6 +366,39 @@ async function loadPetInfo() {
       const existingSelection = document.querySelector('.pet-selection-ui');
       if (existingSelection) {
         existingSelection.remove();
+      }
+    }
+
+    // 반려동물 프로필 이미지 표시
+    const petImageEl = document.querySelector('.pet-image');
+    if (petImageEl) {
+      if (selectedPet.pet_img && selectedPet.pet_img.trim() !== '') {
+        // 이미지가 있으면 표시
+        const img = petImageEl.querySelector('img');
+        if (img) {
+          img.src = selectedPet.pet_img;
+          img.style.display = 'block';
+        } else {
+          // img 태그가 없으면 생성
+          const newImg = document.createElement('img');
+          newImg.src = selectedPet.pet_img;
+          newImg.alt = selectedPet.pet_name || '반려동물 이미지';
+          newImg.style.display = 'block';
+          petImageEl.appendChild(newImg);
+        }
+        // 배경 이미지도 설정
+        petImageEl.style.backgroundImage = `url('${selectedPet.pet_img}')`;
+        petImageEl.style.backgroundSize = 'cover';
+        petImageEl.style.backgroundPosition = 'center';
+        console.log('반려동물 프로필 이미지 표시:', selectedPet.pet_img);
+      } else {
+        // 이미지가 없으면 기본 상태 유지
+        const img = petImageEl.querySelector('img');
+        if (img) {
+          img.style.display = 'none';
+        }
+        petImageEl.style.backgroundImage = '';
+        console.log('반려동물 프로필 이미지 없음');
       }
     }
 
