@@ -595,14 +595,107 @@ function findDiseaseByKeyword(keyword, diseases) {
   return null;
 }
 
+// 헬퍼 함수: 증상에서 disease_id 추출
+function getDiseaseIdsFromSymptoms(symptomWords, symptoms) {
+  const diseaseIds = new Set();
+  symptomWords.forEach((word) => {
+    symptoms
+      .filter((s) => s.symptom_word === word)
+      .forEach((s) => {
+        if (s.disease_id) diseaseIds.add(s.disease_id);
+      });
+  });
+  return Array.from(diseaseIds);
+}
+
+// 헬퍼 함수: disease_id에서 category_id 추출
+function getDiseasesWithCategories(diseaseIds, diseases) {
+  return diseases.filter((d) => diseaseIds.includes(d.disease_id));
+}
+
 // AI를 사용한 증상 정규화 및 질병 후보 선택
 async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
   const { symptoms, diseases } = dbData;
 
   // 증상 키워드 목록 생성 (symptom_word만)
-  const symptomWords = [
+  const allSymptomWords = [
     ...new Set(symptoms.map((s) => s.symptom_word).filter(Boolean)),
   ];
+  
+  // 키워드 기반 category_id 추출 (symptom 필터링을 위해 먼저 수행)
+  const keywordToCategoryId = {
+    심장: 1,
+    호흡: 2,
+    소화: 3,
+    위: 3,
+    장: 3,
+    "위/장": 3,
+    간: 4,
+    신장: 4,
+    비뇨: 4,
+    "간/신장": 4,
+    내과: 5,
+    피부: 6,
+    눈: 7,
+    "뼈/관절": 8,
+    뼈: 8,
+    관절: 8,
+    치과: 9,
+    행동: 10,
+    종양: 11,
+    응급: 12,
+  };
+  
+  // 키워드 기반 category_id 추출
+  let directCategoryIds = [];
+  const messageForMatching = userMessageLower;
+  for (const [key, categoryId] of Object.entries(keywordToCategoryId)) {
+    let shouldMatch = false;
+    if (key === "장") {
+      const 장Keywords = ["위장", "소화", "장기", "장애", "장염", "위/장"];
+      shouldMatch = 장Keywords.some((kw) => messageForMatching.includes(kw));
+      if (messageForMatching.includes("좋은") && !shouldMatch) {
+        continue;
+      }
+    } else {
+      const regex = new RegExp(`(^|[^가-힣])${key}([^가-힣]|$)`, "i");
+      shouldMatch =
+        regex.test(messageForMatching) || messageForMatching.includes(key);
+    }
+    if (shouldMatch && !directCategoryIds.includes(categoryId)) {
+      directCategoryIds.push(categoryId);
+    }
+  }
+  
+  // category_id별 symptom 필터링 (프롬프트 길이 줄이기)
+  let symptomWords = allSymptomWords;
+  if (directCategoryIds.length > 0) {
+    const categoryDiseaseIds = new Set(
+      diseases
+        .filter((d) => directCategoryIds.includes(d.category_id))
+        .map((d) => d.disease_id)
+    );
+    const categorySymptomWords = new Set(
+      symptoms
+        .filter((s) => categoryDiseaseIds.has(s.disease_id))
+        .map((s) => s.symptom_word)
+        .filter(Boolean)
+    );
+    
+    // category_id별 symptom이 있으면 그것만 사용, 없으면 전체 사용
+    if (categorySymptomWords.size > 0 && categorySymptomWords.size < allSymptomWords.length) {
+      symptomWords = Array.from(categorySymptomWords);
+      console.log(
+        "[Chat Function] category_id별 symptom 필터링:",
+        directCategoryIds,
+        "→",
+        symptomWords.length,
+        "개 symptom (전체:",
+        allSymptomWords.length,
+        "개)"
+      );
+    }
+  }
 
   // 질병 목록 생성
   const diseaseList = diseases.map((d) => ({
@@ -695,6 +788,27 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
 - 증상이 모호하거나 부족하면 status를 "uncertain"으로 설정한다.
 - 새로운 증상이나 질병명을 생성하지 마라.
 
+[disease_id 자동 감지 제한 규칙 - 매우 중요]
+
+disease_id는 아래 경우에만 suspected_diseases에 포함한다:
+
+1) 사용자가 질병명을 직접 언급한 경우
+2) symptom_word 매칭 결과가 동일 category_id 내에서만 발생한 경우
+
+❌ 절대 금지:
+- 서로 다른 category_id의 disease_id를 동시에 포함하지 않는다.
+- 예: 관절/뼈(category_id=8) 증상 → 장염(category_id=5) ❌ 차단
+
+✅ 올바른 예:
+- 관절/뼈 증상 → 슬개골탈구(category_id=8) ✅ 허용
+- 위/장 증상 → 장염(category_id=5) ✅ 허용
+
+[disease_id 언급 수 제한]
+
+- 하나의 응답에서 disease_id는 최대 1개만 언급한다.
+- 확신도 낮을 경우 disease_id 언급 없이 category 설명만 제공한다.
+- status: "uncertain"인 경우 disease_id를 언급하지 않는다.
+
 ---
 
 [추천 규칙]
@@ -707,6 +821,15 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
   - "~를 참고하실 수 있습니다"
   - "~를 확인해보실 수 있습니다"
 
+[category_id 우선 규칙 - 핵심]
+
+우선순위:
+1. 사용자 질병 키워드 → category_id (최우선)
+2. 증상 → disease_id → category_id (category_id 일치 확인 필수)
+3. 추천은 항상 category_id 기준으로만 수행
+
+disease_id는 설명 보조용이며, message에서도 category 기준 설명을 우선한다.
+
 ---
 
 [message 작성 규칙 - 매우 중요]
@@ -714,16 +837,21 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
 message에는 반드시 포함해야 한다:
 
 1. 왜 이 카테고리(category_id)로 분류됐는지 설명
-   예: "말씀해주신 증상은 반려견의 움직임이나 관절 사용과 관련된 경우에 자주 언급되는 패턴과 유사해 보여요."
+   예: "말씀해주신 증상은 반려견의 움직임이나 관절 사용과 관련해 자주 언급되는 경우와 유사해 보여요."
 
 2. 이 추천이 참고용임을 명확히 표시
-   예: "그래서 뼈·관절 분야를 주로 진료하는 병원과, 일상적인 관절 관리에 참고할 수 있는 제품 정보를 함께 보여드렸어요."
+   예: "그래서 뼈·관절 분야를 중심으로 진료하는 병원과, 일상적인 관절 관리에 참고할 수 있는 정보들을 함께 안내드렸어요."
 
 3. 병원 방문 권장 (완곡하게, 강요 톤 금지)
-   예: "정확한 상태 판단은 병원 진료를 통해 확인하시는 것이 좋아요."
+   예: "정확한 상태 확인은 병원 진료를 통해 이루어지는 것이 좋아요."
 
-message 예시 (슬개골/관절 케이스):
-"말씀해주신 증상은 반려견의 움직임이나 관절 사용과 관련된 경우에 자주 언급되는 패턴과 유사해 보여요. 그래서 뼈·관절 분야를 주로 진료하는 병원과, 일상적인 관절 관리에 참고할 수 있는 제품 정보를 함께 보여드렸어요. 정확한 상태 판단은 병원 진료를 통해 확인하시는 것이 좋아요."
+❌ 금지 표현:
+- "~질병이 감지되었습니다" (확정 뉘앙스)
+- 질병명 다중 언급
+- "~질병일 수 있습니다" (여러 질병 나열)
+
+✅ 올바른 예시 (슬개골/관절 케이스):
+"말씀해주신 증상은 반려견의 움직임이나 관절 사용과 관련해 자주 언급되는 경우와 유사해 보여요. 그래서 뼈·관절 분야를 중심으로 진료하는 병원과, 일상적인 관절 관리에 참고할 수 있는 정보들을 함께 안내드렸어요. 정확한 상태 확인은 병원 진료를 통해 이루어지는 것이 좋아요."
 
 ---
 
@@ -760,63 +888,22 @@ message 예시 (슬개골/관절 케이스):
   }
 }
 
-판단 불가 시:
+판단 불가 시 (status: "uncertain"):
 {
   "status": "uncertain",
   "normalized_symptoms": [],
-  "suspected_diseases": [],
+  "suspected_diseases": [],  // ❌ disease_id 언급 금지
   "category_ids": [],
   "message": "현재 정보만으로 특정 질병 카테고리를 유추하기 어렵습니다. 증상을 조금 더 자세히 알려주시면 도움을 드릴 수 있어요.",
   "recommendations": {
     "hospitals": [],
     "products": []
   }
-}`;
+}
 
-  // 키워드로 category_id 직접 추출 (질병이 없어도 키워드로 추천 가능)
-  let directCategoryIds = [];
+**중요: status가 "uncertain"인 경우 disease_id를 절대 언급하지 않는다.`;
 
-  console.log("[Chat Function] 키워드 추출 시작:", { userMessage });
-
-  // 단어 경계를 고려한 정확한 키워드 매칭
-  // "좋은"에 포함된 "장"은 제외하기 위해 특별 처리
-  const messageForMatching = userMessageLower;
-
-  for (const [key, categoryId] of Object.entries(keywordToCategoryId)) {
-    let shouldMatch = false;
-
-    // 특수 케이스: "장"은 "위장", "소화", "장기" 등과 함께 나올 때만 매칭
-    // "좋은"에 포함된 "장"은 무시
-    if (key === "장") {
-      // "위장", "소화", "장기", "장애" 등이 포함되어 있는지 확인
-      const 장Keywords = ["위장", "소화", "장기", "장애", "장염", "위/장"];
-      shouldMatch = 장Keywords.some((kw) => messageForMatching.includes(kw));
-
-      // "좋은"만 있고 위의 키워드가 없으면 무시
-      if (messageForMatching.includes("좋은") && !shouldMatch) {
-        continue;
-      }
-    } else {
-      // 다른 키워드는 정확한 매칭
-      // 단어 경계를 고려 (공백, 구두점, 한글 경계)
-      const regex = new RegExp(`(^|[^가-힣])${key}([^가-힣]|$)`, "i");
-      shouldMatch =
-        regex.test(messageForMatching) || messageForMatching.includes(key);
-    }
-
-    if (shouldMatch) {
-      if (!directCategoryIds.includes(categoryId)) {
-        directCategoryIds.push(categoryId);
-        console.log(
-          "[Chat Function] 키워드로 category_id 직접 추출:",
-          key,
-          "→",
-          categoryId
-        );
-      }
-    }
-  }
-
+  // directCategoryIds는 이미 위에서 추출됨 (symptom 필터링을 위해)
   console.log("[Chat Function] 추출된 directCategoryIds:", directCategoryIds);
 
   // product_type 추출 (사료, 영양제, 간식 등)
@@ -1051,45 +1138,145 @@ message 예시 (슬개골/관절 케이스):
       (s) => validSymptomWords.has(s)
     );
 
-    // suspected_diseases 검증 및 처리
+    // suspected_diseases 검증 및 처리 (category_id 일치 확인 필수)
     let validatedDiseases = [];
     if (
       analysisResult.suspected_diseases &&
       analysisResult.suspected_diseases.length > 0
     ) {
       const validDiseaseIds = new Set(diseases.map((d) => d.disease_id));
-      validatedDiseases = analysisResult.suspected_diseases
+      const diseaseMap = new Map(
+        diseases.map((d) => [d.disease_id, d.category_id])
+      );
+
+      // 1차 필터링: 유효한 disease_id만
+      let candidateDiseases = analysisResult.suspected_diseases
         .filter((d) => validDiseaseIds.has(d.disease_id))
         .map((d) => ({
           disease_id: d.disease_id,
-          confidence: d.confidence || "medium", // confidence 필드 사용
+          confidence: d.confidence || "medium",
+          category_id: diseaseMap.get(d.disease_id),
         }));
+
+      // 2차 필터링: category_id 일치 확인
+      // 증상 기반으로 추출된 category_id가 있으면 그것과 일치하는 것만 허용
+      let targetCategoryIds = [];
+      
+      // 증상 기반 category_id 추출
+      if (validatedSymptoms.length > 0) {
+        const symptomDiseaseIds = getDiseaseIdsFromSymptoms(
+          validatedSymptoms,
+          symptoms
+        );
+        if (symptomDiseaseIds.length > 0) {
+          const diseasesWithCategories = getDiseasesWithCategories(
+            symptomDiseaseIds,
+            diseases
+          );
+          targetCategoryIds = [
+            ...new Set(
+              diseasesWithCategories
+                .map((d) => d.category_id)
+                .filter(Boolean)
+            ),
+          ];
+        }
+      }
+
+      // 키워드 기반 category_id 추가
+      if (directCategoryIds.length > 0) {
+        targetCategoryIds = [
+          ...new Set([...targetCategoryIds, ...directCategoryIds]),
+        ];
+      }
+
+      // category_id 필터링: targetCategoryIds가 있으면 일치하는 것만 허용
+      if (targetCategoryIds.length > 0) {
+        candidateDiseases = candidateDiseases.filter((d) =>
+          targetCategoryIds.includes(d.category_id)
+        );
+        console.log(
+          "[Chat Function] category_id 필터링 적용:",
+          targetCategoryIds,
+          "→",
+          candidateDiseases.length,
+          "개 disease_id 통과"
+        );
+      }
+
+      // 3차 필터링: 동일 category_id 내에서만 허용
+      if (candidateDiseases.length > 0) {
+        const categoryGroups = {};
+        candidateDiseases.forEach((d) => {
+          if (!categoryGroups[d.category_id]) {
+            categoryGroups[d.category_id] = [];
+          }
+          categoryGroups[d.category_id].push(d);
+        });
+
+        // 가장 많은 disease_id를 가진 category_id 선택
+        const dominantCategory = Object.keys(categoryGroups).reduce((a, b) =>
+          categoryGroups[a].length > categoryGroups[b].length ? a : b
+        );
+
+        validatedDiseases = categoryGroups[dominantCategory];
+        console.log(
+          "[Chat Function] 동일 category_id 필터링:",
+          dominantCategory,
+          "→",
+          validatedDiseases.length,
+          "개 disease_id"
+        );
+      }
+
+      // 4차 필터링: 최대 1개만 허용
+      if (validatedDiseases.length > 1) {
+        // confidence가 높은 것 우선, 같으면 첫 번째 것
+        validatedDiseases.sort((a, b) => {
+          const confidenceOrder = { high: 3, medium: 2, low: 1 };
+          return (
+            (confidenceOrder[b.confidence] || 0) -
+            (confidenceOrder[a.confidence] || 0)
+          );
+        });
+        validatedDiseases = [validatedDiseases[0]];
+        console.log(
+          "[Chat Function] disease_id 최대 1개 제한:",
+          validatedDiseases[0].disease_id
+        );
+      }
     }
 
-    // 가능한 질병이 발견되었는데 AI가 포함하지 않은 경우 추가
+    // 사용자가 직접 질병명을 언급한 경우 (category_id 제한 없이 허용)
     if (possibleDisease && validatedDiseases.length === 0) {
       const alreadyIncluded = validatedDiseases.some(
         (d) => d.disease_id === possibleDisease.disease_id
       );
       if (!alreadyIncluded) {
         console.log(
-          "[Chat Function] 키워드 매칭으로 질병 발견:",
+          "[Chat Function] 사용자 직접 언급 질병 추가:",
           possibleDisease.disease_name
         );
         validatedDiseases.push({
           disease_id: possibleDisease.disease_id,
           confidence: "medium",
+          category_id: possibleDisease.category_id,
         });
       }
     }
 
-    // 판단 불가 여부 확인 (질병을 모르는 경우만)
-    // 질병을 이미 언급한 경우(validatedDiseases가 있으면)는 추천 가능
-    // 또는 키워드로 category_id를 찾은 경우도 추천 가능
+    // status: "uncertain"인 경우 disease_id 제거
     const isUncertain =
       validatedDiseases.length === 0 &&
       validatedSymptoms.length === 0 &&
       directCategoryIds.length === 0;
+
+    if (analysisResult.status === "uncertain" || isUncertain) {
+      validatedDiseases = []; // disease_id 언급 금지
+      console.log(
+        "[Chat Function] status: uncertain → disease_id 제거"
+      );
+    }
 
     console.log("[Chat Function] 판단 불가 여부:", {
       isUncertain,
@@ -1219,9 +1406,10 @@ message 예시 (슬개골/관절 케이스):
                 validatedSymptoms.length === 0 &&
                 validatedDiseases.length > 0
               ) {
-                // 질병을 이미 언급한 경우 제품 우선
-                console.log("[Chat Function] 질병 언급됨 - 제품 우선 추천");
+                // 질병을 이미 언급한 경우 제품 우선 (순차 실행)
+                console.log("[Chat Function] 질병 언급됨 - 제품 우선 추천 (순차 실행)");
                 recommendedProducts = await getRecommendedProducts(categoryIds);
+                // 제품 추천 완료 후 병원 추천
                 recommendedHospitals = await getRecommendedHospitals(
                   categoryIds
                 );
@@ -1230,11 +1418,12 @@ message 예시 (슬개골/관절 케이스):
                   hospitals: recommendedHospitals.length,
                 });
               } else {
-                // 증상 기반인 경우 병원 우선
-                console.log("[Chat Function] 증상 기반 - 병원 우선 추천");
+                // 증상 기반인 경우 병원 우선 (순차 실행)
+                console.log("[Chat Function] 증상 기반 - 병원 우선 추천 (순차 실행)");
                 recommendedHospitals = await getRecommendedHospitals(
                   categoryIds
                 );
+                // 병원 추천 완료 후 제품 추천
                 recommendedProducts = await getRecommendedProducts(categoryIds);
                 console.log("[Chat Function] 추천 결과:", {
                   products: recommendedProducts.length,
