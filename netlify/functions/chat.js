@@ -652,6 +652,24 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
     name: d.disease_name,
   }));
 
+  // 관리 질문 키워드 확인 (가장 우선)
+  const isCareGuidanceQuestion =
+    userMessageLower.includes("지켜") ||
+    userMessageLower.includes("관찰") ||
+    userMessageLower.includes("바로") ||
+    userMessageLower.includes("며칠") ||
+    userMessageLower.includes("산책") ||
+    userMessageLower.includes("점프") ||
+    userMessageLower.includes("계단") ||
+    userMessageLower.includes("관리") ||
+    userMessageLower.includes("조심") ||
+    userMessageLower.includes("해야") ||
+    userMessageLower.includes("해야하") ||
+    userMessageLower.includes("가야") ||
+    userMessageLower.includes("가야하") ||
+    userMessageLower.includes("급한") ||
+    userMessageLower.includes("긴급");
+
   // 추천 요청 키워드 확인
   const hasRecommendationRequest =
     userMessageLower.includes("추천") ||
@@ -680,6 +698,7 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
     userMessageLower.includes("문제");
 
   console.log("[Chat Function] 메시지 분석:", {
+    isCareGuidanceQuestion,
     hasRecommendationRequest,
     hasCategoryKeyword,
     hasSymptomKeywords,
@@ -847,7 +866,32 @@ message에는 반드시 포함해야 한다:
   }
 }
 
-**중요: status가 "uncertain"인 경우 disease_id를 절대 언급하지 않는다.`;
+**중요: status가 "uncertain"인 경우 disease_id를 절대 언급하지 않는다.
+
+[관리 질문 처리 규칙 - 매우 중요]
+
+사용자가 아래와 같은 질문을 할 때는 병원/제품 추천이 아니라 "관리 가이드"를 제공해야 합니다:
+
+- "지금 바로 병원에 가야 하나요?"
+- "며칠 지켜봐도 되나요?"
+- "산책/점프/계단을 어떻게 해야 하나요?"
+- "관리 방법을 알려주세요"
+- "조심해야 할 점이 있나요?"
+
+관리 질문 응답 형식:
+{
+  "status": "ok",
+  "normalized_symptoms": [],
+  "suspected_diseases": [],
+  "category_ids": [8],  // category_id는 유지
+  "message": "관리 가이드 중심의 답변 (병원 방문 시점, 일상 관리 방법, 주의사항 등)",
+  "recommendations": {
+    "hospitals": [],  // 추천 없음
+    "products": []    // 추천 없음
+  }
+}
+
+**중요: 관리 질문일 때는 추천을 제공하지 않고, 관리 기준과 주의사항만 안내합니다.**`;
 
   // directCategoryIds는 이미 위에서 추출됨 (symptom 필터링을 위해)
   console.log("[Chat Function] 추출된 directCategoryIds:", directCategoryIds);
@@ -996,9 +1040,15 @@ message에는 반드시 포함해야 한다:
 - "운동" 질문이면 반려동물의 운동(산책, 놀이 등)에 대해 답변하세요.
 - 사람의 운동량이나 식습관 조언을 제공하지 마세요.
 
+**관리 질문 처리 (매우 중요):**
+사용자가 "지금 바로 병원에 가야 하나요?", "며칠 지켜봐도 되나요?", "산책/점프/계단을 어떻게 해야 하나요?" 같은 질문을 할 때는:
+- 병원/제품 추천을 제공하지 않습니다 (recommendations는 빈 배열)
+- category_id는 유지하되, 관리 가이드 중심의 message를 생성합니다
+- 병원 방문 시점, 일상 관리 방법, 주의사항 등을 안내합니다
+
 **message 작성 시 반드시 포함:**
 1. 왜 이 카테고리(category_id)로 분류됐는지 설명
-2. 이 추천이 참고용임을 명확히 표시
+2. 이 추천이 참고용임을 명확히 표시 (관리 질문이 아닐 때만)
 3. 병원 방문 권장 (완곡하게, 강요 톤 금지)
 
 **금지 표현:**
@@ -1036,7 +1086,7 @@ message에는 반드시 포함해야 한다:
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "gpt-3.5-turbo",
+            model: "gpt-4o-mini", // gpt-3.5-turbo에서 변경 (JSON 안정성 및 규칙 준수 향상)
             messages: messages,
             temperature: 0.7,
             max_tokens: 500,
@@ -1287,6 +1337,46 @@ message에는 반드시 포함해야 한다:
     let finalDiseases = [];
     let recommendedHospitals = [];
     let recommendedProducts = [];
+
+    // 관리 질문인 경우 추천 로직 스킵
+    if (isCareGuidanceQuestion) {
+      console.log("[Chat Function] 관리 질문 감지 - 추천 로직 스킵");
+      
+      // category_id만 유지 (질병 기반 또는 키워드 기반)
+      if (validatedDiseases.length > 0) {
+        const diseaseIds = validatedDiseases.map((d) => d.disease_id);
+        const diseasesWithCategories = getDiseasesWithCategories(
+          diseaseIds,
+          diseases
+        );
+        categoryIds = [
+          ...new Set(
+            diseasesWithCategories.map((d) => d.category_id).filter(Boolean)
+          ),
+        ];
+        finalDiseases = validatedDiseases.map((d) => ({
+          disease_id: d.disease_id,
+          confidence: d.confidence,
+        }));
+      } else if (directCategoryIds.length > 0) {
+        categoryIds = directCategoryIds;
+      }
+
+      // 관리 질문 응답 반환 (추천 없음)
+      return {
+        status: "ok",
+        normalized_symptoms: validatedSymptoms,
+        suspected_diseases: finalDiseases,
+        category_ids: categoryIds,
+        recommendations: {
+          hospitals: [], // 관리 질문은 추천 없음
+          products: [], // 관리 질문은 추천 없음
+        },
+        message:
+          analysisResult.message ||
+          "말씀해주신 내용을 바탕으로 관리 방법을 안내드렸습니다. 정확한 상태 확인을 위해 병원 진료를 받아보시는 것을 권장드립니다.",
+      };
+    }
 
     if (!isUncertain) {
       // 질병 기반 category_id 추출
@@ -1590,28 +1680,30 @@ message에는 반드시 포함해야 한다:
           "현재 정보만으로 특정 질병 카테고리를 유추하기 어렵습니다. 증상을 조금 더 자세히 알려주시면 도움을 드릴 수 있어요.",
       };
     } else {
-      // 추천이 없는 경우 AI 메시지 조정
+      // 추천이 없는 경우 AI 메시지 조정 (관리 질문이 아닐 때만)
       let finalMessage =
         analysisResult.message ||
         "말씀해주신 내용을 바탕으로 관련 정보를 찾아보았습니다. 정확한 상태 확인을 위해 병원 진료를 받아보시는 것을 권장드립니다.";
 
-      const userMessageLower = userMessage.toLowerCase();
-      const wantsProducts =
-        userMessageLower.includes("제품") ||
-        userMessageLower.includes("상품") ||
-        userMessageLower.includes("사료") ||
-        userMessageLower.includes("영양제");
+      // 관리 질문이 아닐 때만 fallback 메시지로 덮어쓰기
+      if (!isCareGuidanceQuestion) {
+        const wantsProducts =
+          userMessageLower.includes("제품") ||
+          userMessageLower.includes("상품") ||
+          userMessageLower.includes("사료") ||
+          userMessageLower.includes("영양제");
 
-      if (
-        recommendedHospitals.length === 0 &&
-        recommendedProducts.length === 0
-      ) {
-        if (wantsProducts) {
-          finalMessage =
-            "현재 등록된 제품 정보가 제한적이므로, 자사몰에서 관련 제품을 확인해보시거나 가까운 동물병원에 상담을 받아보시기 바랍니다.";
-        } else {
-          finalMessage =
-            "현재 등록된 병원 정보가 제한적이므로, 가까운 동물병원 방문을 우선 권장드립니다.";
+        if (
+          recommendedHospitals.length === 0 &&
+          recommendedProducts.length === 0
+        ) {
+          if (wantsProducts) {
+            finalMessage =
+              "현재 등록된 제품 정보가 제한적이므로, 자사몰에서 관련 제품을 확인해보시거나 가까운 동물병원에 상담을 받아보시기 바랍니다.";
+          } else {
+            finalMessage =
+              "현재 등록된 병원 정보가 제한적이므로, 가까운 동물병원 방문을 우선 권장드립니다.";
+          }
         }
       }
 
