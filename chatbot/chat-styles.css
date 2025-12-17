@@ -99,7 +99,7 @@ body {
 .banner-image {
   width: 55px;
   height: 48px;
-  background-color: #ffffff;
+  background-color: transparent;
   border-radius: 8px;
   flex-shrink: 0;
   background-image: url("../svg/megaphone.svg");
