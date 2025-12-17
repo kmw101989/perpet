@@ -49,6 +49,14 @@ document.addEventListener('DOMContentLoaded', async function() {
       await deleteSelectedPet();
     });
   }
+
+  // 등급별 혜택 보기 버튼
+  const benefitBtn = document.getElementById('benefitBtn');
+  if (benefitBtn) {
+    benefitBtn.addEventListener('click', function() {
+      window.location.href = '../subscription/index.html';
+    });
+  }
 });
 
 // 반려동물 선택 UI 표시 함수

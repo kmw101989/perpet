@@ -164,6 +164,30 @@ html {
   flex-shrink: 0;
 }
 
+.benefit-btn {
+  height: 19px;
+  padding: 0 12px;
+  background: linear-gradient(180deg, #023e8c 0%, #2a73d2 100%);
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 400;
+  font-family: "JejuGothic", sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  line-height: 10px;
+}
+
+.benefit-icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
 .benefit-link {
   height: 19px;
   padding: 0 8px;

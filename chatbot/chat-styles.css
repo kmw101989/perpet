@@ -118,6 +118,7 @@ body {
 
 .banner-line1 {
   margin-bottom: 2px;
+  white-space: nowrap;
 }
 
 .banner-line1 .no-break {
@@ -126,6 +127,7 @@ body {
 
 .banner-line2 {
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .banner-arrow {
