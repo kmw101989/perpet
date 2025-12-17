@@ -315,7 +315,7 @@ document.addEventListener("DOMContentLoaded", function () {
       headerLogoEl.src = "../svg/main_dog.svg";
     } else {
       // 기본값 (species가 없거나 다른 경우)
-      headerLogoEl.src = "../svg/Union.svg";
+      headerLogoEl.src = "../svg/main_dog.svg";
     }
   }
 
