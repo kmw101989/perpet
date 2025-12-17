@@ -1,13 +1,9 @@
 /* Bazzi 폰트 */
 @font-face {
   font-family: "Bazzi";
-  src: url("/Bazzi.ttf") format("truetype"),
-    url("/fonts/Bazzi-Regular.woff2") format("woff2"),
-    url("/fonts/Bazzi-Regular.woff") format("woff"),
-    url("/fonts/Bazzi.woff2") format("woff2"),
-    url("/fonts/Bazzi.woff") format("woff"), local("Bazzi"),
-    local("Bazzi-Regular");
-  font-weight: 400;
+  src: url("../fonts/Bazzi.ttf") format("truetype"),
+    url("../fonts/Bazzi OTF.otf") format("opentype");
+  font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
@@ -15,8 +11,9 @@
 /* JejuGothic 폰트 */
 @font-face {
   font-family: "JejuGothic";
-  src: url("/JejuGothic.ttf") format("truetype");
-  font-weight: 400;
+  src: url("../fonts/JejuGothic.ttf") format("truetype"),
+    url("../fonts/JejuGothicOTF.otf") format("opentype");
+  font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
