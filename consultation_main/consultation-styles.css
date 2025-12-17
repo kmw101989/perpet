@@ -134,7 +134,7 @@ html {
 .vet-card {
   background-color: #ffffff;
   border-radius: 10px;
-  padding: 16px 20px;
+  padding: 16px 0 16px 20px;
   display: flex;
   gap: 18px;
   align-items: flex-start;
@@ -178,6 +178,7 @@ html {
   align-items: flex-end;
   gap: 8px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .vet-profile-image {
@@ -269,29 +270,32 @@ html {
   transition: background-color 0.2s;
   position: relative;
   clip-path: polygon(
-    0 0,
-    calc(100% - 12px) 0,
+    12px 0,
+    100% 0,
     100% 50%,
-    calc(100% - 12px) 100%,
-    0 100%
+    100% 100%,
+    12px 100%,
+    0 50%
   );
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-right: 12px;
+  padding-left: 12px;
   flex-shrink: 0;
   z-index: 1;
+  margin-left: auto;
+  margin-right: 0;
 }
 
 .consult-button::after {
   content: "";
   position: absolute;
-  right: 0;
+  left: 0;
   top: 50%;
   transform: translateY(-50%);
   width: 0;
   height: 0;
-  border-left: 12px solid #023e8c;
+  border-right: 12px solid #023e8c;
   border-top: 14px solid transparent;
   border-bottom: 14px solid transparent;
 }

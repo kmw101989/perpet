@@ -189,7 +189,7 @@ function restoreChatMessages(messages) {
         botMsg.className = 'message bot-message';
         botMsg.innerHTML = `
           <div class="message-avatar">
-            <img src="../svg/bot.svg" alt="펫봇" class="bot-avatar-image" />
+            <img src="../svg/Union.svg" alt="펫봇" class="bot-avatar-image" />
           </div>
           <div class="message-content">
             <div class="message-bubble">${msg.html || msg.content}</div>
@@ -432,7 +432,7 @@ async function sendMessage(messageText) {
         hospitalRecommendation.className = 'message bot-message recommendation-section';
         hospitalRecommendation.innerHTML = `
           <div class="message-avatar">
-            <img src="../svg/bot.svg" alt="펫봇" class="bot-avatar-image" />
+            <img src="../svg/Union.svg" alt="펫봇" class="bot-avatar-image" />
           </div>
           <div class="message-content">
             <div class="recommendation-title">추천 병원</div>
@@ -479,7 +479,7 @@ async function sendMessage(messageText) {
         productRecommendation.className = 'message bot-message recommendation-section';
         productRecommendation.innerHTML = `
           <div class="message-avatar">
-            <img src="../svg/bot.svg" alt="펫봇" class="bot-avatar-image" />
+            <img src="../svg/Union.svg" alt="펫봇" class="bot-avatar-image" />
           </div>
           <div class="message-content">
             <div class="recommendation-title">참고 제품</div>

@@ -295,7 +295,26 @@ async function loadProducts(sectionType = "recommended") {
         ".recommendation-section:last-of-type .section-title"
       );
       if (sectionTitle) {
-        sectionTitle.textContent = `${categoryName}을 위한 냠냠`;
+        // 받침이 있으면 "을", 없으면 "를" 사용
+        // 종합관리와 피부는 "를 위한 추천", 나머지는 "을/를 위한 냠냠"
+        const hasFinalConsonant = (str) => {
+          const lastChar = str[str.length - 1];
+          const code = lastChar.charCodeAt(0);
+          if (code >= 0xac00 && code <= 0xd7a3) {
+            // 한글인 경우
+            return (code - 0xac00) % 28 !== 0;
+          }
+          return false;
+        };
+        
+        const particle = hasFinalConsonant(categoryName) ? "을" : "를";
+        
+        // 종합관리와 피부는 "를 위한 추천", 나머지는 "을/를 위한 냠냠"
+        if (categoryName === "종합관리" || categoryName === "피부") {
+          sectionTitle.textContent = `${categoryName}를 위한 추천`;
+        } else {
+          sectionTitle.textContent = `${categoryName}${particle} 위한 냠냠`;
+        }
       }
     }
   } catch (error) {

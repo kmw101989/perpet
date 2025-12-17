@@ -10,6 +10,14 @@
   background-color: rgba(249, 249, 249, 0.94);
   backdrop-filter: blur(10px);
   z-index: 100;
+  box-sizing: border-box;
+}
+
+@media (max-width: 390px) {
+  .tabbar {
+    width: 100%;
+    max-width: 100%;
+  }
 }
 
 .tabbar-tabs {

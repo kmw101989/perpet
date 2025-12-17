@@ -136,6 +136,8 @@ html {
   display: flex;
   gap: 8px;
   align-items: center;
+  justify-content: flex-end;
+  flex: 1;
 }
 
 .address-btn {
@@ -457,7 +459,13 @@ html {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 28px;
+  gap: 8px;
+}
+
+@media (max-width: 360px) {
+  .pet-tags {
+    gap: 6px;
+  }
 }
 
 .pet-tag-container {

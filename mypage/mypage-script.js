@@ -65,8 +65,8 @@ function displayPetSelectionUI(pets, currentSelectedId) {
     // 선택 UI 생성
     selectionUI = document.createElement('div');
     selectionUI.className = 'pet-selection-ui';
-    // pet-profile-card 다음에 삽입
-    petProfileCard.parentNode.insertBefore(selectionUI, petProfileCard.nextSibling);
+    // pet-profile-card 앞에 삽입
+    petProfileCard.parentNode.insertBefore(selectionUI, petProfileCard);
   }
   
   // 선택 UI 내용 업데이트

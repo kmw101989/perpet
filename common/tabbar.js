@@ -9,28 +9,21 @@ document.addEventListener("DOMContentLoaded", function () {
     const body = document.body;
     const tabbar = document.querySelector(".tabbar");
     if (body && tabbar) {
-      // body의 max-width를 확인 (미디어 쿼리 적용 후)
-      const bodyMaxWidth = window.getComputedStyle(body).maxWidth;
+      // 뷰포트 너비 확인
+      const viewportWidth = window.innerWidth;
       let targetWidth = 390; // 기본값
 
-      // body의 max-width가 설정되어 있으면 그 값을 사용
-      if (bodyMaxWidth && bodyMaxWidth !== "none") {
-        const maxWidthValue = parseFloat(bodyMaxWidth);
-        // 큰 화면에서는 body의 max-width를 따르되, 최소 390px
-        if (maxWidthValue > 390) {
-          targetWidth = maxWidthValue;
-        } else {
-          targetWidth = 390;
-        }
+      // 뷰포트가 390px 이하이면 뷰포트 너비 사용, 그 이상이면 390px 고정
+      if (viewportWidth <= 390) {
+        targetWidth = viewportWidth;
       } else {
-        // max-width가 없으면 body의 실제 너비 사용 (최소 390px)
-        const bodyWidth = body.offsetWidth;
-        targetWidth = Math.max(bodyWidth, 390);
+        targetWidth = 390;
       }
 
       // 너비가 변경될 때만 업데이트 (깜빡임 방지)
       if (lastTabbarWidth !== targetWidth) {
         tabbar.style.maxWidth = targetWidth + "px";
+        tabbar.style.width = "100%";
         lastTabbarWidth = targetWidth;
       }
     }

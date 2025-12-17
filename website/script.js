@@ -215,19 +215,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const petProfileImageEl = document.querySelector(".pet-profile-image");
     const petGenderEl = document.querySelector(".pet-gender");
 
-    // 랜덤 이미지 생성 함수
-    function getRandomImageUrl(type = "pet") {
-      // 랜덤 숫자 생성 (1-1000)
-      const randomNum = Math.floor(Math.random() * 1000) + 1;
-      if (type === "pet") {
-        // 반려동물 이미지 (예: placeholder 서비스 사용)
-        return `https://picsum.photos/seed/pet${randomNum}/200/200`;
-      } else {
-        // 사용자 이미지
-        return `https://picsum.photos/seed/user${randomNum}/200/200`;
-      }
-    }
-
     // 반려동물 프로필 이미지 표시
     if (petProfileImageEl) {
       if (selectedPet.pet_img && selectedPet.pet_img.trim() !== "") {
@@ -237,12 +224,10 @@ document.addEventListener("DOMContentLoaded", function () {
         petProfileImageEl.style.backgroundPosition = "center";
         console.log("반려동물 프로필 이미지 표시:", selectedPet.pet_img);
       } else {
-        // 이미지가 없으면 랜덤 이미지 삽입
-        const randomImageUrl = getRandomImageUrl("pet");
-        petProfileImageEl.style.backgroundImage = `url('${randomImageUrl}')`;
-        petProfileImageEl.style.backgroundSize = "cover";
-        petProfileImageEl.style.backgroundPosition = "center";
-        console.log("반려동물 프로필 랜덤 이미지 삽입:", randomImageUrl);
+        // 이미지가 없으면 배경 이미지 제거
+        petProfileImageEl.style.backgroundImage = "none";
+        petProfileImageEl.style.backgroundColor = "#d9d9d9";
+        console.log("반려동물 프로필 이미지 없음 - 기본 배경색 사용");
       }
     }
 
@@ -306,6 +291,98 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     } else {
       console.error("pet-details 요소를 찾을 수 없습니다.");
+    }
+
+    // 맞춤 케어 가이드 로드
+    await loadCareGuide(selectedPet);
+
+    // 헤더 로고 업데이트
+    updateHeaderLogo(selectedPet);
+  }
+
+  // 헤더 로고 업데이트 함수
+  function updateHeaderLogo(pet) {
+    const headerLogoEl = document.getElementById("headerLogo");
+    if (!headerLogoEl) {
+      return;
+    }
+
+    // pet_species에 따라 로고 변경
+    const species = pet?.pet_species || pet?.species || "";
+    if (species === "cat" || species === "고양이") {
+      headerLogoEl.src = "../svg/main_cat.svg";
+    } else if (species === "dog" || species === "강아지") {
+      headerLogoEl.src = "../svg/main_dog.svg";
+    } else {
+      // 기본값 (species가 없거나 다른 경우)
+      headerLogoEl.src = "../svg/Union.svg";
+    }
+  }
+
+  // 맞춤 케어 가이드 로드 함수
+  async function loadCareGuide(pet) {
+    try {
+      const diseaseTagEl = document.getElementById("careGuideDiseaseTag");
+      const careGuideIllustrationEl = document.getElementById("careGuideIllustration");
+      const careGuideItemsEl = document.getElementById("careGuideItems");
+
+      if (!diseaseTagEl || !careGuideIllustrationEl || !careGuideItemsEl) {
+        return;
+      }
+
+      // 질환이 있는 경우에만 표시
+      if (pet && pet.disease_id) {
+        // 질환 정보 가져오기
+        let diseaseInfo = null;
+        try {
+          diseaseInfo = await SupabaseService.getDiseaseById(pet.disease_id);
+        } catch (err) {
+          console.error("질환 정보 조회 실패:", err);
+        }
+
+        // pet_species에 따라 일러스트 선택
+        const species = pet?.pet_species || pet?.species || "";
+        const illustrationSrc = (species === "cat" || species === "고양이") 
+          ? "../svg/illness_cat.svg" 
+          : "../svg/illness_dog.svg";
+
+        // 질환 태그 표시
+        if (diseaseInfo && diseaseInfo.disease_name) {
+          diseaseTagEl.innerHTML = `
+            <div class="care-guide-disease-tag-item">${diseaseInfo.disease_name}</div>
+          `;
+        } else {
+          diseaseTagEl.innerHTML = "";
+        }
+
+        // 일러스트 표시
+        careGuideIllustrationEl.innerHTML = `
+          <img src="${illustrationSrc}" alt="반려동물 일러스트" />
+        `;
+
+        // 케어 가이드 항목 표시 (질환에 따라 다를 수 있지만, 일단 기본 항목 표시)
+        // 실제로는 질환별로 다른 가이드를 제공할 수 있습니다
+        careGuideItemsEl.innerHTML = `
+          <div class="care-guide-item">
+            <div class="care-guide-item-title">매일 피부 상태 체크</div>
+            <div class="care-guide-item-desc">의심 증상 시 수의사 진료</div>
+          </div>
+          <div class="care-guide-item">
+            <div class="care-guide-item-title">환경 및 생활습관 개선</div>
+            <div class="care-guide-item-desc">오메가 3 급여 및 알러지 요소, 자극 줄이기</div>
+          </div>
+          <div class="care-guide-item">
+            <div class="care-guide-item-title">꾸준한 모니터링 및 예방</div>
+          </div>
+        `;
+      } else {
+        // 질환이 없는 경우 빈 내용
+        diseaseTagEl.innerHTML = "";
+        careGuideIllustrationEl.innerHTML = "";
+        careGuideItemsEl.innerHTML = "";
+      }
+    } catch (err) {
+      console.error("케어 가이드 로드 실패:", err);
     }
   }
 
@@ -460,10 +537,13 @@ function initManagementSlider() {
     }
   });
 
-  // 다음 버튼 클릭
+  // 다음 버튼 클릭 (순환 슬라이드)
   nextBtn.addEventListener("click", function () {
     if (currentSlide < totalSlides - 1) {
       goToSlide(currentSlide + 1);
+    } else {
+      // 마지막 슬라이드에서 오른쪽 버튼 클릭 시 첫 번째로 이동
+      goToSlide(0);
     }
   });
 

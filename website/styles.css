@@ -566,6 +566,126 @@ html {
   font-family: "JejuGothic", sans-serif;
 }
 
+/* 맞춤 케어 가이드 섹션 */
+.care-guide-section {
+  padding: 16px 16px 8px;
+  position: relative;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.care-guide-title {
+  font-size: 14px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 15.19px;
+  font-family: "JejuGothic", sans-serif;
+  margin-bottom: 12px;
+  text-align: center;
+  width: 100%;
+}
+
+.care-guide-content {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+  align-items: flex-start;
+  width: fit-content;
+  max-width: 260px;
+  margin: 0 auto;
+  position: relative;
+  justify-content: center;
+  padding: 0;
+}
+
+.care-guide-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  width: 89px;
+}
+
+.care-guide-disease-tag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.care-guide-disease-tag-item {
+  background-color: #023e8c;
+  color: #ffffff;
+  padding: 4px 16px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 13.02px;
+  font-family: "JejuGothic", sans-serif;
+  white-space: nowrap;
+}
+
+.care-guide-illustration {
+  width: 89px;
+  height: 44px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  margin-left: 0;
+  margin-top: 0;
+}
+
+.care-guide-illustration img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom left;
+}
+
+.care-guide-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.care-guide-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0;
+}
+
+.care-guide-item-title {
+  font-size: 10px;
+  color: #434343;
+  font-weight: 400;
+  line-height: 10.85px;
+  font-family: "JejuGothic", sans-serif;
+}
+
+.care-guide-item-desc {
+  font-size: 6px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 6.51px;
+  font-family: "JejuGothic", sans-serif;
+  padding-left: 15px;
+}
+
+/* 큰 화면에서 중앙 정렬 */
+@media (min-width: 390px) {
+  .care-guide-content {
+    max-width: 280px;
+    margin: 0 auto;
+  }
+}
+
 /* 이벤트 배너 */
 .event-banner {
   margin: 0 25px 20px;
