@@ -67,61 +67,7 @@ async function loadDatabaseData() {
   }
 }
 
-// normalized_symptoms로 symptoms 테이블 조회하여 disease_id 수집
-async function getDiseaseIdsFromSymptoms(normalizedSymptoms) {
-  const supabase = getSupabaseClient();
-
-  if (!normalizedSymptoms || normalizedSymptoms.length === 0) {
-    return [];
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from("symptoms")
-      .select("disease_id")
-      .in("symptom_word", normalizedSymptoms);
-
-    if (error) {
-      console.error("Symptoms 조회 오류:", error);
-      return [];
-    }
-
-    // disease_id 중복 제거
-    const diseaseIds = [
-      ...new Set(data.map((s) => s.disease_id).filter(Boolean)),
-    ];
-    return diseaseIds;
-  } catch (err) {
-    console.error("Disease ID 수집 오류:", err);
-    return [];
-  }
-}
-
-// disease_id로 diseases 테이블 조회하여 category_id 추출
-async function getDiseasesWithCategories(diseaseIds) {
-  const supabase = getSupabaseClient();
-
-  if (!diseaseIds || diseaseIds.length === 0) {
-    return [];
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from("diseases")
-      .select("disease_id, disease_name, category_id")
-      .in("disease_id", diseaseIds);
-
-    if (error) {
-      console.error("Diseases 조회 오류:", error);
-      return [];
-    }
-
-    return data || [];
-  } catch (err) {
-    console.error("Diseases 조회 오류:", err);
-    return [];
-  }
-}
+// 이 함수들은 더 이상 사용하지 않음 (로컬 데이터 기반 함수로 대체됨)
 
 // category_id로 병원 추천 (명세서 기준)
 // 주의: hospitals 테이블은 'category_id' 컬럼을 사용함
@@ -646,6 +592,9 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
     응급: 12,
   };
   
+  // 사용자 메시지 분석: 추천 요청인지, 증상 질문인지, 일반 질문인지 판단
+  const userMessageLower = userMessage.toLowerCase();
+  
   // 키워드 기반 category_id 추출
   let directCategoryIds = [];
   const messageForMatching = userMessageLower;
@@ -702,9 +651,6 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
     id: d.disease_id,
     name: d.disease_name,
   }));
-
-  // 사용자 메시지 분석: 추천 요청인지, 증상 질문인지, 일반 질문인지 판단
-  const userMessageLower = userMessage.toLowerCase();
 
   // 추천 요청 키워드 확인
   const hasRecommendationRequest =
@@ -1075,23 +1021,38 @@ message에는 반드시 포함해야 한다:
 
     messages.push({ role: "user", content: userPrompt });
 
-    const completionRes = await fetch(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "gpt-3.5-turbo",
-          messages: messages,
-          temperature: 0.7,
-          max_tokens: 500,
-          response_format: { type: "json_object" },
-        }),
+    // 타임아웃 방지를 위한 AbortController
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000); // 12초 타임아웃
+
+    let completionRes;
+    try {
+      completionRes = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: messages,
+            temperature: 0.7,
+            max_tokens: 500,
+            response_format: { type: "json_object" },
+          }),
+          signal: controller.signal,
+        }
+      );
+      clearTimeout(timeoutId);
+    } catch (fetchErr) {
+      clearTimeout(timeoutId);
+      if (fetchErr.name === "AbortError") {
+        throw new Error("요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.");
       }
-    );
+      throw fetchErr;
+    }
 
     const raw = await completionRes.text();
 
@@ -1117,18 +1078,32 @@ message에는 반드시 포함해야 한다:
     const json = JSON.parse(raw);
     const aiResponse = json.choices?.[0]?.message?.content || "";
 
-    // JSON 파싱
+    // JSON 파싱 (이중 파싱 방지 및 안정화)
     let analysisResult;
     try {
-      analysisResult = JSON.parse(aiResponse);
+      // content가 이미 object인 경우와 string인 경우 모두 처리
+      if (typeof aiResponse === "string") {
+        analysisResult = JSON.parse(aiResponse);
+      } else if (typeof aiResponse === "object" && aiResponse !== null) {
+        analysisResult = aiResponse;
+      } else {
+        throw new Error("Unexpected response format");
+      }
     } catch (e) {
       console.error("AI 응답 JSON 파싱 실패:", e);
+      console.error("원본 응답:", aiResponse);
       // 판단 불가로 처리
       analysisResult = {
+        status: "uncertain",
         normalized_symptoms: [],
         suspected_diseases: [],
+        category_ids: [],
         message:
-          "증상을 분석하는 중 오류가 발생했습니다. 증상을 다시 설명해주시면 도움을 드릴 수 있어요.",
+          "응답을 해석하는 중 문제가 발생했습니다. 증상을 다시 설명해주시면 도움을 드릴 수 있어요.",
+        recommendations: {
+          hospitals: [],
+          products: [],
+        },
       };
     }
 
@@ -1247,21 +1222,37 @@ message에는 반드시 포함해야 한다:
       }
     }
 
-    // 사용자가 직접 질병명을 언급한 경우 (category_id 제한 없이 허용)
+    // 사용자가 직접 질병명을 언급한 경우 (category_id 검증 필수)
     if (possibleDisease && validatedDiseases.length === 0) {
-      const alreadyIncluded = validatedDiseases.some(
-        (d) => d.disease_id === possibleDisease.disease_id
-      );
-      if (!alreadyIncluded) {
+      // category 충돌 방지: directCategoryIds가 있고, possibleDisease의 category_id와 다르면 무시
+      if (
+        directCategoryIds.length > 0 &&
+        !directCategoryIds.includes(possibleDisease.category_id)
+      ) {
         console.log(
-          "[Chat Function] 사용자 직접 언급 질병 추가:",
-          possibleDisease.disease_name
+          "[Chat Function] category 충돌 감지 - 질병 무시:",
+          possibleDisease.disease_name,
+          "category_id:",
+          possibleDisease.category_id,
+          "vs directCategoryIds:",
+          directCategoryIds
         );
-        validatedDiseases.push({
-          disease_id: possibleDisease.disease_id,
-          confidence: "medium",
-          category_id: possibleDisease.category_id,
-        });
+        // category 충돌 → disease 무시
+      } else {
+        const alreadyIncluded = validatedDiseases.some(
+          (d) => d.disease_id === possibleDisease.disease_id
+        );
+        if (!alreadyIncluded) {
+          console.log(
+            "[Chat Function] 사용자 직접 언급 질병 추가:",
+            possibleDisease.disease_name
+          );
+          validatedDiseases.push({
+            disease_id: possibleDisease.disease_id,
+            confidence: "medium",
+            category_id: possibleDisease.category_id,
+          });
+        }
       }
     }
 
@@ -1304,8 +1295,8 @@ message에는 반드시 포함해야 한다:
         let diseaseIds = [];
 
         if (validatedSymptoms.length > 0) {
-          // 증상 기반: normalized_symptoms로 disease_id 수집
-          diseaseIds = await getDiseaseIdsFromSymptoms(validatedSymptoms);
+          // 증상 기반: normalized_symptoms로 disease_id 수집 (로컬 데이터 사용)
+          diseaseIds = getDiseaseIdsFromSymptoms(validatedSymptoms, symptoms);
         }
 
         // 직접 언급한 질병 ID 추가
@@ -1313,9 +1304,10 @@ message에는 반드시 포함해야 한다:
         diseaseIds = [...new Set([...diseaseIds, ...mentionedDiseaseIds])];
 
         if (diseaseIds.length > 0) {
-          // diseases 테이블 조회하여 category_id 추출
-          const diseasesWithCategories = await getDiseasesWithCategories(
-            diseaseIds
+          // diseases 테이블 조회하여 category_id 추출 (로컬 데이터 사용)
+          const diseasesWithCategories = getDiseasesWithCategories(
+            diseaseIds,
+            diseases
           );
 
           // validatedDiseases와 매칭하여 category_id 추가
