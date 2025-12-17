@@ -289,7 +289,7 @@ function showLoadingMessage() {
   loadingMessage.id = 'loadingMessage';
   loadingMessage.innerHTML = `
     <div class="message-avatar">
-      <img src="../svg/bot.svg" alt="펫봇" class="bot-avatar-image" />
+      <img src="../svg/Union.svg" alt="펫봇" class="bot-avatar-image" />
     </div>
     <div class="message-content">
       <div class="message-bubble">분석 중...</div>
@@ -408,7 +408,7 @@ async function sendMessage(messageText) {
     
     botMessage.innerHTML = `
       <div class="message-avatar">
-        <img src="../svg/bot.svg" alt="펫봇" class="bot-avatar-image" />
+        <img src="../svg/Union.svg" alt="펫봇" class="bot-avatar-image" />
       </div>
       <div class="message-content">
         <div class="message-bubble">${messageContent}</div>
@@ -534,7 +534,7 @@ async function sendMessage(messageText) {
     errorMessage.className = 'message bot-message';
     errorMessage.innerHTML = `
       <div class="message-avatar">
-        <img src="../svg/bot.svg" alt="펫봇" class="bot-avatar-image" />
+        <img src="../svg/Union.svg" alt="펫봇" class="bot-avatar-image" />
       </div>
       <div class="message-content">
         <div class="message-bubble">죄송합니다. 오류가 발생했습니다: ${err.message || '알 수 없는 오류'}</div>
