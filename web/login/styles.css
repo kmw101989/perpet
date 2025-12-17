@@ -1,0 +1,567 @@
+/* Bazzi 폰트 */
+@font-face {
+  font-family: "Bazzi";
+  src: url("/Bazzi.ttf") format("truetype"),
+    url("/fonts/Bazzi-Regular.woff2") format("woff2"),
+    url("/fonts/Bazzi-Regular.woff") format("woff"),
+    url("/fonts/Bazzi.woff2") format("woff2"),
+    url("/fonts/Bazzi.woff") format("woff"), local("Bazzi"),
+    local("Bazzi-Regular");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* JejuGothic 폰트 */
+@font-face {
+  font-family: "JejuGothic";
+  src: url("/JejuGothic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  outline: none;
+}
+
+html:focus,
+html:focus-visible {
+  outline: none;
+}
+
+body {
+  font-family: "JejuGothic", "Noto Sans KR", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  background-color: #f9f9f9;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  outline: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 390px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  scrollbar-gutter: stable;
+  overflow-x: hidden;
+}
+
+body:focus,
+body:focus-visible {
+  outline: none;
+}
+
+.container {
+  width: 100%;
+  max-width: 390px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background-color: #f9f9f9;
+  border: 1px solid #d5d5d5;
+  display: flex;
+  flex-direction: column;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.container:focus,
+.container:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.login-screen {
+  background-color: rgba(249, 249, 249, 0.8);
+  background-image: url("/svg/login_bg.svg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  backdrop-filter: blur(2px);
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 49px 37px;
+  position: relative;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.login-screen:focus,
+.login-screen:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* 로고 섹션 */
+.logo-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 60px;
+  margin-bottom: 80px;
+}
+
+.logo-icon {
+  width: 67px;
+  height: 50px;
+  margin-bottom: 9px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logo-icon img,
+.logo-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.app-title {
+  font-family: "Bazzi";
+  font-size: 50px;
+  font-weight: 400;
+  color: #023E8C;
+  margin-bottom: 2px;
+  letter-spacing: 0;
+  line-height: 55px;
+  font-style: normal;
+}
+
+.app-subtitle {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #999999;
+  text-align: center;
+  letter-spacing: 0;
+  line-height: 13px;
+}
+
+/* 로그인 섹션 */
+.login-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login-title {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: #202027;
+  margin-bottom: 20px;
+  margin-top: 20px;
+  text-align: center;
+  letter-spacing: 0;
+  line-height: 20px;
+  width: 100%;
+}
+
+.privacy-notice {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  color: #999999;
+  text-align: center;
+  line-height: 16px;
+  margin-bottom: 20px;
+  width: 100%;
+  letter-spacing: 0;
+}
+
+/* 소셜 로그인 버튼 */
+.social-login {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.social-btn {
+  width: 100%;
+  height: 43px;
+  background-color: #e5e5e5;
+  border: none;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: none !important;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  position: relative;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kakao-btn {
+  background-color: #fae200;
+}
+
+.naver-btn {
+  background-color: #03a94d;
+}
+
+.google-btn {
+  background-color: #ffffff;
+}
+
+.google-btn .social-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.social-btn:hover,
+.social-btn:focus,
+.social-btn:active {
+  background-color: #e5e5e5 !important;
+  transform: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  border: none !important;
+}
+
+.kakao-btn:hover,
+.kakao-btn:focus,
+.kakao-btn:active {
+  background-color: #fae200 !important;
+  transform: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.naver-btn:hover,
+.naver-btn:focus,
+.naver-btn:active {
+  background-color: #03a94d !important;
+  transform: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.google-btn:hover,
+.google-btn:focus,
+.google-btn:active {
+  background-color: #ffffff !important;
+  transform: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.social-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  left: 20px;
+}
+
+.social-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.kakao-btn .social-icon {
+  /* 말풍선 스타일은 SVG로 처리 */
+  left: 15px;
+}
+
+.kakao-btn .social-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.naver-btn .social-icon {
+  /* 원형 스타일은 SVG로 처리 */
+  width: 24px;
+  height: 24px;
+}
+
+.naver-btn .social-icon img {
+  width: 65% !important;
+  height: 65% !important;
+  object-fit: contain;
+}
+
+.google-btn .social-icon {
+  /* 원형 스타일은 SVG로 처리 */
+}
+
+.social-text {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #202027;
+  letter-spacing: 0;
+  line-height: 12px;
+  text-align: center;
+}
+
+.naver-btn .social-text {
+  color: #ffffff;
+}
+
+/* 이메일 옵션 버튼 */
+.email-options {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.email-btn {
+  width: 100%;
+  height: 50px;
+  border: none;
+  border-radius: 10px;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.email-login-btn {
+  background-color: #408ef5;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(64, 142, 245, 0.3);
+}
+
+.email-login-btn:hover {
+  background-color: #3068c4;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(64, 142, 245, 0.4);
+}
+
+.email-login-btn:active {
+  background-color: #2555a3;
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(64, 142, 245, 0.3);
+}
+
+.email-signup-btn {
+  background-color: #ffffff;
+  color: #408ef5;
+  border: 2px solid #408ef5;
+}
+
+.email-signup-btn:hover {
+  background-color: #f0f7ff;
+  transform: translateY(-1px);
+}
+
+.email-signup-btn:active {
+  background-color: #e0efff;
+  transform: translateY(0);
+}
+
+/* 반응형 디자인 */
+@media (min-width: 768px) {
+  body {
+    max-width: 768px;
+  }
+  
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    max-width: 1024px;
+  }
+  
+  .container {
+    max-width: 1024px;
+  }
+}
+
+@media (max-width: 390px) {
+  .login-screen {
+    padding: 30px 20px;
+  }
+
+  .app-title {
+    font-size: 36px;
+  }
+
+  .social-btn {
+    height: 48px;
+  }
+}
+
+@media (max-height: 844px) {
+  .logo-section {
+    margin-top: 30px;
+    margin-bottom: 50px;
+  }
+}
+
+/* 로그인 모달 스타일 */
+.login-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background-color: #ffffff;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 390px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.modal-header h3 {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: #202027;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999999;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: #202027;
+}
+
+.login-form {
+  padding: 20px;
+}
+
+.login-form .form-group {
+  margin-bottom: 20px;
+}
+
+.login-form .form-group label {
+  display: block;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 14px;
+  color: #202027;
+  margin-bottom: 8px;
+}
+
+.login-form .input-wrapper {
+  position: relative;
+}
+
+.login-form .form-input {
+  width: 100%;
+  height: 43px;
+  padding: 0 16px;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 14px;
+  color: #202027;
+  box-sizing: border-box;
+}
+
+.login-form .form-input:focus {
+  outline: none;
+  border-color: #408ef5;
+}
+
+.login-form .toggle-password {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 9px;
+  color: #c5c5c5;
+  cursor: pointer;
+  padding: 0;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+}
+
+.form-error {
+  color: #ff0000;
+  font-size: 12px;
+  margin-bottom: 10px;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+}
+
+.login-form .submit-btn {
+  width: 100%;
+  height: 43px;
+  background-color: #408ef5;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.login-form .submit-btn:hover {
+  background-color: #3068c4;
+}
+
+.login-form .submit-btn:disabled {
+  background-color: #c5c5c5;
+  cursor: not-allowed;
+}

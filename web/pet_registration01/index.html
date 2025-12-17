@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>반려동물 등록</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="content-frame">
+        <button class="back-btn" id="backBtn"></button>
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+          <h1 class="welcome-title" id="welcomeTitle">반가워요 님</h1>
+          <p class="welcome-subtitle">회원가입이 완료되었어요!</p>
+          <p class="recommendation-text">
+            정확한 입력을 해주시면,<br />
+            오직 반려동물에게 딱 맞는 추천을 받을 수 있어요!
+          </p>
+        </div>
+
+        <!-- Pet Selection Section -->
+        <div class="pet-selection-section">
+          <h2 class="section-title">어떤 반려동물과 함께하고 계신가요?</h2>
+          <div class="pet-options">
+            <div class="pet-card" data-pet="dog">
+            </div>
+            <div class="pet-card" data-pet="cat">
+            </div>
+          </div>
+        </div>
+
+        <!-- Name Input Section -->
+        <div class="name-input-section">
+          <label for="pet-name" class="input-label">이름을 입력해주세요</label>
+          <input
+            type="text"
+            id="pet-name"
+            class="name-input"
+            placeholder="반려동물 이름"
+            maxlength="20"
+          />
+        </div>
+
+        <!-- Next Button -->
+        <button class="next-button" id="next-button" disabled>다음</button>
+      </div>
+    </div>
+
+    <script src="../common/supabase-config.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

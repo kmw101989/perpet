@@ -1,0 +1,319 @@
+/* JejuGothic 폰트 */
+@font-face {
+  font-family: "JejuGothic";
+  src: url("../JejuGothic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  background-color: #F9F9F9;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  max-width: 390px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  scrollbar-gutter: stable;
+  overflow-x: hidden;
+}
+
+.container {
+  width: 100%;
+  max-width: 390px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background-color: #F9F9F9;
+  border: 1px solid #d5d5d5;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.content-frame {
+  width: 100%;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 100%;
+  flex: 1;
+  position: relative;
+}
+
+.back-btn {
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  position: absolute;
+  top: calc(20px + (20px / 2) - (24px / 2));
+  left: 20px;
+  z-index: 10;
+  transition: opacity 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-btn::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  border-left: 2px solid #202027;
+  border-bottom: 2px solid #202027;
+}
+
+.back-btn:hover {
+  opacity: 0.7;
+}
+
+.back-btn:active {
+  opacity: 0.5;
+}
+
+.title {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: #202027;
+  text-align: center;
+  margin-bottom: 8px;
+  line-height: 20px;
+}
+
+.description {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.description-text {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: #202027;
+  text-align: left;
+  line-height: 21.7px;
+}
+
+/* 폼 그룹 */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-label-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.optional-label {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: #959595;
+  line-height: 16.28px;
+}
+
+.form-label {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: #202027;
+  line-height: 16.28px;
+}
+
+/* 건강 관심사 그리드 */
+.health-interest-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  width: 100%;
+}
+
+.health-btn {
+  width: 100%;
+  height: 43px;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  color: #c5c5c5;
+  transition: all 0.3s ease;
+  padding: 0 8px;
+}
+
+.health-btn.active {
+  border-color: #e5e5e5;
+  background-color: #BBE8FF;
+  color: #c5c5c5;
+}
+
+/* 주의사항 버튼 */
+.caution-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.caution-btn {
+  flex: 1;
+  height: 43px;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  color: #c5c5c5;
+  transition: all 0.3s ease;
+}
+
+.caution-btn.active {
+  border-color: #e5e5e5;
+  background-color: #BBE8FF;
+  color: #c5c5c5;
+}
+
+/* 주의사항 입력 섹션 */
+.caution-input-section {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.caution-input-label {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #959595;
+  line-height: 13.02px;
+  margin: 0;
+  margin-bottom: 6px;
+  padding: 0;
+}
+
+.caution-input {
+  width: 100%;
+  height: 43px;
+  padding: 12px 16px;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  background-color: transparent;
+  font-size: 15px;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  color: #202027;
+  outline: none;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.caution-input::placeholder {
+  color: #C5C5C5;
+  font-size: 12px;
+}
+
+.caution-input:focus {
+  border-color: #202027;
+}
+
+/* 다음 버튼 */
+.next-btn {
+  width: 100%;
+  height: 43px;
+  border: none;
+  border-radius: 10px;
+  background-color: #e5e5e5;
+  color: #a0a0a0;
+  font-size: 15px;
+  font-weight: 400;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: auto;
+  margin-bottom: 20px;
+}
+
+.next-btn.active {
+  background-color: #023E8C;
+  color: #ffffff;
+}
+
+.next-btn.active:hover {
+  background-color: #333339;
+}
+
+/* 반응형 디자인 */
+@media (min-width: 768px) {
+  body {
+    max-width: 768px;
+  }
+  
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    max-width: 1024px;
+  }
+  
+  .container {
+    max-width: 1024px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    border-left: none;
+    border-right: none;
+  }
+
+  .content-frame {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 390px) {
+  .health-interest-grid {
+    gap: 4px;
+  }
+}
+
+@media (max-width: 360px) {
+  .content-frame {
+    padding: 12px;
+  }
+}
+

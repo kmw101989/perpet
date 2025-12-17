@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>내새꾸 등록</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="content-frame">
+        <button class="back-btn" id="backBtn"></button>
+        <h1 class="title">내새꾸 등록</h1>
+        <div class="scrollable-content">
+          <p class="subtitle" id="subtitle">내새꾸 에 대해 소개해주세요!</p>
+
+          <!-- 프로필 이미지 영역 -->
+          <div class="profile-section">
+            <div class="profile-image-container">
+              <div class="profile-image" id="profileImage">
+                <input
+                  type="file"
+                  id="imageInput"
+                  accept="image/*"
+                  style="display: none"
+                />
+                <span class="upload-icon">+</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 견종 입력 -->
+          <div class="form-group">
+            <label class="form-label">견종을 등록해주세요</label>
+            <input
+              type="text"
+              class="form-input"
+              id="breedInput"
+              placeholder="예시) 포메라니안, 믹스견, 말티즈…"
+            />
+          </div>
+
+          <!-- 생일 입력 -->
+          <div class="form-group">
+            <label class="form-label">생일을 입력해주세요</label>
+            <div class="birthday-input">
+              <select class="birth-year" id="birthYear">
+                <option value="">년</option>
+              </select>
+              <span class="separator">/</span>
+              <select class="birth-month" id="birthMonth">
+                <option value="">월</option>
+              </select>
+              <span class="separator">/</span>
+              <select class="birth-day" id="birthDay">
+                <option value="">일</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 성별 선택 -->
+          <div class="form-group">
+            <label class="form-label">성별을 선택해주세요</label>
+            <div class="gender-buttons">
+              <button class="gender-btn" data-gender="male">
+                <span class="gender-icon">♂</span>
+                <span>남아</span>
+              </button>
+              <button class="gender-btn" data-gender="female">
+                <span class="gender-icon">♀</span>
+                <span>여아</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 몸무게 선택 -->
+          <div class="form-group">
+            <label class="form-label">몸무게를 입력해주세요 (숫자)</label>
+            <div class="weight-input-wrapper">
+              <input
+                type="text"
+                class="form-input"
+                id="weightInput"
+                placeholder="예시) 4.5"
+              />
+              <span class="weight-unit" id="weightUnit">(kg)</span>
+            </div>
+          </div>
+
+          <!-- 체형 선택 -->
+          <div class="form-group">
+            <label class="form-label">체형을 선택해주세요</label>
+            <div class="body-type-buttons">
+              <button class="body-type-btn" data-type="slim">날씬해요</button>
+              <button class="body-type-btn" data-type="normal">적당해요</button>
+              <button class="body-type-btn" data-type="chubby">통통해요</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 다음 버튼 -->
+        <button class="next-btn" id="nextBtn" disabled>다음</button>
+      </div>
+    </div>
+
+    <script src="../common/supabase-config.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>병원 예약 - 퍼펫트</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="reservation-styles.css">
+</head>
+<body>
+  <div class="reservation-container">
+    <!-- 헤더 -->
+    <header class="reservation-header">
+      <svg class="back-icon" width="27" height="27" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 8L10 13.5L16 19" stroke="#202027" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </header>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="reservation-content">
+      <h1 class="page-title">날짜와 시간을 선택해주세요</h1>
+
+      <!-- 달력 섹션 -->
+      <div class="calendar-section">
+        <!-- 달력 헤더 -->
+        <div class="calendar-header">
+          <button class="calendar-nav-btn prev-month" id="prevMonth">
+            <svg width="27" height="27" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16 8L10 13.5L16 19" stroke="#202027" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="calendar-month" id="calendarMonth">2026년 01월</div>
+          <button class="calendar-nav-btn next-month" id="nextMonth">
+            <svg width="27" height="27" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11 8L17 13.5L11 19" stroke="#202027" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- 달력 요일 -->
+        <div class="calendar-weekdays">
+          <div class="weekday">일</div>
+          <div class="weekday">월</div>
+          <div class="weekday">화</div>
+          <div class="weekday">수</div>
+          <div class="weekday">목</div>
+          <div class="weekday">금</div>
+          <div class="weekday">토</div>
+        </div>
+
+        <!-- 달력 날짜 -->
+        <div class="calendar-days" id="calendarDays">
+          <!-- JavaScript로 동적 생성 -->
+        </div>
+      </div>
+
+      <!-- 시간 선택 섹션 -->
+      <div class="time-section">
+        <div class="time-period">
+          <div class="period-label">오전</div>
+          <div class="time-slots" id="morningSlots">
+            <!-- JavaScript로 동적 생성 -->
+          </div>
+        </div>
+        <div class="time-period">
+          <div class="period-label">오후</div>
+          <div class="time-slots" id="afternoonSlots">
+            <!-- JavaScript로 동적 생성 -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 예약하기 버튼 -->
+    <div class="reservation-footer">
+      <button class="reservation-btn" id="reservationBtn" disabled>
+        예약하기
+      </button>
+    </div>
+  </div>
+
+  <script src="../common/auth-check.js"></script>
+  <script src="reservation-script.js"></script>
+  <script>
+    // 인증 체크
+    document.addEventListener('DOMContentLoaded', function() {
+      checkAuth();
+    });
+  </script>
+</body>
+</html>
+

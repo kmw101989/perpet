@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>내새꾸 등록완료</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="content-frame">
+        <button class="back-btn" id="backBtn"></button>
+        <h1 class="title">내새꾸 등록완료</h1>
+
+        <div class="description">
+          <p class="description-text">수고하셨어요!</p>
+          <p class="description-text">내새꾸의 퍼펫트한</p>
+          <p class="description-text">맞춤정보를 확인해보세요</p>
+        </div>
+
+        <!-- 스크롤 가능한 영역 (pet-card와 add-pet-card) -->
+        <div class="scrollable-cards">
+          <!-- 반려동물 정보 카드 컨테이너 -->
+          <div id="petsContainer">
+            <!-- 동적으로 생성됩니다 -->
+          </div>
+
+          <!-- 다른 내새꾸 등록 카드 -->
+          <div class="add-pet-card">
+            <div class="add-pet-content">
+              <p class="add-pet-text">다른 내새꾸 등록</p>
+              <div class="add-icon">
+                <span>+</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 퍼펫트 시작하기 버튼 -->
+        <button class="start-btn" id="startBtn">퍼펫트 시작하기</button>
+      </div>
+    </div>
+
+    <script src="../common/supabase-config.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

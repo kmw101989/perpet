@@ -1,0 +1,397 @@
+/* JejuGothic 폰트 */
+@font-face {
+  font-family: "JejuGothic";
+  src: url("../JejuGothic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  background-color: #f9f9f9;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  max-width: 390px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  scrollbar-gutter: stable;
+  overflow-x: hidden;
+}
+
+.container {
+  width: 100%;
+  max-width: 390px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background-color: #f9f9f9;
+  border: 1px solid #d5d5d5;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.signup-frame {
+  width: 100%;
+  padding: 20px;
+  padding-top: calc(20px + env(safe-area-inset-top, 44px));
+  background-color: #f9f9f9;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.back-btn {
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  position: absolute;
+  top: calc(20px + env(safe-area-inset-top, 44px) + (20px / 2) - (24px / 2));
+  left: 20px;
+  z-index: 10;
+  transition: opacity 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-btn::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  border-left: 2px solid #202027;
+  border-bottom: 2px solid #202027;
+}
+
+.back-btn:hover {
+  opacity: 0.7;
+}
+
+.back-btn:active {
+  opacity: 0.5;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 400;
+  color: #202027;
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 10px;
+  line-height: 20px;
+  flex-shrink: 0;
+}
+
+.notice {
+  font-size: 9px;
+  color: #959595;
+  text-align: center;
+  line-height: 13.5px;
+  margin-bottom: 30px;
+  flex-shrink: 0;
+}
+
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
+  padding-bottom: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.password-confirm-group {
+  margin-top: -12px;
+}
+
+.form-label {
+  font-size: 15px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 15px;
+}
+
+.form-input {
+  width: 100%;
+  height: 43px;
+  padding: 12px 16px;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  background-color: transparent;
+  font-size: 12px;
+  color: #202027;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+/* password input에 * 기호로 표시 */
+#password.form-input[type="password"],
+#passwordConfirm.form-input[type="password"] {
+  font-family: "Courier New", monospace;
+  letter-spacing: 2px;
+}
+
+#password.form-input[type="password"]::placeholder,
+#passwordConfirm.form-input[type="password"]::placeholder {
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  letter-spacing: normal;
+}
+
+/* residence select에만 드롭다운 아이콘 적용 */
+#residence.form-input {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23202027' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
+}
+
+.form-input::placeholder {
+  color: #c5c5c5;
+}
+
+.form-input:focus {
+  border-color: #202027;
+}
+
+/* residence select의 focus 효과 제거 */
+#residence.form-input:focus {
+  border-color: #e5e5e5;
+}
+
+.form-input option {
+  color: #202027;
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 9px;
+  color: #c5c5c5;
+  cursor: pointer;
+  padding: 0;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.gender-group {
+  display: flex;
+  gap: 8px;
+}
+
+.gender-btn {
+  flex: 1;
+  height: 43px;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  background-color: transparent;
+  font-size: 12px;
+  color: #c5c5c5;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+.gender-btn:hover {
+  border-color: #202027;
+}
+
+.gender-btn.active {
+  border-color: #202027;
+  color: #202027;
+  background-color: #f0f0f0;
+}
+
+.terms-section {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.terms-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  position: relative;
+}
+
+.checkbox-input {
+  display: none;
+}
+
+.checkbox-custom {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  border: 1px solid #d9d9d9;
+  border-radius: 2px;
+  background-color: transparent;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.checkbox-input:checked + .checkbox-custom {
+  background-color: #202027;
+  border-color: #202027;
+}
+
+.checkbox-input:checked + .checkbox-custom::after {
+  content: "✓";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.checkbox-text {
+  font-size: 12px;
+  color: #202027;
+  line-height: 12px;
+}
+
+.terms-list .checkbox-text {
+  font-size: 9px;
+  line-height: 9px;
+}
+
+.view-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 9px;
+  color: #c5c5c5;
+  cursor: pointer;
+  padding: 0;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+}
+
+.marketing-notice {
+  font-size: 7px;
+  color: #c5c5c5;
+  line-height: 10px;
+  margin-top: -8px;
+  padding-left: calc(16px + 8px);
+}
+
+.submit-btn {
+  width: 100%;
+  height: 43px;
+  border: none;
+  border-radius: 10px;
+  background-color: #e5e5e5;
+  color: #a0a0a0;
+  font-size: 15px;
+  font-weight: 400;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+  cursor: not-allowed;
+  margin-top: auto;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.submit-btn:enabled {
+  background-color: #023e8c;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.submit-btn:enabled:active {
+  background-color: #023e8c;
+}
+
+/* 반응형 디자인 */
+@media (min-width: 768px) {
+  body {
+    max-width: 768px;
+  }
+  
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    max-width: 1024px;
+  }
+  
+  .container {
+    max-width: 1024px;
+  }
+}
+
+/* 모바일 최적화 */
+@media (max-width: 480px) {
+  .container {
+    border-left: none;
+    border-right: none;
+  }
+
+  .signup-frame {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .signup-frame {
+    padding: 12px;
+  }
+}
