@@ -420,8 +420,10 @@ async function sendMessage(messageText) {
     // 병원·제품 추천 표시 (명세서: recommendations 필드)
     console.log('[Chat] 응답 데이터:', response);
     console.log('[Chat] 추천 데이터:', response.recommendations);
+    console.log('[Chat] Intent:', response.intent);
     
-    if (response.recommendations) {
+    // ✅ intent 기반 추천 렌더링 가드 (관리 질문이 아닐 때만 추천 표시)
+    if (response.recommendations && response.intent === 'recommendation') {
       const { hospitals, products } = response.recommendations;
       console.log('[Chat] 병원 개수:', hospitals?.length || 0);
       console.log('[Chat] 제품 개수:', products?.length || 0);
@@ -529,6 +531,17 @@ async function sendMessage(messageText) {
     // 로딩 메시지 제거
     removeLoadingMessage();
     
+    // ✅ 사용자 친화적 에러 메시지 (기술적 에러 숨김)
+    const isServerError = 
+      err.message?.includes('500') || 
+      err.message?.includes('502') || 
+      err.message?.includes('504') ||
+      err.message?.includes('HTTP');
+    
+    const userFriendlyMessage = isServerError
+      ? '일시적으로 응답이 지연되고 있어요. 같은 질문을 다시 한 번 보내주세요 🙏'
+      : '응답을 처리하는 중 문제가 발생했어요. 잠시 후 다시 시도해주세요.';
+    
     // 에러 메시지 표시
     const errorMessage = document.createElement('div');
     errorMessage.className = 'message bot-message';
@@ -537,11 +550,14 @@ async function sendMessage(messageText) {
         <img src="../svg/Union.svg" alt="펫봇" class="bot-avatar-image" />
       </div>
       <div class="message-content">
-        <div class="message-bubble">죄송합니다. 오류가 발생했습니다: ${err.message || '알 수 없는 오류'}</div>
+        <div class="message-bubble">${userFriendlyMessage}</div>
       </div>
     `;
     
     chatMessages.appendChild(errorMessage);
+    
+    // ✅ 중요: assistant 히스토리에 추가하지 않음 (에러는 대화 기록에 포함하지 않음)
+    // chatHistory.push({ role: 'assistant', content: ... }) ❌
     
     // 스크롤이 맨 아래에 있으면 자동 스크롤
     scrollToBottomIfNeeded();

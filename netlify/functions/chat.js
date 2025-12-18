@@ -559,6 +559,89 @@ function getDiseasesWithCategories(diseaseIds, diseases) {
   return diseases.filter((d) => diseaseIds.includes(d.disease_id));
 }
 
+// ✅ category 결정 로직 단일화 (Single Source of Truth)
+// 우선순위: 키워드 기반 > 질병 기반 > 증상 기반
+function resolveCategoryIds({
+  directCategoryIds,      // 키워드 기반 category_id
+  validatedDiseases,      // AI가 추론한 질병들
+  validatedSymptoms,      // 정규화된 증상들
+  symptoms,               // 전체 증상 데이터
+  diseases,               // 전체 질병 데이터
+}) {
+  // 1순위: 키워드 기반 category_id (사용자가 직접 언급)
+  if (directCategoryIds.length > 0) {
+    console.log(
+      "[Chat Function] category 결정: 키워드 기반",
+      directCategoryIds
+    );
+    return directCategoryIds;
+  }
+
+  // 2순위: 질병 기반 category_id
+  if (validatedDiseases.length > 0) {
+    // 질병 ID 추출 (증상 기반 또는 직접 언급)
+    let diseaseIds = [];
+
+    if (validatedSymptoms.length > 0) {
+      // 증상 기반: normalized_symptoms로 disease_id 수집
+      diseaseIds = getDiseaseIdsFromSymptoms(validatedSymptoms, symptoms);
+    }
+
+    // 직접 언급한 질병 ID 추가
+    const mentionedDiseaseIds = validatedDiseases.map((d) => d.disease_id);
+    diseaseIds = [...new Set([...diseaseIds, ...mentionedDiseaseIds])];
+
+    if (diseaseIds.length > 0) {
+      // diseases 테이블 조회하여 category_id 추출
+      const diseasesWithCategories = getDiseasesWithCategories(
+        diseaseIds,
+        diseases
+      );
+
+      const categoryIds = [
+        ...new Set(
+          diseasesWithCategories.map((d) => d.category_id).filter(Boolean)
+        ),
+      ];
+
+      if (categoryIds.length > 0) {
+        console.log(
+          "[Chat Function] category 결정: 질병 기반",
+          categoryIds
+        );
+        return categoryIds;
+      }
+    }
+  }
+
+  // 3순위: 증상 기반 category_id (질병이 없을 때만)
+  if (validatedSymptoms.length > 0 && validatedDiseases.length === 0) {
+    const diseaseIds = getDiseaseIdsFromSymptoms(validatedSymptoms, symptoms);
+    if (diseaseIds.length > 0) {
+      const diseasesWithCategories = getDiseasesWithCategories(
+        diseaseIds,
+        diseases
+      );
+      const categoryIds = [
+        ...new Set(
+          diseasesWithCategories.map((d) => d.category_id).filter(Boolean)
+        ),
+      ];
+      if (categoryIds.length > 0) {
+        console.log(
+          "[Chat Function] category 결정: 증상 기반",
+          categoryIds
+        );
+        return categoryIds;
+      }
+    }
+  }
+
+  // category를 결정할 수 없음
+  console.log("[Chat Function] category 결정: 실패 (정보 부족)");
+  return [];
+}
+
 // AI를 사용한 증상 정규화 및 질병 후보 선택
 async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
   const { symptoms, diseases } = dbData;
@@ -568,31 +651,8 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
     ...new Set(symptoms.map((s) => s.symptom_word).filter(Boolean)),
   ];
   
-  // 키워드 기반 category_id 추출 (symptom 필터링을 위해 먼저 수행)
-  const keywordToCategoryId = {
-    심장: 1,
-    호흡: 2,
-    소화: 3,
-    위: 3,
-    장: 3,
-    "위/장": 3,
-    간: 4,
-    신장: 4,
-    비뇨: 4,
-    "간/신장": 4,
-    내과: 5,
-    피부: 6,
-    눈: 7,
-    "뼈/관절": 8,
-    뼈: 8,
-    관절: 8,
-    치과: 9,
-    행동: 10,
-    종양: 11,
-    응급: 12,
-  };
-  
   // 사용자 메시지 분석: 추천 요청인지, 증상 질문인지, 일반 질문인지 판단
+  // 키워드 → category_id 매핑은 전역 keywordToCategoryId 사용 (435줄)
   const userMessageLower = userMessage.toLowerCase();
   
   // 키워드 기반 category_id 추출
@@ -616,6 +676,83 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
     }
   }
   
+  // 🔥 관리 질문 체크 (AI 호출 전에 최우선 처리)
+  const isCareGuidanceQuestion =
+    userMessageLower.includes("지켜") ||
+    userMessageLower.includes("관찰") ||
+    userMessageLower.includes("바로") ||
+    userMessageLower.includes("며칠") ||
+    userMessageLower.includes("산책") ||
+    userMessageLower.includes("점프") ||
+    userMessageLower.includes("계단") ||
+    userMessageLower.includes("관리") ||
+    userMessageLower.includes("조심") ||
+    userMessageLower.includes("해야") ||
+    userMessageLower.includes("해야하") ||
+    userMessageLower.includes("가야") ||
+    userMessageLower.includes("가야하") ||
+    userMessageLower.includes("급한") ||
+    userMessageLower.includes("긴급");
+
+  // 관리 질문이면 AI 호출 없이 즉시 반환
+  if (isCareGuidanceQuestion) {
+    console.log("[Chat Function] 관리 질문 감지 - AI 호출 스킵");
+
+    // ✅ category 결정 (단일 함수 사용)
+    let categoryIds = resolveCategoryIds({
+      directCategoryIds,
+      validatedDiseases: [],
+      validatedSymptoms: [],
+      symptoms,
+      diseases,
+    });
+
+    // category가 없으면 키워드 기반 보정 (관절/산책/다리 → 뼈/관절)
+    if (categoryIds.length === 0) {
+      if (/다리|산책|뒷다리|절뚝|걷|관절|뼈|보행/.test(userMessageLower)) {
+        categoryIds = [8]; // 뼈/관절
+        console.log(
+          "[Chat Function] 관리 질문 category 보정: 뼈/관절 (8)"
+        );
+      }
+    }
+
+    // 간단한 관리 가이드 메시지 생성
+    let careMessage = "말씀해주신 내용을 바탕으로 관리 방법을 안내드리겠습니다. ";
+    if (categoryIds.length > 0) {
+      const categoryNames = {
+        2: "심장",
+        3: "신장/방광",
+        4: "간",
+        5: "위/장",
+        6: "피부",
+        7: "치아",
+        8: "뼈/관절",
+        9: "눈",
+        10: "면역력",
+        11: "행동",
+      };
+      const categoryName =
+        categoryNames[categoryIds[0]] || "관련 분야";
+      careMessage += `${categoryName} 관련 주의사항을 참고하시되, `;
+    }
+    careMessage +=
+      "정확한 상태 확인을 위해 병원 진료를 받아보시는 것을 권장드립니다.";
+
+    return {
+      status: "ok",
+      intent: "care_guidance", // ✅ 관리 질문 의도 명시
+      normalized_symptoms: [],
+      suspected_diseases: [], // 관리 질문은 disease 언급 완전 차단
+      category_ids: categoryIds,
+      recommendations: {
+        hospitals: [], // 관리 질문은 추천 없음
+        products: [], // 관리 질문은 추천 없음
+      },
+      message: careMessage,
+    };
+  }
+
   // category_id별 symptom 필터링 (프롬프트 길이 줄이기)
   let symptomWords = allSymptomWords;
   if (directCategoryIds.length > 0) {
@@ -651,24 +788,6 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
     id: d.disease_id,
     name: d.disease_name,
   }));
-
-  // 관리 질문 키워드 확인 (가장 우선)
-  const isCareGuidanceQuestion =
-    userMessageLower.includes("지켜") ||
-    userMessageLower.includes("관찰") ||
-    userMessageLower.includes("바로") ||
-    userMessageLower.includes("며칠") ||
-    userMessageLower.includes("산책") ||
-    userMessageLower.includes("점프") ||
-    userMessageLower.includes("계단") ||
-    userMessageLower.includes("관리") ||
-    userMessageLower.includes("조심") ||
-    userMessageLower.includes("해야") ||
-    userMessageLower.includes("해야하") ||
-    userMessageLower.includes("가야") ||
-    userMessageLower.includes("가야하") ||
-    userMessageLower.includes("급한") ||
-    userMessageLower.includes("긴급");
 
   // 추천 요청 키워드 확인
   const hasRecommendationRequest =
@@ -998,6 +1117,7 @@ message에는 반드시 포함해야 한다:
 
     return {
       status: "ok",
+      intent: "recommendation", // ✅ 직접 추천 요청
       normalized_symptoms: [],
       suspected_diseases: [],
       category_ids: directCategoryIds,
@@ -1338,328 +1458,72 @@ message에는 반드시 포함해야 한다:
     let recommendedHospitals = [];
     let recommendedProducts = [];
 
-    // 관리 질문인 경우 추천 로직 스킵
-    if (isCareGuidanceQuestion) {
-      console.log("[Chat Function] 관리 질문 감지 - 추천 로직 스킵");
-      
-      // category_id만 유지 (질병 기반 또는 키워드 기반)
-      if (validatedDiseases.length > 0) {
-        const diseaseIds = validatedDiseases.map((d) => d.disease_id);
-        const diseasesWithCategories = getDiseasesWithCategories(
-          diseaseIds,
-          diseases
-        );
-        categoryIds = [
-          ...new Set(
-            diseasesWithCategories.map((d) => d.category_id).filter(Boolean)
-          ),
-        ];
-        finalDiseases = validatedDiseases.map((d) => ({
-          disease_id: d.disease_id,
-          confidence: d.confidence,
-        }));
-      } else if (directCategoryIds.length > 0) {
-        categoryIds = directCategoryIds;
-      }
-
-      // 관리 질문 응답 반환 (추천 없음)
-      return {
-        status: "ok",
-        normalized_symptoms: validatedSymptoms,
-        suspected_diseases: finalDiseases,
-        category_ids: categoryIds,
-        recommendations: {
-          hospitals: [], // 관리 질문은 추천 없음
-          products: [], // 관리 질문은 추천 없음
-        },
-        message:
-          analysisResult.message ||
-          "말씀해주신 내용을 바탕으로 관리 방법을 안내드렸습니다. 정확한 상태 확인을 위해 병원 진료를 받아보시는 것을 권장드립니다.",
-      };
-    }
-
+    // 관리 질문은 이미 함수 상단에서 처리되어 return됨 (여기서는 도달하지 않음)
     if (!isUncertain) {
-      // 질병 기반 category_id 추출
+      // ✅ categoryIds 결정 (단일 함수 사용)
+      categoryIds = resolveCategoryIds({
+        directCategoryIds,
+        validatedDiseases,
+        validatedSymptoms,
+        symptoms,
+        diseases,
+      });
+
+      // validatedDiseases와 매칭 (finalDiseases 구성)
       if (validatedDiseases.length > 0) {
-        // 질병 ID 추출 (증상 기반 또는 직접 언급)
-        let diseaseIds = [];
-
-        if (validatedSymptoms.length > 0) {
-          // 증상 기반: normalized_symptoms로 disease_id 수집 (로컬 데이터 사용)
-          diseaseIds = getDiseaseIdsFromSymptoms(validatedSymptoms, symptoms);
-        }
-
-        // 직접 언급한 질병 ID 추가
-        const mentionedDiseaseIds = validatedDiseases.map((d) => d.disease_id);
-        diseaseIds = [...new Set([...diseaseIds, ...mentionedDiseaseIds])];
-
-        if (diseaseIds.length > 0) {
-          // diseases 테이블 조회하여 category_id 추출 (로컬 데이터 사용)
-          const diseasesWithCategories = getDiseasesWithCategories(
-            diseaseIds,
-            diseases
-          );
-
-          // validatedDiseases와 매칭하여 category_id 추가
-          finalDiseases = validatedDiseases.map((d) => {
-            const diseaseInfo = diseasesWithCategories.find(
-              (di) => di.disease_id === d.disease_id
-            );
-            return {
-              disease_id: d.disease_id,
-              confidence: d.confidence,
-            };
-          });
-
-          // category_ids 추출
-          const diseaseCategoryIds = [
-            ...new Set(
-              diseasesWithCategories.map((d) => d.category_id).filter(Boolean)
-            ),
-          ];
-
-          console.log(
-            "[Chat Function] 질병 기반 추출된 category_ids:",
-            diseaseCategoryIds
-          );
-          console.log(
-            "[Chat Function] 키워드 기반 directCategoryIds:",
-            directCategoryIds
-          );
-
-          // 키워드 기반 category_id가 있으면 우선 사용, 없으면 질병 기반 사용
-          if (directCategoryIds.length > 0) {
-            categoryIds = directCategoryIds;
-            console.log(
-              "[Chat Function] 키워드 기반 category_id 우선 사용:",
-              categoryIds
-            );
-          } else {
-            categoryIds = diseaseCategoryIds;
-            console.log(
-              "[Chat Function] 질병 기반 category_id 사용:",
-              categoryIds
-            );
-          }
-
-          // 병원·제품 추천 (category_id 기반)
-          // 사용자 요청에 따라 필터링
-          if (categoryIds.length > 0) {
-            const userMessageLower = userMessage.toLowerCase();
-            const wantsProducts =
-              userMessageLower.includes("제품") ||
-              userMessageLower.includes("상품") ||
-              userMessageLower.includes("사료") ||
-              userMessageLower.includes("영양제") ||
-              userMessageLower.includes("추천해줘");
-            const wantsHospitals =
-              userMessageLower.includes("병원") ||
-              userMessageLower.includes("예약") ||
-              userMessageLower.includes("진료");
-
-            console.log("[Chat Function] 사용자 요청 분석:", {
-              wantsProducts,
-              wantsHospitals,
-              userMessage,
-            });
-
-            // 사용자가 명시적으로 요청한 경우만 해당 추천 제공
-            if (wantsProducts && !wantsHospitals) {
-              // 제품만 추천
-              console.log("[Chat Function] 제품만 추천 시작");
-              recommendedProducts = await getRecommendedProducts(categoryIds);
-              console.log(
-                "[Chat Function] 제품 추천 결과:",
-                recommendedProducts.length,
-                "개"
-              );
-            } else if (wantsHospitals && !wantsProducts) {
-              // 병원만 추천
-              console.log("[Chat Function] 병원만 추천 시작");
-              recommendedHospitals = await getRecommendedHospitals(categoryIds);
-              console.log(
-                "[Chat Function] 병원 추천 결과:",
-                recommendedHospitals.length,
-                "개"
-              );
-            } else {
-              // 둘 다 요청하거나 명시하지 않은 경우: 제품 우선 (질병을 이미 아는 경우)
-              if (
-                validatedSymptoms.length === 0 &&
-                validatedDiseases.length > 0
-              ) {
-                // 질병을 이미 언급한 경우 제품 우선 (순차 실행)
-                console.log("[Chat Function] 질병 언급됨 - 제품 우선 추천 (순차 실행)");
-                recommendedProducts = await getRecommendedProducts(categoryIds);
-                // 제품 추천 완료 후 병원 추천
-                recommendedHospitals = await getRecommendedHospitals(
-                  categoryIds
-                );
-                console.log("[Chat Function] 추천 결과:", {
-                  products: recommendedProducts.length,
-                  hospitals: recommendedHospitals.length,
-                });
-              } else {
-                // 증상 기반인 경우 병원 우선 (순차 실행)
-                console.log("[Chat Function] 증상 기반 - 병원 우선 추천 (순차 실행)");
-                recommendedHospitals = await getRecommendedHospitals(
-                  categoryIds
-                );
-                // 병원 추천 완료 후 제품 추천
-                recommendedProducts = await getRecommendedProducts(categoryIds);
-                console.log("[Chat Function] 추천 결과:", {
-                  products: recommendedProducts.length,
-                  hospitals: recommendedHospitals.length,
-                });
-              }
-            }
-          } else {
-            console.log("[Chat Function] 질병 기반 category_ids가 없음");
-          }
-        }
+        finalDiseases = validatedDiseases.map((d) => {
+          return {
+            disease_id: d.disease_id,
+            confidence: d.confidence,
+          };
+        });
       }
 
-      // 키워드 기반 category_id로 직접 추천 (질병이 없어도)
-      // 질병 기반 추천이 없거나 실패한 경우 키워드 기반으로 추천
-      if (directCategoryIds.length > 0) {
-        console.log("[Chat Function] 키워드 기반 추천 시작:", {
-          directCategoryIds,
-          categoryIds,
-          recommendedProducts: recommendedProducts.length,
-          recommendedHospitals: recommendedHospitals.length,
-        });
-
-        // categoryIds가 없으면 directCategoryIds 사용, 있으면 병합
-        if (categoryIds.length === 0) {
-          categoryIds = directCategoryIds;
-          console.log(
-            "[Chat Function] 키워드 기반 category_id로 직접 추천:",
-            directCategoryIds
-          );
-        } else {
-          // 병합 (중복 제거)
-          categoryIds = [...new Set([...categoryIds, ...directCategoryIds])];
-          console.log("[Chat Function] category_ids 병합:", categoryIds);
-        }
-
-        // 키워드 기반 추천은 항상 실행 (directCategoryIds가 있으면)
-        const userMessageLower = userMessage.toLowerCase();
+      // ✅ 추천 실행 (한 번만, 재시도 없음)
+      if (categoryIds.length > 0) {
+        const userMessageLowerForRecommendation = userMessage.toLowerCase();
         const wantsProducts =
-          userMessageLower.includes("제품") ||
-          userMessageLower.includes("상품") ||
-          userMessageLower.includes("사료") ||
-          userMessageLower.includes("영양제") ||
-          userMessageLower.includes("추천해줘");
+          userMessageLowerForRecommendation.includes("제품") ||
+          userMessageLowerForRecommendation.includes("상품") ||
+          userMessageLowerForRecommendation.includes("사료") ||
+          userMessageLowerForRecommendation.includes("영양제") ||
+          userMessageLowerForRecommendation.includes("추천해줘");
         const wantsHospitals =
-          userMessageLower.includes("병원") ||
-          userMessageLower.includes("예약") ||
-          userMessageLower.includes("진료");
+          userMessageLowerForRecommendation.includes("병원") ||
+          userMessageLowerForRecommendation.includes("예약") ||
+          userMessageLowerForRecommendation.includes("진료");
 
-        console.log("[Chat Function] 키워드 기반 추천 - 사용자 요청 분석:", {
-          userMessage,
+        console.log("[Chat Function] 추천 요청 분석:", {
           wantsProducts,
           wantsHospitals,
           categoryIds,
-          hasRecommendedProducts: recommendedProducts.length > 0,
-          hasRecommendedHospitals: recommendedHospitals.length > 0,
         });
 
-        // 제품 추천이 필요하고 아직 없으면 실행
-        // 키워드 기반 추천은 directCategoryIds를 사용하여 다시 시도
-        const keywordCategoryIds =
-          directCategoryIds.length > 0 ? directCategoryIds : categoryIds;
-
+        // 사용자가 명시적으로 요청한 경우만 해당 추천 제공
         if (wantsProducts && !wantsHospitals) {
           // 제품만 추천
-          if (recommendedProducts.length === 0) {
-            console.log(
-              "[Chat Function] 키워드 기반 제품 추천 실행 (제품만):",
-              keywordCategoryIds
-            );
-            recommendedProducts = await getRecommendedProducts(
-              keywordCategoryIds
-            );
-            console.log(
-              "[Chat Function] 키워드 기반 제품 추천 결과:",
-              recommendedProducts.length,
-              "개",
-              recommendedProducts
-            );
-          } else {
-            console.log(
-              "[Chat Function] 이미 제품 추천이 있음, 키워드 기반 재시도:",
-              keywordCategoryIds
-            );
-            // 이미 추천이 있지만 키워드 기반으로 다시 시도
-            const keywordProducts = await getRecommendedProducts(
-              keywordCategoryIds
-            );
-            if (keywordProducts.length > 0) {
-              recommendedProducts = keywordProducts;
-              console.log(
-                "[Chat Function] 키워드 기반 제품 추천 성공:",
-                recommendedProducts.length,
-                "개"
-              );
-            }
-          }
+          recommendedProducts = await getRecommendedProducts(categoryIds);
+          console.log(
+            "[Chat Function] 제품 추천 결과:",
+            recommendedProducts.length,
+            "개"
+          );
         } else if (wantsHospitals && !wantsProducts) {
           // 병원만 추천
-          if (recommendedHospitals.length === 0) {
-            console.log(
-              "[Chat Function] 키워드 기반 병원 추천 실행 (병원만):",
-              keywordCategoryIds
-            );
-            recommendedHospitals = await getRecommendedHospitals(
-              keywordCategoryIds
-            );
-            console.log(
-              "[Chat Function] 키워드 기반 병원 추천 결과:",
-              recommendedHospitals.length,
-              "개"
-            );
-          }
+          recommendedHospitals = await getRecommendedHospitals(categoryIds);
+          console.log(
+            "[Chat Function] 병원 추천 결과:",
+            recommendedHospitals.length,
+            "개"
+          );
         } else {
-          // 둘 다 추천 (제품 우선, 없으면 병원)
-          // 키워드 기반으로 제품 재시도
-          if (
-            recommendedProducts.length === 0 ||
-            (directCategoryIds.length > 0 && recommendedProducts.length === 0)
-          ) {
-            console.log(
-              "[Chat Function] 키워드 기반 제품 추천 실행 (둘 다):",
-              keywordCategoryIds
-            );
-            const keywordProducts = await getRecommendedProducts(
-              keywordCategoryIds
-            );
-            if (keywordProducts.length > 0) {
-              recommendedProducts = keywordProducts;
-              console.log(
-                "[Chat Function] 키워드 기반 제품 추천 성공:",
-                recommendedProducts.length,
-                "개"
-              );
-            } else {
-              console.log(
-                "[Chat Function] 키워드 기반 제품 추천 실패 (제품 없음)"
-              );
-            }
-          }
-          if (recommendedHospitals.length === 0) {
-            console.log(
-              "[Chat Function] 키워드 기반 병원 추천 실행 (둘 다):",
-              keywordCategoryIds
-            );
-            recommendedHospitals = await getRecommendedHospitals(
-              keywordCategoryIds
-            );
-            console.log(
-              "[Chat Function] 키워드 기반 병원 추천 결과:",
-              recommendedHospitals.length,
-              "개"
-            );
-          }
+          // 둘 다 요청하거나 명시하지 않은 경우: 둘 다 추천 (순차 실행)
+          recommendedHospitals = await getRecommendedHospitals(categoryIds);
+          recommendedProducts = await getRecommendedProducts(categoryIds);
+          console.log("[Chat Function] 추천 결과:", {
+            products: recommendedProducts.length,
+            hospitals: recommendedHospitals.length,
+          });
         }
       }
     }
@@ -1668,6 +1532,7 @@ message에는 반드시 포함해야 한다:
     if (isUncertain) {
       return {
         status: "uncertain",
+        intent: "question", // ✅ 일반 질문 (판단 불가)
         normalized_symptoms: validatedSymptoms,
         suspected_diseases: [],
         category_ids: [],
@@ -1680,30 +1545,28 @@ message에는 반드시 포함해야 한다:
           "현재 정보만으로 특정 질병 카테고리를 유추하기 어렵습니다. 증상을 조금 더 자세히 알려주시면 도움을 드릴 수 있어요.",
       };
     } else {
-      // 추천이 없는 경우 AI 메시지 조정 (관리 질문이 아닐 때만)
+      // 추천이 없는 경우 AI 메시지 조정
+      // (관리 질문은 이미 상단에서 return되므로 여기까지 오는 경우는 관리 질문이 아님)
       let finalMessage =
         analysisResult.message ||
         "말씀해주신 내용을 바탕으로 관련 정보를 찾아보았습니다. 정확한 상태 확인을 위해 병원 진료를 받아보시는 것을 권장드립니다.";
 
-      // 관리 질문이 아닐 때만 fallback 메시지로 덮어쓰기
-      if (!isCareGuidanceQuestion) {
-        const wantsProducts =
-          userMessageLower.includes("제품") ||
-          userMessageLower.includes("상품") ||
-          userMessageLower.includes("사료") ||
-          userMessageLower.includes("영양제");
+      const wantsProducts =
+        userMessageLower.includes("제품") ||
+        userMessageLower.includes("상품") ||
+        userMessageLower.includes("사료") ||
+        userMessageLower.includes("영양제");
 
-        if (
-          recommendedHospitals.length === 0 &&
-          recommendedProducts.length === 0
-        ) {
-          if (wantsProducts) {
-            finalMessage =
-              "현재 등록된 제품 정보가 제한적이므로, 자사몰에서 관련 제품을 확인해보시거나 가까운 동물병원에 상담을 받아보시기 바랍니다.";
-          } else {
-            finalMessage =
-              "현재 등록된 병원 정보가 제한적이므로, 가까운 동물병원 방문을 우선 권장드립니다.";
-          }
+      if (
+        recommendedHospitals.length === 0 &&
+        recommendedProducts.length === 0
+      ) {
+        if (wantsProducts) {
+          finalMessage =
+            "현재 등록된 제품 정보가 제한적이므로, 자사몰에서 관련 제품을 확인해보시거나 가까운 동물병원에 상담을 받아보시기 바랍니다.";
+        } else {
+          finalMessage =
+            "현재 등록된 병원 정보가 제한적이므로, 가까운 동물병원 방문을 우선 권장드립니다.";
         }
       }
 
@@ -1714,8 +1577,14 @@ message에는 반드시 포함해야 한다:
         products: recommendedProducts.length,
       });
 
+      // ✅ intent 결정: 추천이 있으면 "recommendation", 없으면 "question"
+      const hasRecommendations = 
+        (recommendedHospitals.length > 0) || (recommendedProducts.length > 0);
+      const intent = hasRecommendations ? "recommendation" : "question";
+
       return {
         status: "ok",
+        intent: intent, // ✅ 추천 여부에 따라 intent 설정
         normalized_symptoms: validatedSymptoms,
         suspected_diseases: finalDiseases,
         category_ids: categoryIds,
@@ -1730,6 +1599,7 @@ message에는 반드시 포함해야 한다:
     console.error("AI 분석 오류:", err);
     return {
       status: "uncertain",
+      intent: "question", // ✅ 에러 시 일반 질문으로 처리
       normalized_symptoms: [],
       suspected_diseases: [],
       category_ids: [],
@@ -1822,6 +1692,7 @@ exports.handler = async (event) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status: "uncertain",
+          intent: "question", // ✅ DB 오류 시 일반 질문으로 처리
           normalized_symptoms: [],
           suspected_diseases: [],
           category_ids: [],
@@ -1847,6 +1718,7 @@ exports.handler = async (event) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status: "uncertain",
+          intent: "question", // ✅ AI 분석 실패 시 일반 질문으로 처리
           normalized_symptoms: [],
           suspected_diseases: [],
           category_ids: [],
@@ -1872,6 +1744,7 @@ exports.handler = async (event) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         status: "uncertain",
+        intent: "question", // ✅ 서버 오류 시 일반 질문으로 처리
         normalized_symptoms: [],
         suspected_diseases: [],
         category_ids: [],
