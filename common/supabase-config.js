@@ -564,18 +564,48 @@ const SupabaseService = {
 
     const userId = user.user_id;
 
-    // 해당 사용자의 반려동물도 함께 삭제
+    // 1단계: 해당 사용자의 반려동물 이미지 삭제 (Storage)
+    try {
+      const { data: pets } = await client
+        .from('pets')
+        .select('pet_img')
+        .eq('user_id', userId);
+
+      if (pets && pets.length > 0) {
+        for (const pet of pets) {
+          if (pet.pet_img) {
+            try {
+              await this.deletePetImage(pet.pet_img);
+            } catch (imgError) {
+              console.warn('반려동물 이미지 삭제 실패 (무시):', imgError);
+            }
+          }
+        }
+      }
+    } catch (petsQueryError) {
+      console.warn('반려동물 조회 중 오류 (무시):', petsQueryError);
+    }
+
+    // 2단계: 해당 사용자의 반려동물 삭제
     const { error: petsError } = await client
       .from('pets')
       .delete()
       .eq('user_id', userId);
 
     if (petsError) {
-      console.warn('반려동물 삭제 중 오류 (무시):', petsError);
-      // 반려동물 삭제 실패해도 계속 진행
+      // 외래키 제약조건 오류인 경우 상세 메시지 제공
+      if (petsError.code === '23503' || petsError.message?.includes('foreign key')) {
+        throw new Error('반려동물 데이터 삭제에 실패했습니다. Supabase에서 외래키 제약조건을 확인해주세요.');
+      }
+      console.warn('반려동물 삭제 중 오류:', petsError);
+      // RLS 정책 오류인 경우도 처리
+      if (petsError.code === '42501') {
+        throw new Error('반려동물 삭제 권한이 없습니다. Supabase RLS 정책을 확인해주세요.');
+      }
+      // 다른 오류는 무시하고 계속 진행
     }
 
-    // 사용자 삭제
+    // 3단계: 사용자 삭제
     const { error } = await client
       .from('users')
       .delete()
@@ -583,6 +613,17 @@ const SupabaseService = {
 
     if (error) {
       console.error('Error deleting user:', error);
+      
+      // 외래키 제약조건 오류인 경우
+      if (error.code === '23503' || error.message?.includes('foreign key')) {
+        throw new Error('사용자 삭제에 실패했습니다. 반려동물 데이터가 남아있을 수 있습니다. Supabase에서 외래키 제약조건을 CASCADE DELETE로 설정해주세요.');
+      }
+      
+      // RLS 정책 오류인 경우
+      if (error.code === '42501') {
+        throw new Error('사용자 삭제 권한이 없습니다. Supabase RLS 정책을 확인해주세요.');
+      }
+      
       throw error;
     }
 
