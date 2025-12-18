@@ -226,6 +226,65 @@ function saveJoinMemberData() {
   }
 }
 
+// 이메일 중복 체크 함수
+async function checkEmailDuplicate(email) {
+  if (!email || !email.trim()) {
+    hideEmailError();
+    return true; // 빈 이메일은 중복 체크하지 않음
+  }
+
+  try {
+    // SupabaseService가 로드되었는지 확인
+    if (typeof SupabaseService === "undefined") {
+      console.warn("SupabaseService가 아직 로드되지 않았습니다.");
+      return true; // 서비스가 없으면 체크하지 않음
+    }
+
+    const emailExists = await SupabaseService.checkEmailExists(email);
+    
+    if (emailExists) {
+      showEmailError("이미 가입된 이메일입니다.");
+      return false;
+    } else {
+      hideEmailError();
+      return true;
+    }
+  } catch (error) {
+    console.error("이메일 중복 체크 오류:", error);
+    // 에러 발생 시에도 계속 진행 (네트워크 오류 등)
+    return true;
+  }
+}
+
+// 이메일 에러 메시지 표시
+function showEmailError(message) {
+  let errorElement = document.getElementById("emailError");
+  if (!errorElement) {
+    // 에러 메시지 요소가 없으면 생성
+    errorElement = document.createElement("div");
+    errorElement.id = "emailError";
+    errorElement.className = "error-message";
+    errorElement.style.cssText = "display: block; color: #ff0000; font-size: 12px; margin-top: 4px;";
+    
+    // 이메일 입력 필드 다음에 삽입
+    const emailInput = document.getElementById("email");
+    if (emailInput && emailInput.parentElement) {
+      emailInput.parentElement.appendChild(errorElement);
+    }
+  }
+  
+  errorElement.textContent = message;
+  errorElement.style.display = "block";
+}
+
+// 이메일 에러 메시지 숨김
+function hideEmailError() {
+  const errorElement = document.getElementById("emailError");
+  if (errorElement) {
+    errorElement.style.display = "none";
+  }
+}
+
 // 비밀번호 일치 확인
 function checkPasswordMatch() {
   const password = passwordInput ? passwordInput.value : "";
@@ -357,9 +416,36 @@ function setupInputEventListeners() {
 
   // 입력 필드 이벤트 리스너 (입력 시 데이터 저장 및 검증)
   if (emailInput) {
+    let emailCheckTimeout = null;
+    
     emailInput.addEventListener("input", () => {
       saveJoinMemberData();
       validateForm();
+      
+      // 이메일 중복 체크 (입력 후 500ms 지연)
+      const email = emailInput.value.trim();
+      if (email) {
+        // 기존 타이머 취소
+        if (emailCheckTimeout) {
+          clearTimeout(emailCheckTimeout);
+        }
+        
+        // 500ms 후 중복 체크 실행
+        emailCheckTimeout = setTimeout(async () => {
+          await checkEmailDuplicate(email);
+        }, 500);
+      } else {
+        // 이메일이 비어있으면 에러 메시지 숨김
+        hideEmailError();
+      }
+    });
+    
+    // 포커스 아웃 시에도 중복 체크
+    emailInput.addEventListener("blur", async () => {
+      const email = emailInput.value.trim();
+      if (email) {
+        await checkEmailDuplicate(email);
+      }
     });
   }
 
@@ -462,6 +548,17 @@ function setupSubmitButton() {
           marketingAgree: marketingTermsCheckbox.checked,
         };
 
+        // 이메일 중복 최종 체크
+        const emailAvailable = await checkEmailDuplicate(formData.email);
+        if (!emailAvailable) {
+          alert("이미 가입된 이메일입니다. 다른 이메일을 사용해주세요.");
+          isSubmitting = false;
+          submitBtn.disabled = false;
+          submitBtn.textContent = "가입하기";
+          emailInput.focus();
+          return;
+        }
+
         // Supabase에 사용자 정보 저장
         try {
           // Supabase 스크립트 로드 확인
@@ -530,7 +627,16 @@ function setupSubmitButton() {
           }
         } catch (error) {
           console.error("데이터 저장 실패:", error);
-          alert("회원가입 중 오류가 발생했습니다: " + error.message);
+          
+          // 이메일 중복 오류 처리
+          if (error.message && error.message.includes("이미 가입된 이메일")) {
+            showEmailError("이미 가입된 이메일입니다.");
+            alert("이미 가입된 이메일입니다. 다른 이메일을 사용해주세요.");
+            emailInput.focus();
+          } else {
+            alert("회원가입 중 오류가 발생했습니다: " + error.message);
+          }
+          
           isSubmitting = false;
           submitBtn.disabled = false;
           submitBtn.textContent = "가입하기";

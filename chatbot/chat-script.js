@@ -238,6 +238,11 @@ function scrollToBottomIfNeeded(force = false) {
     // requestAnimationFrame을 사용하여 DOM 업데이트 후 스크롤
     requestAnimationFrame(() => {
       chatContainer.scrollTop = chatContainer.scrollHeight;
+      // 추가 지연으로 확실하게 스크롤 (이미지 로딩 등 대기)
+      setTimeout(() => {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        updateScrollButtonVisibility();
+      }, 100);
       // 스크롤 버튼 상태 업데이트
       updateScrollButtonVisibility();
     });
@@ -417,13 +422,23 @@ async function sendMessage(messageText) {
     
     chatMessages.appendChild(botMessage);
     
+    // ✅ 새 메시지 추가 후 자동 스크롤
+    setTimeout(() => {
+      scrollToBottomIfNeeded(true);
+    }, 50);
+    
     // 병원·제품 추천 표시 (명세서: recommendations 필드)
     console.log('[Chat] 응답 데이터:', response);
     console.log('[Chat] 추천 데이터:', response.recommendations);
     console.log('[Chat] Intent:', response.intent);
     
-    // ✅ intent 기반 추천 렌더링 가드 (관리 질문이 아닐 때만 추천 표시)
-    if (response.recommendations && response.intent === 'recommendation') {
+    // ✅ intent 기반 추천 렌더링 가드 (추천 intent일 때만 표시)
+    const isRecommendationIntent = 
+      response.intent === 'hospital_recommend' || 
+      response.intent === 'product_recommend' ||
+      response.intent === 'recommendation'; // 하위 호환
+    
+    if (response.recommendations && isRecommendationIntent) {
       const { hospitals, products } = response.recommendations;
       console.log('[Chat] 병원 개수:', hospitals?.length || 0);
       console.log('[Chat] 제품 개수:', products?.length || 0);
@@ -462,6 +477,11 @@ async function sendMessage(messageText) {
           </div>
         `;
         chatMessages.appendChild(hospitalRecommendation);
+        
+        // ✅ 추천 섹션 추가 후 자동 스크롤
+        setTimeout(() => {
+          scrollToBottomIfNeeded(true);
+        }, 50);
         
         // 병원 예약 버튼 이벤트 리스너 추가
         hospitalRecommendation.querySelectorAll('.hospital-reservation-btn').forEach(btn => {
@@ -507,6 +527,11 @@ async function sendMessage(messageText) {
           </div>
         `;
         chatMessages.appendChild(productRecommendation);
+        
+        // ✅ 추천 섹션 추가 후 자동 스크롤
+        setTimeout(() => {
+          scrollToBottomIfNeeded(true);
+        }, 50);
         
         // 제품 클릭 이벤트 리스너 추가 (PDP로 이동)
         productRecommendation.querySelectorAll('.chat-product-card').forEach(item => {
@@ -676,9 +701,22 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 100);
   }
   
+  // 스크롤 버튼 클릭 이벤트
+  const scrollBtn = document.getElementById('scrollToBottomBtn');
+  if (scrollBtn) {
+    scrollBtn.addEventListener('click', function() {
+      scrollToBottom();
+    });
+  }
+
   // MutationObserver를 사용하여 새 메시지가 추가될 때 자동 스크롤
   const chatContainer = document.querySelector('.chat-container');
   if (chatContainer && chatMessages) {
+    // 스크롤 이벤트 리스너: 사용자가 스크롤할 때 버튼 표시/숨김 업데이트
+    chatContainer.addEventListener('scroll', function() {
+      updateScrollButtonVisibility();
+    });
+
     const observer = new MutationObserver(() => {
       // 새 메시지가 추가되었을 때, 스크롤이 맨 아래에 있으면 자동 스크롤
       scrollToBottomIfNeeded();

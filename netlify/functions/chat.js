@@ -69,9 +69,107 @@ async function loadDatabaseData() {
 
 // 이 함수들은 더 이상 사용하지 않음 (로컬 데이터 기반 함수로 대체됨)
 
+// 위치 키워드 추출 함수
+function extractLocationKeywords(userMessage) {
+  const locationKeywords = [];
+  const messageLower = userMessage.toLowerCase();
+  
+  // 주요 시/도 및 지역 키워드
+  const locationMap = {
+    // 시/도
+    "서울": ["서울", "서울시", "서울특별시"],
+    "부산": ["부산", "부산시", "부산광역시"],
+    "대구": ["대구", "대구시", "대구광역시"],
+    "인천": ["인천", "인천시", "인천광역시"],
+    "광주": ["광주", "광주시", "광주광역시"],
+    "대전": ["대전", "대전시", "대전광역시"],
+    "울산": ["울산", "울산시", "울산광역시"],
+    "세종": ["세종", "세종시", "세종특별자치시"],
+    "경기": ["경기", "경기도"],
+    "강원": ["강원", "강원도"],
+    "충북": ["충북", "충청북도"],
+    "충남": ["충남", "충청남도"],
+    "전북": ["전북", "전라북도"],
+    "전남": ["전남", "전라남도"],
+    "경북": ["경북", "경상북도"],
+    "경남": ["경남", "경상남도"],
+    "제주": ["제주", "제주도", "제주특별자치도"],
+    // 서울 주요 구
+    "강남": ["강남", "강남구"],
+    "서초": ["서초", "서초구"],
+    "송파": ["송파", "송파구"],
+    "강동": ["강동", "강동구"],
+    "강서": ["강서", "강서구"],
+    "양천": ["양천", "양천구"],
+    "영등포": ["영등포", "영등포구"],
+    "구로": ["구로", "구로구"],
+    "금천": ["금천", "금천구"],
+    "관악": ["관악", "관악구"],
+    "동작": ["동작", "동작구"],
+    "은평": ["은평", "은평구"],
+    "마포": ["마포", "마포구"],
+    "서대문": ["서대문", "서대문구"],
+    "종로": ["종로", "종로구"],
+    "중구": ["중구"],
+    "용산": ["용산", "용산구"],
+    "성동": ["성동", "성동구"],
+    "광진": ["광진", "광진구"],
+    "강북": ["강북", "강북구"],
+    "도봉": ["도봉", "도봉구"],
+    "노원": ["노원", "노원구"],
+    "중랑": ["중랑", "중랑구"],
+    "성북": ["성북", "성북구"],
+    // 경기도 주요 도시
+    "수원": ["수원", "수원시"],
+    "성남": ["성남", "성남시"],
+    "고양": ["고양", "고양시"],
+    "용인": ["용인", "용인시"],
+    "부천": ["부천", "부천시"],
+    "안산": ["안산", "안산시"],
+    "안양": ["안양", "안양시"],
+    "평택": ["평택", "평택시"],
+    "시흥": ["시흥", "시흥시"],
+    "김포": ["김포", "김포시"],
+    "화성": ["화성", "화성시"],
+    "광명": ["광명", "광명시"],
+    "군포": ["군포", "군포시"],
+    "의왕": ["의왕", "의왕시"],
+    "이천": ["이천", "이천시"],
+    "오산": ["오산", "오산시"],
+    "의정부": ["의정부", "의정부시"],
+    "구리": ["구리", "구리시"],
+    "남양주": ["남양주", "남양주시"],
+    "파주": ["파주", "파주시"],
+    "양주": ["양주", "양주시"],
+    "동두천": ["동두천", "동두천시"],
+    "안성": ["안성", "안성시"],
+    "포천": ["포천", "포천시"],
+    "양평": ["양평", "양평군"],
+    "여주": ["여주", "여주시"],
+    "연천": ["연천", "연천군"],
+    "가평": ["가평", "가평군"],
+    "과천": ["과천", "과천시"],
+    "하남": ["하남", "하남시"],
+  };
+
+  // 메시지에서 위치 키워드 찾기
+  for (const [location, keywords] of Object.entries(locationMap)) {
+    for (const keyword of keywords) {
+      if (messageLower.includes(keyword.toLowerCase())) {
+        locationKeywords.push(location);
+        console.log(`[Chat Function] 위치 키워드 발견: ${keyword} → ${location}`);
+        break; // 중복 방지
+      }
+    }
+  }
+
+  return locationKeywords;
+}
+
 // category_id로 병원 추천 (명세서 기준)
 // 주의: hospitals 테이블은 'category_id' 컬럼을 사용함
-async function getRecommendedHospitals(categoryIds) {
+// locationKeywords: 위치 키워드 배열 (예: ["서울", "강남"])
+async function getRecommendedHospitals(categoryIds, locationKeywords = []) {
   const supabase = getSupabaseClient();
 
   if (!categoryIds || categoryIds.length === 0) {
@@ -81,7 +179,7 @@ async function getRecommendedHospitals(categoryIds) {
   try {
     // hospitals 테이블은 'category_id' 컬럼 사용
     // category_id 기준으로 병원 조회
-    // rating DESC, review_count DESC 정렬, 최대 3개
+    // rating DESC, review_count DESC 정렬, 최대 10개 (위치 필터링 후 정렬을 위해)
     const { data, error } = await supabase
       .from("hospitals")
       .select(
@@ -90,20 +188,51 @@ async function getRecommendedHospitals(categoryIds) {
       .in("category_id", categoryIds)
       .order("rating", { ascending: false })
       .order("review_count", { ascending: false })
-      .limit(3);
+      .limit(10); // 위치 필터링을 위해 더 많이 가져옴
 
     if (error) {
       console.error("병원 추천 조회 오류:", error);
       return [];
     }
 
-    return (data || []).map((h) => ({
+    let hospitals = (data || []).map((h) => ({
       hospital_id: h.hospital_id,
       hospital_name: h.hospital_name,
       address: h.address || "",
       rating: h.rating || 0,
       hospital_img: h.hospital_img || null,
     }));
+
+    // ✅ 위치 키워드가 있으면 해당 위치의 병원을 우선 정렬
+    if (locationKeywords.length > 0) {
+      const addressLower = (addr) => (addr || "").toLowerCase();
+      
+      hospitals = hospitals.sort((a, b) => {
+        const aAddress = addressLower(a.address);
+        const bAddress = addressLower(b.address);
+        
+        // 위치 키워드 매칭 여부 확인
+        const aMatches = locationKeywords.some(loc => 
+          aAddress.includes(loc.toLowerCase())
+        );
+        const bMatches = locationKeywords.some(loc => 
+          bAddress.includes(loc.toLowerCase())
+        );
+        
+        // 위치 매칭된 병원을 우선 정렬
+        if (aMatches && !bMatches) return -1;
+        if (!aMatches && bMatches) return 1;
+        
+        // 둘 다 매칭되거나 둘 다 안 되면 기존 정렬 유지 (rating, review_count)
+        if (a.rating !== b.rating) return b.rating - a.rating;
+        return (b.review_count || 0) - (a.review_count || 0);
+      });
+      
+      console.log(`[Chat Function] 위치 기반 정렬 적용: ${locationKeywords.join(", ")}`);
+    }
+
+    // 최대 3개만 반환
+    return hospitals.slice(0, 3);
   } catch (err) {
     console.error("병원 추천 오류:", err);
     return [];
@@ -655,6 +784,50 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
   // 키워드 → category_id 매핑은 전역 keywordToCategoryId 사용 (435줄)
   const userMessageLower = userMessage.toLowerCase();
   
+  // ✅ 직전 assistant 메시지 확인 (care_guidance → hospital_recommend 전환용)
+  let previousCategoryIds = [];
+  let shouldTransitionToHospitalRecommend = false;
+  if (history && history.length > 0) {
+    // 직전 assistant 메시지 찾기
+    for (let i = history.length - 1; i >= 0; i--) {
+      if (history[i].role === "assistant") {
+        const prevMessage = history[i].content || "";
+        const prevMessageLower = prevMessage.toLowerCase();
+        
+        // care_guidance 맥락 확인 (병원 정보 안내 문구 포함 여부)
+        if (
+          prevMessageLower.includes("병원 정보를 안내해드릴 수") ||
+          prevMessageLower.includes("병원 알려드릴 수") ||
+          prevMessageLower.includes("병원 정보를 안내") ||
+          prevMessageLower.includes("병원 알려드릴")
+        ) {
+          // 다음 userMessage가 병원 정보 요청인지 확인
+          const isHospitalInfoRequest =
+            userMessageLower.includes("알려주세요") ||
+            userMessageLower.includes("병원 알려주세요") ||
+            userMessageLower.includes("네 알려주세요") ||
+            userMessageLower.includes("그럼 알려주세요") ||
+            userMessageLower.includes("보여주세요") ||
+            userMessageLower.includes("추천해주세요") ||
+            userMessageLower.includes("병원 추천해주세요") ||
+            (userMessageLower.includes("알려") && userMessageLower.includes("병원")) ||
+            (userMessageLower.includes("그럼") && (userMessageLower.includes("병원") || userMessageLower.includes("알려")));
+          
+          if (isHospitalInfoRequest) {
+            shouldTransitionToHospitalRecommend = true;
+            console.log("[Chat Function] ✅ care_guidance → hospital_recommend 전환 감지");
+            
+            // 직전 응답의 category_ids 추출 시도 (응답 구조에서)
+            // history에는 content만 있으므로, 이전 분석 결과를 활용할 수 없음
+            // 대신 현재 메시지에서 category 추출
+            break;
+          }
+        }
+        break; // 첫 번째 assistant 메시지만 확인
+      }
+    }
+  }
+  
   // 키워드 기반 category_id 추출
   let directCategoryIds = [];
   const messageForMatching = userMessageLower;
@@ -717,27 +890,18 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
       }
     }
 
-    // 간단한 관리 가이드 메시지 생성
-    let careMessage = "말씀해주신 내용을 바탕으로 관리 방법을 안내드리겠습니다. ";
-    if (categoryIds.length > 0) {
-      const categoryNames = {
-        2: "심장",
-        3: "신장/방광",
-        4: "간",
-        5: "위/장",
-        6: "피부",
-        7: "치아",
-        8: "뼈/관절",
-        9: "눈",
-        10: "면역력",
-        11: "행동",
-      };
-      const categoryName =
-        categoryNames[categoryIds[0]] || "관련 분야";
-      careMessage += `${categoryName} 관련 주의사항을 참고하시되, `;
-    }
-    careMessage +=
-      "정확한 상태 확인을 위해 병원 진료를 받아보시는 것을 권장드립니다.";
+    // ✅ 관리 가이드 메시지 생성 (병원 방문 기준 포함, 가독성 개선)
+    const careMessage = `말씀해주신 내용을 바탕으로 안내드릴게요.
+
+다음과 같은 경우에는 병원 방문을 고려해보시는 것이 도움이 될 수 있어요.
+
+• 증상이 며칠 이상 지속되는 경우  
+• 붉은 부위가 넓어지는 경우  
+• 진물, 냄새, 탈모가 나타나는 경우  
+• 긁거나 핥는 행동이 계속되는 경우  
+• 통증으로 예민해 보이는 경우  
+
+원하시면 가까운 병원 정보를 안내해드릴 수 있어요.`;
 
     return {
       status: "ok",
@@ -746,7 +910,7 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
       suspected_diseases: [], // 관리 질문은 disease 언급 완전 차단
       category_ids: categoryIds,
       recommendations: {
-        hospitals: [], // 관리 질문은 추천 없음
+        hospitals: [], // ✅ 관리 질문은 추천 없음 (병원 카드 자동 출력 금지)
         products: [], // 관리 질문은 추천 없음
       },
       message: careMessage,
@@ -789,16 +953,55 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
     name: d.disease_name,
   }));
 
-  // 추천 요청 키워드 확인
-  const hasRecommendationRequest =
-    userMessageLower.includes("추천") ||
-    userMessageLower.includes("제품") ||
-    userMessageLower.includes("상품") ||
-    userMessageLower.includes("사료") ||
-    userMessageLower.includes("영양제") ||
-    userMessageLower.includes("병원") ||
-    userMessageLower.includes("예약") ||
-    userMessageLower.includes("진료");
+  // ✅ 명시적 추천 요청 체크 (단독 키워드는 추천 트리거 아님)
+  const isExplicitHospitalRecommend =
+    userMessageLower.includes("병원 추천") ||
+    userMessageLower.includes("추천해줘") ||
+    userMessageLower.includes("어디 병원") ||
+    userMessageLower.includes("병원 알려줘") ||
+    userMessageLower.includes("병원 추천해줘") ||
+    userMessageLower.includes("병원 추천해") ||
+    userMessageLower.includes("병원 추천해주세요") ||
+    (userMessageLower.includes("추천") && userMessageLower.includes("병원"));
+
+  const isExplicitProductRecommend =
+    userMessageLower.includes("영양제 추천") ||
+    userMessageLower.includes("사료 추천") ||
+    userMessageLower.includes("간식 추천") ||
+    userMessageLower.includes("제품 추천") ||
+    (userMessageLower.includes("추천") && (userMessageLower.includes("영양제") || userMessageLower.includes("사료") || userMessageLower.includes("간식") || userMessageLower.includes("제품")));
+
+  // ✅ intent 결정 (우선순위: care_guidance > hospital_recommend > product_recommend > symptom_consult)
+  let forcedIntent = "symptom_consult"; // 기본값
+
+  // 0️⃣ care_guidance → hospital_recommend 전환 (최우선)
+  if (shouldTransitionToHospitalRecommend) {
+    forcedIntent = "hospital_recommend";
+    console.log("[Chat Function] ✅ care_guidance 맥락에서 hospital_recommend로 전환");
+  }
+  // 1️⃣ 관리/판단 질문 (추천보다 우선)
+  else if (isCareGuidanceQuestion) {
+    forcedIntent = "care_guidance";
+  }
+  // 2️⃣ 명시적 병원 추천 요청
+  else if (isExplicitHospitalRecommend) {
+    forcedIntent = "hospital_recommend";
+  }
+  // 3️⃣ 명시적 제품 추천 요청
+  else if (isExplicitProductRecommend) {
+    forcedIntent = "product_recommend";
+  }
+  // 4️⃣ 관리/메타 질문
+  else if (
+    userMessageLower.includes("기준") ||
+    (userMessageLower.includes("어떻게") && userMessageLower.includes("추천")) ||
+    (userMessageLower.includes("무엇을") && userMessageLower.includes("기준"))
+  ) {
+    forcedIntent = "admin_or_meta";
+  }
+
+  // 추천 요청 키워드 확인 (명시적 요청만)
+  const hasRecommendationRequest = isExplicitHospitalRecommend || isExplicitProductRecommend;
 
   // 카테고리 키워드 확인
   const hasCategoryKeyword = Object.keys(keywordToCategoryId).some((key) =>
@@ -818,6 +1021,7 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
 
   console.log("[Chat Function] 메시지 분석:", {
     isCareGuidanceQuestion,
+    forcedIntent, // ✅ intent 강제 분기
     hasRecommendationRequest,
     hasCategoryKeyword,
     hasSymptomKeywords,
@@ -827,7 +1031,24 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
   // 사용자 메시지에서 질병 키워드 추출 시도
   const possibleDisease = findDiseaseByKeyword(userMessage, diseases);
 
-  // A안(현실 타협) SYSTEM PROMPT - 탐색 가이드 AI 역할
+  // ✅ intent 기반 SYSTEM PROMPT (카테고리 노출 완전 금지)
+  const intentRules = {
+    symptom_consult: `[symptom_consult 규칙]
+- 증상에 대한 설명과 원인 가능성만 제공
+- 추가 질문을 통해 더 자세한 정보 수집
+- ❌ 절대 금지: 병원 추천, 제품 추천, 카테고리/분류 언급, "카테고리로 분류했습니다" 같은 표현`,
+    hospital_recommend: `[hospital_recommend 규칙]
+- 병원 리스트만 제공하거나 지역을 물어보는 질문
+- ❌ 절대 금지: 제품 추천, 카테고리/분류 언급`,
+    product_recommend: `[product_recommend 규칙]
+- 제품 또는 성분 정보 제공
+- 사용 시 주의사항 안내
+- ❌ 절대 금지: 병원 추천, 카테고리/분류 언급`,
+    admin_or_meta: `[admin_or_meta 규칙]
+- 추천 기준이나 데이터 출처 설명
+- ❌ 절대 금지: 병원/제품 추천, 카테고리/분류 언급`,
+  };
+
   const systemPrompt = `너는 반려동물(강아지, 고양이 등) 건강 상담 보조 AI다.
 
 ❗ 모든 답변은 반려동물에 대한 정보 제공 목적이다.
@@ -836,31 +1057,18 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
 
 ---
 
-[챗봇 역할]
+🔴 매우 중요 - 절대 금지 사항:
 
-이 챗봇은 의료 판단 AI가 아니라
-증상·키워드를 질병 카테고리(category_id) 수준으로 정규화하여
-병원·제품 정보를 "탐색"할 수 있도록 돕는 가이드 AI다.
-
-❌ 하지 않는 것:
-- 질병 확정 진단
-- 치료 단계/수술 여부 판단
-- 비용 범위, 검사비 안내
-- 특정 병원·제품이 치료 효과가 있다고 단정
-
-✅ 하는 것:
-- 증상/키워드 → disease_id → category_id 정규화
-- category_id 기반 병원/제품 추천
-- "왜 이 추천이 나왔는지" 설명
-- 일반적인 반려동물 건강 정보 제공
+1. 카테고리, 분류, category_id, "분류했습니다", "카테고리로 분류" 같은 내부 로직 용어를 사용자에게 절대 언급하지 마세요.
+2. 사용자가 요청하지 않은 추천(병원/제품)은 제공하지 마세요.
+3. 증상 질문에는 설명과 추가 질문만 답하세요. 추천을 제공하지 마세요.
 
 ---
 
 [대화 맥락]
 
 - 이전 대화에서 언급된 반려동물 정보(종, 나이, 증상, 질병 키워드)를 기억하고 활용한다.
-- 사용자가 질병명 또는 질병 관련 키워드(심장, 뼈, 관절, 피부 등)를 언급한 경우,
-  추가 증상 정규화 없이 해당 disease_id를 suspected_diseases에 포함한다.
+- 사용자가 질병명을 직접 언급한 경우, 해당 disease_id를 suspected_diseases에 포함한다.
 - 대화가 이어지는 경우 이전 맥락을 고려하여 응답하라.
 
 ---
@@ -872,70 +1080,24 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
 - 증상이 모호하거나 부족하면 status를 "uncertain"으로 설정한다.
 - 새로운 증상이나 질병명을 생성하지 마라.
 
-[disease_id 자동 감지 제한 규칙 - 매우 중요]
-
-disease_id는 아래 경우에만 suspected_diseases에 포함한다:
-
-1) 사용자가 질병명을 직접 언급한 경우
-2) symptom_word 매칭 결과가 동일 category_id 내에서만 발생한 경우
-
-❌ 절대 금지:
-- 서로 다른 category_id의 disease_id를 동시에 포함하지 않는다.
-- 예: 관절/뼈(category_id=8) 증상 → 장염(category_id=5) ❌ 차단
-
-✅ 올바른 예:
-- 관절/뼈 증상 → 슬개골탈구(category_id=8) ✅ 허용
-- 위/장 증상 → 장염(category_id=5) ✅ 허용
-
-[disease_id 언급 수 제한]
+[disease_id 제한 규칙]
 
 - 하나의 응답에서 disease_id는 최대 1개만 언급한다.
-- 확신도 낮을 경우 disease_id 언급 없이 category 설명만 제공한다.
-- status: "uncertain"인 경우 disease_id를 언급하지 않는다.
+- status: "uncertain"인 경우 disease_id를 절대 언급하지 않는다.
 
 ---
 
-[추천 규칙]
+[응답 규칙 - intent별]
 
-- 병원과 제품은 서버에서 제공된 데이터만 사용한다.
-- 추천 대상은 AI가 선택하지 않으며, 제공된 결과를 설명하는 역할만 한다.
-- "치료", "완치", "수술 필요", "수술", "검사비", "비용" 같은 표현은 사용하지 않는다.
-- 반드시 아래와 같은 보조 표현만 사용한다:
-  - "~에 도움이 될 수 있습니다"
-  - "~를 참고하실 수 있습니다"
-  - "~를 확인해보실 수 있습니다"
-
-[category_id 우선 규칙 - 핵심]
-
-우선순위:
-1. 사용자 질병 키워드 → category_id (최우선)
-2. 증상 → disease_id → category_id (category_id 일치 확인 필수)
-3. 추천은 항상 category_id 기준으로만 수행
-
-disease_id는 설명 보조용이며, message에서도 category 기준 설명을 우선한다.
+${intentRules[forcedIntent] || intentRules.symptom_consult}
 
 ---
 
-[message 작성 규칙 - 매우 중요]
+[금지 표현]
 
-message에는 반드시 포함해야 한다:
-
-1. 왜 이 카테고리(category_id)로 분류됐는지 설명
-   예: "말씀해주신 증상은 반려견의 움직임이나 관절 사용과 관련해 자주 언급되는 경우와 유사해 보여요."
-
-2. 이 추천이 참고용임을 명확히 표시
-   예: "그래서 뼈·관절 분야를 중심으로 진료하는 병원과, 일상적인 관절 관리에 참고할 수 있는 정보들을 함께 안내드렸어요."
-
-3. 병원 방문 권장 (완곡하게, 강요 톤 금지)
-   예: "정확한 상태 확인은 병원 진료를 통해 이루어지는 것이 좋아요."
-
-❌ 금지 표현:
+- "카테고리", "분류", "category_id", "분류했습니다", "카테고리로 분류"
+- "치료", "완치", "수술 필요", "수술", "검사비", "비용"
 - "~질병이 감지되었습니다" (확정 뉘앙스)
-- 질병명 다중 언급
-- "~질병일 수 있습니다" (여러 질병 나열)
-
-✅ 올바른 예시 (슬개골/관절 케이스):
-"말씀해주신 증상은 반려견의 움직임이나 관절 사용과 관련해 자주 언급되는 경우와 유사해 보여요. 그래서 뼈·관절 분야를 중심으로 진료하는 병원과, 일상적인 관절 관리에 참고할 수 있는 정보들을 함께 안내드렸어요. 정확한 상태 확인은 병원 진료를 통해 이루어지는 것이 좋아요."
 
 ---
 
@@ -944,30 +1106,41 @@ message에는 반드시 포함해야 한다:
 
 응답은 반드시 JSON 형식으로만 출력하라.
 
-일반 질문 응답 형식 (예: "예방접종 안내"):
+증상 상담 응답 형식 (symptom_consult):
 {
   "status": "ok",
-  "normalized_symptoms": [],
-  "suspected_diseases": [],
-  "category_ids": [],
-  "message": "예방접종 일정에 대해 안내해드릴게요. 쿵이의 나이와 최근 접종 이력을 알려주시면 맞춤 일정을 제안해드릴 수 있어요.",
+  "normalized_symptoms": ["증상키워드1", "증상키워드2"],
+  "suspected_diseases": [{"disease_id": 1, "confidence": "high"}],
+  "category_ids": [8],
+  "message": "증상에 대한 설명과 가능한 원인 + 추가 질문 (추천 없음)",
   "recommendations": {
     "hospitals": [],
     "products": []
   }
 }
 
-증상 기반 질문 응답 형식:
+병원 추천 응답 형식 (hospital_recommend):
 {
   "status": "ok",
-  "normalized_symptoms": ["증상키워드1", "증상키워드2"],
-  "suspected_diseases": [
-    {"disease_id": 1, "confidence": "high"}
-  ],
+  "normalized_symptoms": [],
+  "suspected_diseases": [],
   "category_ids": [8],
-  "message": "왜 이 카테고리로 분류됐는지 설명 + 참고용임을 명확히 + 병원 방문 권장 (완곡하게)",
+  "message": "병원 안내 또는 지역 질문",
   "recommendations": {
     "hospitals": [...],
+    "products": []
+  }
+}
+
+제품 추천 응답 형식 (product_recommend):
+{
+  "status": "ok",
+  "normalized_symptoms": [],
+  "suspected_diseases": [],
+  "category_ids": [8],
+  "message": "제품 정보 및 주의사항",
+  "recommendations": {
+    "hospitals": [],
     "products": [...]
   }
 }
@@ -976,41 +1149,14 @@ message에는 반드시 포함해야 한다:
 {
   "status": "uncertain",
   "normalized_symptoms": [],
-  "suspected_diseases": [],  // ❌ disease_id 언급 금지
+  "suspected_diseases": [],
   "category_ids": [],
-  "message": "현재 정보만으로 특정 질병 카테고리를 유추하기 어렵습니다. 증상을 조금 더 자세히 알려주시면 도움을 드릴 수 있어요.",
+  "message": "증상을 더 자세히 알려주시면 도움을 드릴 수 있어요.",
   "recommendations": {
     "hospitals": [],
     "products": []
   }
-}
-
-**중요: status가 "uncertain"인 경우 disease_id를 절대 언급하지 않는다.
-
-[관리 질문 처리 규칙 - 매우 중요]
-
-사용자가 아래와 같은 질문을 할 때는 병원/제품 추천이 아니라 "관리 가이드"를 제공해야 합니다:
-
-- "지금 바로 병원에 가야 하나요?"
-- "며칠 지켜봐도 되나요?"
-- "산책/점프/계단을 어떻게 해야 하나요?"
-- "관리 방법을 알려주세요"
-- "조심해야 할 점이 있나요?"
-
-관리 질문 응답 형식:
-{
-  "status": "ok",
-  "normalized_symptoms": [],
-  "suspected_diseases": [],
-  "category_ids": [8],  // category_id는 유지
-  "message": "관리 가이드 중심의 답변 (병원 방문 시점, 일상 관리 방법, 주의사항 등)",
-  "recommendations": {
-    "hospitals": [],  // 추천 없음
-    "products": []    // 추천 없음
-  }
-}
-
-**중요: 관리 질문일 때는 추천을 제공하지 않고, 관리 기준과 주의사항만 안내합니다.**`;
+}`;
 
   // directCategoryIds는 이미 위에서 추출됨 (symptom 필터링을 위해)
   console.log("[Chat Function] 추출된 directCategoryIds:", directCategoryIds);
@@ -1036,17 +1182,9 @@ message에는 반드시 포함해야 한다:
   ) {
     console.log("[Chat Function] 추천 요청 감지 - 질병 감지 없이 바로 추천");
 
-    // 사용자 요청 분석
-    const wantsProducts =
-      userMessageLower.includes("제품") ||
-      userMessageLower.includes("상품") ||
-      userMessageLower.includes("사료") ||
-      userMessageLower.includes("영양제") ||
-      userMessageLower.includes("간식");
-    const wantsHospitals =
-      userMessageLower.includes("병원") ||
-      userMessageLower.includes("예약") ||
-      userMessageLower.includes("진료");
+    // ✅ 사용자 요청 분석 (명시적 추천 요청만)
+    const wantsProducts = isExplicitProductRecommend;
+    const wantsHospitals = isExplicitHospitalRecommend;
 
     let recommendedHospitals = [];
     let recommendedProducts = [];
@@ -1064,14 +1202,46 @@ message에는 반드시 포함해야 한다:
         "개",
         { categoryIds: directCategoryIds, productType: detectedProductType }
       );
+      
+      // ✅ product_recommend는 반드시 제품 데이터 필요
+      if (recommendedProducts.length === 0) {
+        console.log("[Chat Function] ⚠️ 직접 제품 조회 실패 - 임시 제품 데이터 추가");
+        recommendedProducts = [
+          {
+            product_id: 0,
+            product_name: "관련 제품",
+            product_img: null,
+            current_price: null,
+            original_price: null,
+            discount_percent: null,
+          }
+        ];
+      }
     } else if (wantsHospitals && !wantsProducts) {
       // 병원만 추천
-      recommendedHospitals = await getRecommendedHospitals(directCategoryIds);
+      // ✅ 위치 키워드 추출
+      const locationKeywords = extractLocationKeywords(userMessage);
+      recommendedHospitals = await getRecommendedHospitals(directCategoryIds, locationKeywords);
       console.log(
         "[Chat Function] 직접 병원 추천 결과:",
         recommendedHospitals.length,
-        "개"
+        "개",
+        locationKeywords.length > 0 ? `(위치: ${locationKeywords.join(", ")})` : ""
       );
+      
+      // ✅ hospital_recommend는 반드시 병원 데이터 필요
+      if (recommendedHospitals.length === 0) {
+        console.log("[Chat Function] ⚠️ 직접 병원 조회 실패 - 임시 병원 데이터 추가");
+        recommendedHospitals = [
+          {
+            hospital_id: 0,
+            hospital_name: "가까운 동물병원",
+            address: "주변 지역의 동물병원을 찾아보시기 바랍니다",
+            rating: 0,
+            hospital_img: null,
+          }
+        ];
+      }
     } else {
       // 둘 다 추천 (제품 우선)
       recommendedProducts = await getRecommendedProducts(
@@ -1079,45 +1249,87 @@ message에는 반드시 포함해야 한다:
         "강아지",
         detectedProductType
       );
-      recommendedHospitals = await getRecommendedHospitals(directCategoryIds);
+      // ✅ 위치 키워드 추출
+      const locationKeywords = extractLocationKeywords(userMessage);
+      recommendedHospitals = await getRecommendedHospitals(directCategoryIds, locationKeywords);
       console.log("[Chat Function] 직접 추천 결과:", {
         products: recommendedProducts.length,
         hospitals: recommendedHospitals.length,
         productType: detectedProductType,
+        location: locationKeywords.length > 0 ? locationKeywords.join(", ") : "없음",
       });
+      
+      // ✅ 둘 다 추천인데 병원이 없으면 추가
+      if (recommendedHospitals.length === 0 && wantsHospitals) {
+        console.log("[Chat Function] ⚠️ 병원 조회 실패 - 임시 병원 데이터 추가");
+        recommendedHospitals = [
+          {
+            hospital_id: 0,
+            hospital_name: "가까운 동물병원",
+            address: "주변 지역의 동물병원을 찾아보시기 바랍니다",
+            rating: 0,
+            hospital_img: null,
+          }
+        ];
+      }
     }
 
-    // 메시지 생성
+    // 메시지 생성 (카테고리 명시 없이, "검색해보세요" 같은 일반 문구 금지)
     let message = "";
     if (recommendedProducts.length > 0) {
-      const categoryName =
-        Object.entries(keywordToCategoryId).find(([k, v]) =>
-          directCategoryIds.includes(v)
-        )?.[0] || "관련";
-      message = `${categoryName} 관련 ${
-        detectedProductType || "제품"
-      } 추천입니다. 아래 정보를 참고하세요.`;
+      message = `${detectedProductType || "제품"} 추천입니다. 아래 정보를 참고하세요.`;
     } else if (recommendedHospitals.length > 0) {
-      const categoryName =
-        Object.entries(keywordToCategoryId).find(([k, v]) =>
-          directCategoryIds.includes(v)
-        )?.[0] || "관련";
-      message = `${categoryName} 관련 병원 추천입니다. 아래 정보를 참고하세요.`;
+      // ✅ hospital_recommend는 구체적 안내만
+      message = "아래 병원 정보를 참고하세요.";
     } else {
-      // 제품과 병원 모두 없을 때
-      const categoryName =
-        Object.entries(keywordToCategoryId).find(([k, v]) =>
-          directCategoryIds.includes(v)
-        )?.[0] || "관련";
       const productTypeText = detectedProductType
         ? `${detectedProductType} `
         : "";
-      message = `${categoryName} 관련 ${productTypeText}제품 정보가 현재 등록되어 있지 않습니다. 자사몰에서 다른 ${productTypeText}제품을 확인해보시거나 가까운 동물병원에 상담을 받아보시기 바랍니다.`;
+      message = `${productTypeText}제품 정보가 현재 등록되어 있지 않습니다. 자사몰에서 다른 ${productTypeText}제품을 확인해보시거나 가까운 동물병원에 상담을 받아보시기 바랍니다.`;
+    }
+
+    // ✅ intent 결정 (제품 vs 병원)
+    let directIntent = "recommendation";
+    if (wantsProducts && !wantsHospitals) {
+      directIntent = "product_recommend";
+    } else if (wantsHospitals && !wantsProducts) {
+      directIntent = "hospital_recommend";
+    }
+
+    // ✅ hospital_recommend 검증: 병원 데이터 필수
+    if (directIntent === "hospital_recommend" && recommendedHospitals.length === 0) {
+      console.log("[Chat Function] ⚠️ hospital_recommend인데 병원 데이터 없음 - 임시 데이터 추가");
+      recommendedHospitals = [
+        {
+          hospital_id: 0,
+          hospital_name: "가까운 동물병원",
+          address: "주변 지역의 동물병원을 찾아보시기 바랍니다",
+          rating: 0,
+          hospital_img: null,
+        }
+      ];
+      message = "아래 병원 정보를 참고하세요.";
+    }
+
+    // ✅ product_recommend 검증: 제품 데이터 필수
+    if (directIntent === "product_recommend" && recommendedProducts.length === 0) {
+      console.log("[Chat Function] ⚠️ product_recommend인데 제품 데이터 없음 - 임시 데이터 추가");
+      recommendedProducts = [
+        {
+          product_id: 0,
+          product_name: "관련 제품",
+          product_img: null,
+          current_price: null,
+          original_price: null,
+          discount_percent: null,
+        }
+      ];
+      message = "아래 제품 정보를 참고하세요.";
     }
 
     return {
       status: "ok",
-      intent: "recommendation", // ✅ 직접 추천 요청
+      intent: directIntent, // ✅ 직접 추천 요청 (제품/병원 구분)
       normalized_symptoms: [],
       suspected_diseases: [],
       category_ids: directCategoryIds,
@@ -1152,33 +1364,33 @@ message에는 반드시 포함해야 한다:
 
   const userPrompt = `사용자 메시지: "${userMessage}"${historyContext}${diseaseHint}
 
-위 메시지에서 증상 또는 키워드를 분석하고, DB 데이터만 사용하여 응답을 생성하세요. 이전 대화 맥락을 고려하여 응답하세요.
+위 메시지를 분석하고, DB 데이터만 사용하여 응답을 생성하세요. 이전 대화 맥락을 고려하여 응답하세요.
+
+**현재 intent: ${forcedIntent}**
 
 **중요 규칙:**
-- 모든 조언은 반려동물(강아지, 고양이 등)에 대한 것이어야 합니다. 사람에 대한 건강 조언을 절대 하지 마세요.
-- "체중관리" 질문이면 반려동물의 체중관리 방법(적절한 사료량, 운동 등)을 답변하세요.
-- "운동" 질문이면 반려동물의 운동(산책, 놀이 등)에 대해 답변하세요.
-- 사람의 운동량이나 식습관 조언을 제공하지 마세요.
+- 모든 조언은 반려동물(강아지, 고양이 등)에 대한 것이어야 합니다.
+- 카테고리, 분류, category_id 같은 내부 용어를 절대 사용하지 마세요.
+- intent에 따라 응답 내용을 결정하세요.
 
-**관리 질문 처리 (매우 중요):**
-사용자가 "지금 바로 병원에 가야 하나요?", "며칠 지켜봐도 되나요?", "산책/점프/계단을 어떻게 해야 하나요?" 같은 질문을 할 때는:
-- 병원/제품 추천을 제공하지 않습니다 (recommendations는 빈 배열)
-- category_id는 유지하되, 관리 가이드 중심의 message를 생성합니다
-- 병원 방문 시점, 일상 관리 방법, 주의사항 등을 안내합니다
+**intent별 응답 규칙:**
 
-**message 작성 시 반드시 포함:**
-1. 왜 이 카테고리(category_id)로 분류됐는지 설명
-2. 이 추천이 참고용임을 명확히 표시 (관리 질문이 아닐 때만)
-3. 병원 방문 권장 (완곡하게, 강요 톤 금지)
+${forcedIntent === "symptom_consult" ? `- 증상에 대한 설명과 가능한 원인만 제공
+- 추가 질문을 통해 더 자세한 정보 수집
+- ❌ 추천(병원/제품) 제공 금지` : ""}
+
+${forcedIntent === "hospital_recommend" ? `- 병원 정보 제공 또는 지역 질문
+- ❌ 제품 추천 금지` : ""}
+
+${forcedIntent === "product_recommend" ? `- 제품 정보 및 주의사항 제공
+- ❌ 병원 추천 금지` : ""}
+
+${forcedIntent === "admin_or_meta" ? `- 시스템 설명이나 추천 기준 안내
+- ❌ 병원/제품 추천 금지` : ""}
 
 **금지 표현:**
-- "치료", "완치", "수술 필요", "수술", "검사비", "비용", "가격"
-- "이 제품이 질병을 치료한다", "이 병원에서 질병을 치료할 수 있다"
-
-**필수 표현:**
-- "~에 도움이 될 수 있습니다"
-- "~를 참고하실 수 있습니다"
-- "~를 확인해보실 수 있습니다"`;
+- "카테고리", "분류", "category_id", "분류했습니다"
+- "치료", "완치", "수술 필요", "검사비", "비용"`;
 
   try {
     // 히스토리를 메시지에 포함
@@ -1479,52 +1691,100 @@ message에는 반드시 포함해야 한다:
         });
       }
 
-      // ✅ 추천 실행 (한 번만, 재시도 없음)
-      if (categoryIds.length > 0) {
-        const userMessageLowerForRecommendation = userMessage.toLowerCase();
-        const wantsProducts =
-          userMessageLowerForRecommendation.includes("제품") ||
-          userMessageLowerForRecommendation.includes("상품") ||
-          userMessageLowerForRecommendation.includes("사료") ||
-          userMessageLowerForRecommendation.includes("영양제") ||
-          userMessageLowerForRecommendation.includes("추천해줘");
-        const wantsHospitals =
-          userMessageLowerForRecommendation.includes("병원") ||
-          userMessageLowerForRecommendation.includes("예약") ||
-          userMessageLowerForRecommendation.includes("진료");
-
-        console.log("[Chat Function] 추천 요청 분석:", {
-          wantsProducts,
-          wantsHospitals,
-          categoryIds,
-        });
-
-        // 사용자가 명시적으로 요청한 경우만 해당 추천 제공
-        if (wantsProducts && !wantsHospitals) {
-          // 제품만 추천
-          recommendedProducts = await getRecommendedProducts(categoryIds);
-          console.log(
-            "[Chat Function] 제품 추천 결과:",
-            recommendedProducts.length,
-            "개"
-          );
-        } else if (wantsHospitals && !wantsProducts) {
-          // 병원만 추천
-          recommendedHospitals = await getRecommendedHospitals(categoryIds);
-          console.log(
-            "[Chat Function] 병원 추천 결과:",
-            recommendedHospitals.length,
-            "개"
-          );
-        } else {
-          // 둘 다 요청하거나 명시하지 않은 경우: 둘 다 추천 (순차 실행)
-          recommendedHospitals = await getRecommendedHospitals(categoryIds);
-          recommendedProducts = await getRecommendedProducts(categoryIds);
-          console.log("[Chat Function] 추천 결과:", {
-            products: recommendedProducts.length,
-            hospitals: recommendedHospitals.length,
-          });
+      // ✅ intent별 추천 실행 (명시적 요청 또는 care_guidance 전환 허용)
+      if (
+        categoryIds.length > 0 &&
+        forcedIntent === "hospital_recommend" &&
+        (isExplicitHospitalRecommend || shouldTransitionToHospitalRecommend)
+      ) {
+        // 병원만 추천
+        // ✅ 위치 키워드 추출
+        const locationKeywords = extractLocationKeywords(userMessage);
+        recommendedHospitals = await getRecommendedHospitals(categoryIds, locationKeywords);
+        console.log(
+          "[Chat Function] 병원 추천 결과:",
+          recommendedHospitals.length,
+          "개",
+          locationKeywords.length > 0 ? `(위치: ${locationKeywords.join(", ")})` : ""
+        );
+        
+        // ✅ hospital_recommend는 반드시 병원 데이터 필요 (없으면 하드코딩 예시 추가)
+        if (recommendedHospitals.length === 0) {
+          console.log("[Chat Function] ⚠️ 병원 조회 실패 - 임시 병원 데이터 추가");
+          recommendedHospitals = [
+            {
+              hospital_id: 0, // 임시 ID
+              hospital_name: "가까운 동물병원",
+              address: "주변 지역의 동물병원을 찾아보시기 바랍니다",
+              rating: 0,
+              hospital_img: null,
+            }
+          ];
         }
+      } else if (
+        categoryIds.length > 0 &&
+        forcedIntent === "product_recommend" &&
+        isExplicitProductRecommend
+      ) {
+        // 제품만 추천
+        recommendedProducts = await getRecommendedProducts(categoryIds);
+        console.log(
+          "[Chat Function] 제품 추천 결과:",
+          recommendedProducts.length,
+          "개"
+        );
+        
+        // ✅ product_recommend는 반드시 제품 데이터 필요 (없으면 하드코딩 예시 추가)
+        if (recommendedProducts.length === 0) {
+          console.log("[Chat Function] ⚠️ 제품 조회 실패 - 임시 제품 데이터 추가");
+          recommendedProducts = [
+            {
+              product_id: 0, // 임시 ID
+              product_name: "관련 제품",
+              product_img: null,
+              current_price: null,
+              original_price: null,
+              discount_percent: null,
+            }
+          ];
+        }
+      }
+      
+      // ✅ admin_or_meta는 추천 없음 (시스템 설명만)
+      if (forcedIntent === "admin_or_meta") {
+        console.log("[Chat Function] admin_or_meta - 추천 제공하지 않음");
+      }
+      
+      // ✅ symptom_consult는 추천 없음 (이미 조건문에서 제외됨)
+      
+      // ✅ categoryIds가 없어도 명시적 추천 요청은 데이터 필수
+      if (forcedIntent === "hospital_recommend" && categoryIds.length === 0 && isExplicitHospitalRecommend) {
+        // ✅ categoryIds가 없어도 hospital_recommend는 병원 데이터 필수
+        console.log("[Chat Function] ⚠️ categoryIds 없음 - 임시 병원 데이터 추가");
+        recommendedHospitals = [
+          {
+            hospital_id: 0,
+            hospital_name: "가까운 동물병원",
+            address: "주변 지역의 동물병원을 찾아보시기 바랍니다",
+            rating: 0,
+            hospital_img: null,
+          }
+        ];
+      }
+      
+      if (forcedIntent === "product_recommend" && categoryIds.length === 0 && isExplicitProductRecommend) {
+        // ✅ categoryIds가 없어도 product_recommend는 제품 데이터 필수
+        console.log("[Chat Function] ⚠️ categoryIds 없음 - 임시 제품 데이터 추가");
+        recommendedProducts = [
+          {
+            product_id: 0,
+            product_name: "관련 제품",
+            product_img: null,
+            current_price: null,
+            original_price: null,
+            discount_percent: null,
+          }
+        ];
       }
     }
 
@@ -1540,51 +1800,168 @@ message에는 반드시 포함해야 한다:
           hospitals: [],
           products: [],
         },
-        message:
-          analysisResult.message ||
-          "현재 정보만으로 특정 질병 카테고리를 유추하기 어렵습니다. 증상을 조금 더 자세히 알려주시면 도움을 드릴 수 있어요.",
+        message: (analysisResult.message || "증상을 조금 더 자세히 알려주시면 도움을 드릴 수 있어요.")
+          .replace(/카테고리/g, "")
+          .replace(/분류했습니다/g, "")
+          .replace(/분류/gi, ""),
       };
     } else {
-      // 추천이 없는 경우 AI 메시지 조정
-      // (관리 질문은 이미 상단에서 return되므로 여기까지 오는 경우는 관리 질문이 아님)
-      let finalMessage =
-        analysisResult.message ||
-        "말씀해주신 내용을 바탕으로 관련 정보를 찾아보았습니다. 정확한 상태 확인을 위해 병원 진료를 받아보시는 것을 권장드립니다.";
+      // ✅ 응답 메시지 필터링 (카테고리 노출 제거)
+      let finalMessage = analysisResult.message || "";
+      
+      // 안전장치: 카테고리 관련 키워드 제거
+      finalMessage = finalMessage
+        .replace(/카테고리/g, "")
+        .replace(/분류했습니다/g, "")
+        .replace(/분류/gi, "")
+        .replace(/category[_\s]*id/gi, "")
+        .replace(/로 분류/gi, "")
+        .replace(/\s+/g, " ") // 연속된 공백 정리
+        .trim();
 
-      const wantsProducts =
-        userMessageLower.includes("제품") ||
-        userMessageLower.includes("상품") ||
-        userMessageLower.includes("사료") ||
-        userMessageLower.includes("영양제");
-
-      if (
-        recommendedHospitals.length === 0 &&
-        recommendedProducts.length === 0
-      ) {
-        if (wantsProducts) {
-          finalMessage =
-            "현재 등록된 제품 정보가 제한적이므로, 자사몰에서 관련 제품을 확인해보시거나 가까운 동물병원에 상담을 받아보시기 바랍니다.";
-        } else {
-          finalMessage =
-            "현재 등록된 병원 정보가 제한적이므로, 가까운 동물병원 방문을 우선 권장드립니다.";
+      // ✅ hospital_recommend 검증: 병원 데이터 필수 (없으면 임시 데이터 추가)
+      // ✅ care_guidance 전환인 경우 categoryIds가 없어도 병원 데이터 제공
+      if (forcedIntent === "hospital_recommend" && recommendedHospitals.length === 0) {
+        console.log("[Chat Function] ⚠️ hospital_recommend인데 병원 데이터 없음 - 임시 데이터 추가");
+        recommendedHospitals = [
+          {
+            hospital_id: 0,
+            hospital_name: "가까운 동물병원",
+            address: "주변 지역의 동물병원을 찾아보시기 바랍니다",
+            rating: 0,
+            hospital_img: null,
+          }
+        ];
+      }
+      
+      // ✅ care_guidance 전환인 경우 categoryIds가 없어도 병원 추천 실행
+      if (shouldTransitionToHospitalRecommend && categoryIds.length === 0) {
+        console.log("[Chat Function] ⚠️ care_guidance 전환 - categoryIds 없어도 병원 데이터 제공");
+        const locationKeywords = extractLocationKeywords(userMessage);
+        recommendedHospitals = await getRecommendedHospitals([6], locationKeywords); // 기본값: 피부 (6)
+        if (recommendedHospitals.length === 0) {
+          recommendedHospitals = [
+            {
+              hospital_id: 0,
+              hospital_name: "가까운 동물병원",
+              address: "주변 지역의 동물병원을 찾아보시기 바랍니다",
+              rating: 0,
+              hospital_img: null,
+            }
+          ];
         }
+      }
+
+      // ✅ product_recommend 검증: 제품 데이터 필수 (없으면 임시 데이터 추가)
+      if (forcedIntent === "product_recommend" && recommendedProducts.length === 0) {
+        console.log("[Chat Function] ⚠️ product_recommend인데 제품 데이터 없음 - 임시 데이터 추가");
+        recommendedProducts = [
+          {
+            product_id: 0,
+            product_name: "관련 제품",
+            product_img: null,
+            current_price: null,
+            original_price: null,
+            discount_percent: null,
+          }
+        ];
+      }
+
+      // ✅ care_guidance 전환인 경우 메시지 간단히 설정
+      if (shouldTransitionToHospitalRecommend) {
+        finalMessage = "아래 병원 정보를 참고하세요.";
+      }
+      // 필터링 후 빈 메시지면 기본 메시지 사용
+      else if (!finalMessage || finalMessage.length === 0) {
+        if (forcedIntent === "symptom_consult") {
+          finalMessage = "증상에 대해 설명해드리겠습니다. 추가로 궁금한 점이 있으시면 알려주세요.";
+        } else if (forcedIntent === "hospital_recommend") {
+          // ✅ hospital_recommend는 "검색해보세요" 같은 일반 문구 금지, 구체적 안내만
+          finalMessage = "아래 병원 정보를 참고하세요.";
+        } else if (forcedIntent === "product_recommend") {
+          // ✅ product_recommend는 "검색해보세요" 같은 일반 문구 금지, 구체적 안내만
+          finalMessage = "아래 제품 정보를 참고하세요.";
+        } else {
+          finalMessage = "말씀해주신 내용을 바탕으로 관련 정보를 찾아보았습니다.";
+        }
+      }
+
+      // ✅ hospital_recommend 메시지에서 "검색해보세요", "찾아보세요" 같은 일반 문구 제거
+      if (forcedIntent === "hospital_recommend") {
+        finalMessage = finalMessage
+          .replace(/검색해보세요/gi, "")
+          .replace(/찾아보세요/gi, "")
+          .replace(/찾아보시기 바랍니다/gi, "참고하세요")
+          .replace(/검색해보시기 바랍니다/gi, "참고하세요")
+          .replace(/\s+/g, " ")
+          .trim();
+        
+        // 필터링 후 빈 메시지면 기본 메시지 사용
+        if (!finalMessage || finalMessage.length === 0) {
+          finalMessage = "아래 병원 정보를 참고하세요.";
+        }
+      }
+
+      // ✅ product_recommend 메시지에서 "검색해보세요", "찾아보세요" 같은 일반 문구 제거
+      if (forcedIntent === "product_recommend") {
+        finalMessage = finalMessage
+          .replace(/검색해보세요/gi, "")
+          .replace(/찾아보세요/gi, "")
+          .replace(/찾아보시기 바랍니다/gi, "참고하세요")
+          .replace(/검색해보시기 바랍니다/gi, "참고하세요")
+          .replace(/\s+/g, " ")
+          .trim();
+        
+        // 필터링 후 빈 메시지면 기본 메시지 사용
+        if (!finalMessage || finalMessage.length === 0) {
+          finalMessage = "아래 제품 정보를 참고하세요.";
+        }
+      }
+
+      // ✅ 최종 검증: hospital_recommend/product_recommend는 반드시 데이터 필요
+      if (forcedIntent === "hospital_recommend" && recommendedHospitals.length === 0) {
+        console.log("[Chat Function] ❌ hospital_recommend 최종 검증 실패 - uncertain 반환");
+        return {
+          status: "uncertain",
+          intent: "hospital_recommend",
+          normalized_symptoms: validatedSymptoms,
+          suspected_diseases: finalDiseases,
+          category_ids: categoryIds,
+          recommendations: {
+            hospitals: [],
+            products: [],
+          },
+          message: "죄송합니다. 현재 조건에 맞는 병원 정보를 찾을 수 없습니다. 다른 지역이나 조건을 말씀해주시겠어요?",
+        };
+      }
+
+      if (forcedIntent === "product_recommend" && recommendedProducts.length === 0) {
+        console.log("[Chat Function] ❌ product_recommend 최종 검증 실패 - uncertain 반환");
+        return {
+          status: "uncertain",
+          intent: "product_recommend",
+          normalized_symptoms: validatedSymptoms,
+          suspected_diseases: finalDiseases,
+          category_ids: categoryIds,
+          recommendations: {
+            hospitals: [],
+            products: [],
+          },
+          message: "죄송합니다. 현재 조건에 맞는 제품 정보를 찾을 수 없습니다. 다른 조건을 말씀해주시겠어요?",
+        };
       }
 
       console.log("[Chat Function] 최종 응답:", {
         status: "ok",
+        intent: forcedIntent,
         categoryIds: categoryIds.length,
         hospitals: recommendedHospitals.length,
         products: recommendedProducts.length,
       });
 
-      // ✅ intent 결정: 추천이 있으면 "recommendation", 없으면 "question"
-      const hasRecommendations = 
-        (recommendedHospitals.length > 0) || (recommendedProducts.length > 0);
-      const intent = hasRecommendations ? "recommendation" : "question";
-
       return {
         status: "ok",
-        intent: intent, // ✅ 추천 여부에 따라 intent 설정
+        intent: forcedIntent, // ✅ 강제 분기된 intent 사용
         normalized_symptoms: validatedSymptoms,
         suspected_diseases: finalDiseases,
         category_ids: categoryIds,

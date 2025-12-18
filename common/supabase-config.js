@@ -564,9 +564,34 @@ const SupabaseService = {
     return String(maxId + 1);
   },
 
+  // 이메일 중복 체크
+  async checkEmailExists(email) {
+    const client = await getSupabaseClient();
+    const { data, error } = await client
+      .from('users')
+      .select('email')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error checking email:', error);
+      // 에러가 발생해도 중복 체크 실패로 간주하여 false 반환
+      return false;
+    }
+
+    // data가 있으면 이메일이 존재함
+    return data !== null;
+  },
+
   // 사용자 등록
   async createUser(userData) {
     const client = await getSupabaseClient();
+    
+    // 이메일 중복 체크
+    const emailExists = await this.checkEmailExists(userData.email);
+    if (emailExists) {
+      throw new Error('이미 가입된 이메일입니다.');
+    }
     
     // 다음 user_id 가져오기
     const userId = await this.getNextUserId();
