@@ -235,18 +235,12 @@ function scrollToBottomIfNeeded(force = false) {
   
   // force가 true이거나 스크롤이 맨 아래에 있으면 자동 스크롤
   if (force || isScrolledToBottom(chatContainer)) {
-    // DOM 업데이트를 기다린 후 스크롤 (이중 대기로 확실하게)
-    setTimeout(() => {
-      requestAnimationFrame(() => {
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-        // 한 번 더 확인하여 확실히 스크롤
-        setTimeout(() => {
-          chatContainer.scrollTop = chatContainer.scrollHeight;
-          // 스크롤 버튼 상태 업데이트
-          updateScrollButtonVisibility();
-        }, 50);
-      });
-    }, 50);
+    // requestAnimationFrame을 사용하여 DOM 업데이트 후 스크롤
+    requestAnimationFrame(() => {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      // 스크롤 버튼 상태 업데이트
+      updateScrollButtonVisibility();
+    });
   } else {
     // 스크롤 버튼 상태 업데이트
     updateScrollButtonVisibility();
@@ -521,11 +515,6 @@ async function sendMessage(messageText) {
           });
         });
       }
-      
-      // 병원/제품 추천이 추가된 후 스크롤 (이미지 로딩 대기)
-      setTimeout(() => {
-        scrollToBottomIfNeeded(true);
-      }, 200);
     }
     
     // 히스토리에 추가
@@ -534,8 +523,8 @@ async function sendMessage(messageText) {
     // 채팅 히스토리 저장
     saveChatHistory();
     
-    // 메시지 추가 후 즉시 스크롤
-    scrollToBottomIfNeeded(true);
+    // 스크롤이 맨 아래에 있으면 자동 스크롤
+    scrollToBottomIfNeeded();
   } catch (err) {
     // 로딩 메시지 제거
     removeLoadingMessage();
@@ -664,20 +653,11 @@ document.addEventListener('DOMContentLoaded', function() {
   // 채팅 히스토리 불러오기
   const historyLoaded = loadChatHistory();
   
-  // 초기 스크롤을 맨 아래로 (히스토리 복원 후에도 작동하도록 여러 번 시도)
+  // 초기 스크롤을 맨 아래로
   if (chatMessages) {
-    // 즉시 스크롤
-    scrollToBottomIfNeeded(true);
-    
-    // 짧은 지연 후 스크롤 (DOM 업데이트 대기)
     setTimeout(() => {
       scrollToBottomIfNeeded(true);
     }, 100);
-    
-    // 더 긴 지연 후 스크롤 (이미지 로딩 등 대기)
-    setTimeout(() => {
-      scrollToBottomIfNeeded(true);
-    }, 500);
   }
   
   // MutationObserver를 사용하여 새 메시지가 추가될 때 자동 스크롤

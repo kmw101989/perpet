@@ -705,11 +705,8 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
     userMessage,
   });
 
-  // 사용자 메시지에서 질병 키워드 추출 시도 (관리 질문일 때는 제외)
-  let possibleDisease = null;
-  if (!isCareGuidanceQuestion) {
-    possibleDisease = findDiseaseByKeyword(userMessage, diseases);
-  }
+  // 사용자 메시지에서 질병 키워드 추출 시도
+  const possibleDisease = findDiseaseByKeyword(userMessage, diseases);
 
   // A안(현실 타협) SYSTEM PROMPT - 탐색 가이드 AI 역할
   const systemPrompt = `너는 반려동물(강아지, 고양이 등) 건강 상담 보조 AI다.
@@ -1357,29 +1354,19 @@ message에는 반드시 포함해야 한다:
             diseasesWithCategories.map((d) => d.category_id).filter(Boolean)
           ),
         ];
+        finalDiseases = validatedDiseases.map((d) => ({
+          disease_id: d.disease_id,
+          confidence: d.confidence,
+        }));
       } else if (directCategoryIds.length > 0) {
         categoryIds = directCategoryIds;
       }
 
-      // 관리 질문 + category 비어있을 때 default category 보정
-      if (categoryIds.length === 0) {
-        // 관절/산책/다리 키워드가 있으면 뼈/관절로 보정
-        if (
-          /다리|산책|뒷다리|절뚝|걷|관절|뼈|보행/.test(userMessageLower)
-        ) {
-          categoryIds = [8]; // 뼈/관절
-          console.log(
-            "[Chat Function] 관리 질문 category 보정: 뼈/관절 (8)"
-          );
-        }
-        // 다른 키워드 기반 보정도 여기에 추가 가능
-      }
-
-      // 관리 질문 응답 반환 (추천 없음, disease 언급 금지)
+      // 관리 질문 응답 반환 (추천 없음)
       return {
         status: "ok",
         normalized_symptoms: validatedSymptoms,
-        suspected_diseases: [], // 관리 질문은 disease 언급 완전 차단
+        suspected_diseases: finalDiseases,
         category_ids: categoryIds,
         recommendations: {
           hospitals: [], // 관리 질문은 추천 없음
