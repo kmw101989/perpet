@@ -536,6 +536,59 @@ const SupabaseService = {
     return data;
   },
 
+  // 이메일로 사용자 정보 가져오기
+  async getUserByEmail(email) {
+    const client = await getSupabaseClient();
+    const { data, error } = await client
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching user by email:', error);
+      return null;
+    }
+    return data;
+  },
+
+  // 사용자 삭제 (이메일 기준)
+  async deleteUserByEmail(email) {
+    const client = await getSupabaseClient();
+    
+    // 먼저 사용자 정보 가져오기
+    const user = await this.getUserByEmail(email);
+    if (!user) {
+      throw new Error('해당 이메일의 사용자를 찾을 수 없습니다.');
+    }
+
+    const userId = user.user_id;
+
+    // 해당 사용자의 반려동물도 함께 삭제
+    const { error: petsError } = await client
+      .from('pets')
+      .delete()
+      .eq('user_id', userId);
+
+    if (petsError) {
+      console.warn('반려동물 삭제 중 오류 (무시):', petsError);
+      // 반려동물 삭제 실패해도 계속 진행
+    }
+
+    // 사용자 삭제
+    const { error } = await client
+      .from('users')
+      .delete()
+      .eq('email', email);
+
+    if (error) {
+      console.error('Error deleting user:', error);
+      throw error;
+    }
+
+    return true;
+  },
+
   // 다음 사용자 ID 생성 (1부터 시작하는 순차 번호)
   async getNextUserId() {
     const client = await getSupabaseClient();

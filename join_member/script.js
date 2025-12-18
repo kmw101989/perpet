@@ -243,7 +243,7 @@ async function checkEmailDuplicate(email) {
     const emailExists = await SupabaseService.checkEmailExists(email);
     
     if (emailExists) {
-      showEmailError("이미 가입된 이메일입니다.");
+      showEmailError("이미 가입된 이메일입니다.", email);
       return false;
     } else {
       hideEmailError();
@@ -256,32 +256,129 @@ async function checkEmailDuplicate(email) {
   }
 }
 
-// 이메일 에러 메시지 표시
-function showEmailError(message) {
-  let errorElement = document.getElementById("emailError");
-  if (!errorElement) {
-    // 에러 메시지 요소가 없으면 생성
-    errorElement = document.createElement("div");
-    errorElement.id = "emailError";
-    errorElement.className = "error-message";
-    errorElement.style.cssText = "display: block; color: #ff0000; font-size: 12px; margin-top: 4px;";
+// 이메일 에러 메시지 표시 (기존 계정 삭제 버튼 포함)
+function showEmailError(message, email) {
+  let errorContainer = document.getElementById("emailErrorContainer");
+  if (!errorContainer) {
+    // 에러 컨테이너가 없으면 생성
+    errorContainer = document.createElement("div");
+    errorContainer.id = "emailErrorContainer";
+    errorContainer.style.cssText = "margin-top: 4px;";
     
     // 이메일 입력 필드 다음에 삽입
     const emailInput = document.getElementById("email");
     if (emailInput && emailInput.parentElement) {
-      emailInput.parentElement.appendChild(errorElement);
+      emailInput.parentElement.appendChild(errorContainer);
     }
   }
   
+  // 에러 메시지
+  let errorElement = document.getElementById("emailError");
+  if (!errorElement) {
+    errorElement = document.createElement("div");
+    errorElement.id = "emailError";
+    errorElement.className = "error-message";
+    errorElement.style.cssText = "color: #ff0000; font-size: 12px; margin-bottom: 8px;";
+    errorContainer.appendChild(errorElement);
+  }
   errorElement.textContent = message;
-  errorElement.style.display = "block";
+  
+  // 기존 계정 삭제 버튼 (데모용)
+  let deleteButton = document.getElementById("deleteExistingAccountBtn");
+  if (!deleteButton && email) {
+    deleteButton = document.createElement("button");
+    deleteButton.id = "deleteExistingAccountBtn";
+    deleteButton.type = "button";
+    deleteButton.textContent = "기존 계정 삭제하고 새로 가입하기";
+    deleteButton.style.cssText = `
+      background-color: #ff6b6b;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 11px;
+      font-family: "JejuGothic", "Noto Sans KR", sans-serif;
+      cursor: pointer;
+      margin-top: 4px;
+      transition: background-color 0.2s;
+    `;
+    
+    deleteButton.addEventListener("mouseenter", function() {
+      this.style.backgroundColor = "#ff5252";
+    });
+    deleteButton.addEventListener("mouseleave", function() {
+      this.style.backgroundColor = "#ff6b6b";
+    });
+    
+    deleteButton.addEventListener("click", async function() {
+      await deleteExistingAccount(email);
+    });
+    
+    errorContainer.appendChild(deleteButton);
+  }
+  
+  errorContainer.style.display = "block";
 }
 
 // 이메일 에러 메시지 숨김
 function hideEmailError() {
-  const errorElement = document.getElementById("emailError");
-  if (errorElement) {
-    errorElement.style.display = "none";
+  const errorContainer = document.getElementById("emailErrorContainer");
+  if (errorContainer) {
+    errorContainer.style.display = "none";
+  }
+}
+
+// 기존 계정 삭제 함수
+async function deleteExistingAccount(email) {
+  if (!email || !email.trim()) {
+    alert("이메일이 입력되지 않았습니다.");
+    return;
+  }
+
+  // 확인 메시지
+  const confirmed = confirm(
+    "기존 계정과 관련된 모든 데이터(반려동물 정보 포함)가 삭제됩니다.\n정말 삭제하시겠습니까?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    // SupabaseService가 로드되었는지 확인
+    if (typeof SupabaseService === "undefined") {
+      alert("서비스 초기화 중 오류가 발생했습니다. 페이지를 새로고침해주세요.");
+      return;
+    }
+
+    // 삭제 버튼 비활성화 및 로딩 표시
+    const deleteButton = document.getElementById("deleteExistingAccountBtn");
+    if (deleteButton) {
+      deleteButton.disabled = true;
+      deleteButton.textContent = "삭제 중...";
+    }
+
+    // 기존 계정 삭제
+    await SupabaseService.deleteUserByEmail(email);
+
+    // 성공 메시지
+    alert("기존 계정이 삭제되었습니다. 이제 새로 가입할 수 있습니다.");
+
+    // 에러 메시지 숨김
+    hideEmailError();
+
+    // 폼 검증 다시 실행
+    validateForm();
+  } catch (error) {
+    console.error("계정 삭제 오류:", error);
+    alert("계정 삭제 중 오류가 발생했습니다: " + error.message);
+    
+    // 삭제 버튼 복원
+    const deleteButton = document.getElementById("deleteExistingAccountBtn");
+    if (deleteButton) {
+      deleteButton.disabled = false;
+      deleteButton.textContent = "기존 계정 삭제하고 새로 가입하기";
+    }
   }
 }
 
@@ -630,8 +727,8 @@ function setupSubmitButton() {
           
           // 이메일 중복 오류 처리
           if (error.message && error.message.includes("이미 가입된 이메일")) {
-            showEmailError("이미 가입된 이메일입니다.");
-            alert("이미 가입된 이메일입니다. 다른 이메일을 사용해주세요.");
+            showEmailError("이미 가입된 이메일입니다.", formData.email);
+            alert("이미 가입된 이메일입니다. 다른 이메일을 사용하거나 기존 계정을 삭제해주세요.");
             emailInput.focus();
           } else {
             alert("회원가입 중 오류가 발생했습니다: " + error.message);
