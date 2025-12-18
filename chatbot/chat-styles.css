@@ -168,14 +168,15 @@ body {
   border-radius: 10px;
   padding: 8px 16px;
   font-size: 12px;
-  white-space: pre-line; /* ✅ 줄바꿈 정상 렌더링 */
+  white-space: normal; /* ✅ HTML 엔티티(bullet point) 정상 렌더링을 위해 normal 사용, 줄바꿈은 <br>로 처리 */
   color: #000000;
   font-weight: 400;
-  line-height: 13.02px;
+  line-height: 1.6; /* ✅ bullet point 가독성 개선 */
   max-width: 232px;
   word-wrap: break-word;
   display: inline-block;
   vertical-align: top;
+  font-family: "JejuGothic", "Noto Sans KR", sans-serif; /* ✅ bullet point 폰트 지원 */
 }
 
 /* 사용자 메시지 */

@@ -69,8 +69,27 @@ async function loadDatabaseData() {
 
 // 이 함수들은 더 이상 사용하지 않음 (로컬 데이터 기반 함수로 대체됨)
 
-// 위치 키워드 추출 함수
-function extractLocationKeywords(userMessage) {
+// 위치 키워드 추출 함수 (사용자 주소 우선)
+function extractLocationKeywords(userMessage, userAddress = null) {
+  // ✅ 사용자 주소가 있으면 우선 사용
+  if (userAddress) {
+    const addressMap = {
+      "서울": ["서울"],
+      "경기/인천": ["경기", "인천"],
+      "경기": ["경기"],
+      "인천": ["인천"],
+    };
+    if (addressMap[userAddress]) {
+      console.log("[Chat Function] 사용자 주소 기반 위치 키워드:", addressMap[userAddress]);
+      return addressMap[userAddress];
+    } else {
+      // 매핑되지 않은 경우 직접 사용
+      console.log("[Chat Function] 사용자 주소 직접 사용:", userAddress);
+      return [userAddress];
+    }
+  }
+  
+  // 사용자 주소가 없으면 메시지에서 추출
   const locationKeywords = [];
   const messageLower = userMessage.toLowerCase();
   
@@ -169,6 +188,9 @@ function extractLocationKeywords(userMessage) {
 // category_id로 병원 추천 (명세서 기준)
 // 주의: hospitals 테이블은 'category_id' 컬럼을 사용함
 // locationKeywords: 위치 키워드 배열 (예: ["서울", "강남"])
+// 로직:
+// 1. 사용자의 지역에 질병에 알맞는 병원 있음 → 지역 우선 추천
+// 2. 사용자의 지역에 질병에 알맞는 병원 없음 → 지역 필터 없이 카테고리만으로 추천
 async function getRecommendedHospitals(categoryIds, locationKeywords = []) {
   const supabase = getSupabaseClient();
 
@@ -179,7 +201,7 @@ async function getRecommendedHospitals(categoryIds, locationKeywords = []) {
   try {
     // hospitals 테이블은 'category_id' 컬럼 사용
     // category_id 기준으로 병원 조회
-    // rating DESC, review_count DESC 정렬, 최대 10개 (위치 필터링 후 정렬을 위해)
+    // rating DESC, review_count DESC 정렬, 최대 10개
     const { data, error } = await supabase
       .from("hospitals")
       .select(
@@ -188,7 +210,7 @@ async function getRecommendedHospitals(categoryIds, locationKeywords = []) {
       .in("category_id", categoryIds)
       .order("rating", { ascending: false })
       .order("review_count", { ascending: false })
-      .limit(10); // 위치 필터링을 위해 더 많이 가져옴
+      .limit(10);
 
     if (error) {
       console.error("병원 추천 조회 오류:", error);
@@ -203,35 +225,32 @@ async function getRecommendedHospitals(categoryIds, locationKeywords = []) {
       hospital_img: h.hospital_img || null,
     }));
 
-    // ✅ 위치 키워드가 있으면 해당 위치의 병원을 우선 정렬
+    // ✅ 위치 키워드가 있으면 해당 위치의 병원을 먼저 필터링
     if (locationKeywords.length > 0) {
       const addressLower = (addr) => (addr || "").toLowerCase();
       
-      hospitals = hospitals.sort((a, b) => {
-        const aAddress = addressLower(a.address);
-        const bAddress = addressLower(b.address);
-        
-        // 위치 키워드 매칭 여부 확인
-        const aMatches = locationKeywords.some(loc => 
-          aAddress.includes(loc.toLowerCase())
+      // 위치 키워드로 매칭되는 병원 필터링
+      const matchedHospitals = hospitals.filter(h => {
+        const hAddress = addressLower(h.address);
+        return locationKeywords.some(loc => 
+          hAddress.includes(loc.toLowerCase())
         );
-        const bMatches = locationKeywords.some(loc => 
-          bAddress.includes(loc.toLowerCase())
-        );
-        
-        // 위치 매칭된 병원을 우선 정렬
-        if (aMatches && !bMatches) return -1;
-        if (!aMatches && bMatches) return 1;
-        
-        // 둘 다 매칭되거나 둘 다 안 되면 기존 정렬 유지 (rating, review_count)
-        if (a.rating !== b.rating) return b.rating - a.rating;
-        return (b.review_count || 0) - (a.review_count || 0);
       });
       
-      console.log(`[Chat Function] 위치 기반 정렬 적용: ${locationKeywords.join(", ")}`);
+      // ✅ 경우의 수 1: 사용자의 지역에 질병에 알맞는 병원 있음 → 지역 우선 추천
+      if (matchedHospitals.length > 0) {
+        console.log(`[Chat Function] 지역 매칭 병원 발견: ${matchedHospitals.length}개 (${locationKeywords.join(", ")})`);
+        // 최대 3개만 반환
+        return matchedHospitals.slice(0, 3);
+      }
+      
+      // ✅ 경우의 수 2: 사용자의 지역에 질병에 알맞는 병원 없음 → 지역 필터 없이 카테고리만으로 추천
+      console.log(`[Chat Function] 지역 매칭 병원 없음 - 지역 필터 없이 카테고리만으로 추천 (${locationKeywords.join(", ")})`);
+      // 전체 병원 중 최대 3개 반환 (이미 rating, review_count로 정렬됨)
+      return hospitals.slice(0, 3);
     }
 
-    // 최대 3개만 반환
+    // 위치 키워드가 없으면 그냥 카테고리만으로 추천
     return hospitals.slice(0, 3);
   } catch (err) {
     console.error("병원 추천 오류:", err);
@@ -772,7 +791,7 @@ function resolveCategoryIds({
 }
 
 // AI를 사용한 증상 정규화 및 질병 후보 선택
-async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
+async function analyzeSymptoms(userMessage, dbData, apiKey, history = [], userAddress = null) {
   const { symptoms, diseases } = dbData;
 
   // 증상 키워드 목록 생성 (symptom_word만)
@@ -1038,8 +1057,9 @@ async function analyzeSymptoms(userMessage, dbData, apiKey, history = []) {
 - 추가 질문을 통해 더 자세한 정보 수집
 - ❌ 절대 금지: 병원 추천, 제품 추천, 카테고리/분류 언급, "카테고리로 분류했습니다" 같은 표현`,
     hospital_recommend: `[hospital_recommend 규칙]
-- 병원 리스트만 제공하거나 지역을 물어보는 질문
-- ❌ 절대 금지: 제품 추천, 카테고리/분류 언급`,
+- 병원 리스트만 제공
+- ❌ 절대 금지: 지역을 물어보는 질문 ("어떤 지역에 계신지", "지역을 알려주세요" 등), 제품 추천, 카테고리/분류 언급
+- ✅ 사용자 주소 정보는 서버에서 자동으로 처리하므로 지역을 물어보지 말 것`,
     product_recommend: `[product_recommend 규칙]
 - 제품 또는 성분 정보 제공
 - 사용 시 주의사항 안내
@@ -1219,8 +1239,8 @@ ${intentRules[forcedIntent] || intentRules.symptom_consult}
       }
     } else if (wantsHospitals && !wantsProducts) {
       // 병원만 추천
-      // ✅ 위치 키워드 추출
-      const locationKeywords = extractLocationKeywords(userMessage);
+      // ✅ 위치 키워드 추출 (사용자 주소 우선)
+      const locationKeywords = extractLocationKeywords(userMessage, userAddress);
       recommendedHospitals = await getRecommendedHospitals(directCategoryIds, locationKeywords);
       console.log(
         "[Chat Function] 직접 병원 추천 결과:",
@@ -1249,8 +1269,8 @@ ${intentRules[forcedIntent] || intentRules.symptom_consult}
         "강아지",
         detectedProductType
       );
-      // ✅ 위치 키워드 추출
-      const locationKeywords = extractLocationKeywords(userMessage);
+      // ✅ 위치 키워드 추출 (사용자 주소 우선)
+      const locationKeywords = extractLocationKeywords(userMessage, userAddress);
       recommendedHospitals = await getRecommendedHospitals(directCategoryIds, locationKeywords);
       console.log("[Chat Function] 직접 추천 결과:", {
         products: recommendedProducts.length,
@@ -1698,8 +1718,8 @@ ${forcedIntent === "admin_or_meta" ? `- 시스템 설명이나 추천 기준 안
         (isExplicitHospitalRecommend || shouldTransitionToHospitalRecommend)
       ) {
         // 병원만 추천
-        // ✅ 위치 키워드 추출
-        const locationKeywords = extractLocationKeywords(userMessage);
+        // ✅ 위치 키워드 추출 (사용자 주소 우선)
+        const locationKeywords = extractLocationKeywords(userMessage, userAddress);
         recommendedHospitals = await getRecommendedHospitals(categoryIds, locationKeywords);
         console.log(
           "[Chat Function] 병원 추천 결과:",
@@ -1837,7 +1857,7 @@ ${forcedIntent === "admin_or_meta" ? `- 시스템 설명이나 추천 기준 안
       // ✅ care_guidance 전환인 경우 categoryIds가 없어도 병원 추천 실행
       if (shouldTransitionToHospitalRecommend && categoryIds.length === 0) {
         console.log("[Chat Function] ⚠️ care_guidance 전환 - categoryIds 없어도 병원 데이터 제공");
-        const locationKeywords = extractLocationKeywords(userMessage);
+        const locationKeywords = extractLocationKeywords(userMessage, userAddress);
         recommendedHospitals = await getRecommendedHospitals([6], locationKeywords); // 기본값: 피부 (6)
         if (recommendedHospitals.length === 0) {
           recommendedHospitals = [
@@ -1886,13 +1906,19 @@ ${forcedIntent === "admin_or_meta" ? `- 시스템 설명이나 추천 기준 안
         }
       }
 
-      // ✅ hospital_recommend 메시지에서 "검색해보세요", "찾아보세요" 같은 일반 문구 제거
+      // ✅ hospital_recommend 메시지에서 "검색해보세요", "찾아보세요", "지역을 물어보는 문구" 제거
       if (forcedIntent === "hospital_recommend") {
         finalMessage = finalMessage
           .replace(/검색해보세요/gi, "")
           .replace(/찾아보세요/gi, "")
           .replace(/찾아보시기 바랍니다/gi, "참고하세요")
           .replace(/검색해보시기 바랍니다/gi, "참고하세요")
+          .replace(/어떤 지역에 계신지/gi, "")
+          .replace(/지역에 계신지/gi, "")
+          .replace(/지역을 알려주세요/gi, "")
+          .replace(/지역을 말씀해주세요/gi, "")
+          .replace(/어떤 지역/gi, "")
+          .replace(/가까운 병원을 안내/gi, "병원을 안내")
           .replace(/\s+/g, " ")
           .trim();
         
@@ -2040,7 +2066,7 @@ exports.handler = async (event) => {
       };
     }
 
-    const { message, history = [] } = requestBody;
+    const { message, history = [], userId = null } = requestBody;
     if (!message) {
       console.error("[Chat Function] message 필드 누락");
       return {
@@ -2052,6 +2078,27 @@ exports.handler = async (event) => {
 
     console.log("[Chat Function] 메시지:", message.substring(0, 50) + "...");
     console.log("[Chat Function] 히스토리 길이:", history.length);
+    console.log("[Chat Function] 사용자 ID:", userId);
+
+    // ✅ 사용자 정보 조회 (user_address1 가져오기)
+    let userAddress = null;
+    if (userId) {
+      try {
+        const supabase = getSupabaseClient();
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('user_address1')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (!userError && userData && userData.user_address1) {
+          userAddress = userData.user_address1;
+          console.log("[Chat Function] 사용자 주소:", userAddress);
+        }
+      } catch (userErr) {
+        console.warn("[Chat Function] 사용자 정보 조회 실패 (무시):", userErr);
+      }
+    }
 
     // DB 데이터 로드
     console.log("[Chat Function] DB 데이터 로드 시작");
@@ -2086,7 +2133,8 @@ exports.handler = async (event) => {
     console.log("[Chat Function] AI 분석 시작");
     let analysisResult;
     try {
-      analysisResult = await analyzeSymptoms(message, dbData, apiKey, history);
+      // ✅ 사용자 주소 정보를 analyzeSymptoms에 전달
+      analysisResult = await analyzeSymptoms(message, dbData, apiKey, history, userAddress);
       console.log("[Chat Function] AI 분석 완료:", analysisResult.status);
     } catch (aiErr) {
       console.error("[Chat Function] AI 분석 실패:", aiErr);

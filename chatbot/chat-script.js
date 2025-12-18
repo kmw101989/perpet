@@ -187,12 +187,18 @@ function restoreChatMessages(messages) {
       if (!msg.content || !msg.content.includes(initialMessageText)) {
         const botMsg = document.createElement('div');
         botMsg.className = 'message bot-message';
+        // ✅ bullet point와 줄바꿈 처리
+        let restoredContent = msg.html || msg.content || '';
+        restoredContent = restoredContent
+          .replace(/•/g, '&bull;') // bullet point를 HTML 엔티티로 변환
+          .replace(/\n/g, '<br>'); // 줄바꿈을 <br>로 변환
+        
         botMsg.innerHTML = `
           <div class="message-avatar">
             <img src="../svg/Union.svg" alt="펫봇" class="bot-avatar-image" />
           </div>
           <div class="message-content">
-            <div class="message-bubble">${msg.html || msg.content}</div>
+            <div class="message-bubble">${restoredContent}</div>
           </div>
         `;
         chatMessages.appendChild(botMsg);
@@ -323,6 +329,9 @@ async function callChatAPI(message) {
     // Netlify Function 경로 (로컬: netlify dev, 배포: 자동 라우팅)
     const apiUrl = '/.netlify/functions/chat';
     
+    // ✅ 사용자 ID 가져오기
+    const userId = getCurrentUserId();
+    
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -330,7 +339,8 @@ async function callChatAPI(message) {
       },
       body: JSON.stringify({
         message: message,
-        history: chatHistory
+        history: chatHistory,
+        userId: userId || null // ✅ 사용자 ID 전송
       })
     });
 
@@ -410,6 +420,12 @@ async function sendMessage(messageText) {
     
     // 응답 메시지 구성 (명세서 형식)
     let messageContent = response.message || '응답을 생성하는 중 오류가 발생했습니다.';
+    
+    // ✅ bullet point(•) 문자를 HTML 엔티티로 변환하여 제대로 표시되도록 처리
+    // 줄바꿈도 <br>로 변환 (white-space: pre-line과 함께 사용)
+    messageContent = messageContent
+      .replace(/•/g, '&bull;') // bullet point를 HTML 엔티티로 변환
+      .replace(/\n/g, '<br>'); // 줄바꿈을 <br>로 변환
     
     botMessage.innerHTML = `
       <div class="message-avatar">
