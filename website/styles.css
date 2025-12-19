@@ -698,12 +698,20 @@ html {
 
 /* 이벤트 배너 */
 .event-banner {
-  margin: 0 25px 20px;
-  background: linear-gradient(135deg, #4caf50 0%, #2196f3 100%);
+  margin: 0 25px 0;
   border-radius: 10px;
-  padding: 16px;
   overflow: hidden;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.event-banner-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
 }
 
 .event-content {

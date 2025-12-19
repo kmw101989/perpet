@@ -494,6 +494,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // 관리 카드 슬라이드 기능
   initManagementSlider();
+
+  // 이벤트 배너 클릭 이벤트
+  const eventBanner = document.getElementById("eventBanner");
+  if (eventBanner) {
+    eventBanner.style.cursor = "pointer";
+    eventBanner.addEventListener("click", function () {
+      // 쇼핑 페이지로 이동하면서 검색어 전달
+      window.location.href = "../mall/shop.html?search=케어브이";
+    });
+  }
 });
 
 // 관리 카드 슬라이드 초기화

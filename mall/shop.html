@@ -22,23 +22,25 @@
     <header class="shop-header"></header>
 
     <div class="shop-container">
-      <!-- 상단 카테고리 탭 -->
-      <div class="category-tabs">
-        <div class="category-tab active">종합관리</div>
-        <div class="category-tab">심장</div>
-        <div class="category-tab">신장/방광</div>
-        <div class="category-tab">간</div>
-        <div class="category-tab">위/장</div>
-        <div class="category-tab">피부</div>
-        <div class="category-tab">치아</div>
-        <div class="category-tab">뼈/관절</div>
-        <div class="category-tab">눈</div>
-        <div class="category-tab">면역력</div>
-        <div class="category-tab">행동</div>
-      </div>
+      <!-- 상단 고정 영역 (카테고리 탭 + 검색 바) -->
+      <div class="sticky-top-section">
+        <!-- 상단 카테고리 탭 -->
+        <div class="category-tabs">
+          <div class="category-tab active">종합관리</div>
+          <div class="category-tab">심장</div>
+          <div class="category-tab">신장/방광</div>
+          <div class="category-tab">간</div>
+          <div class="category-tab">위/장</div>
+          <div class="category-tab">피부</div>
+          <div class="category-tab">치아</div>
+          <div class="category-tab">뼈/관절</div>
+          <div class="category-tab">눈</div>
+          <div class="category-tab">면역력</div>
+          <div class="category-tab">행동</div>
+        </div>
 
-      <!-- 검색 바 -->
-      <div class="search-bar">
+        <!-- 검색 바 -->
+        <div class="search-bar">
         <svg
           class="search-icon"
           width="20"
@@ -65,8 +67,10 @@
         <input
           type="text"
           class="search-input"
+          id="searchInput"
           placeholder="어떤 맛있는 걸 찾고있냠?"
         />
+      </div>
       </div>
 
       <!-- 첫 번째 섹션: 내새꾸를 위한 냠냠 추천 -->

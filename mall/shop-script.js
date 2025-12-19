@@ -339,6 +339,105 @@ function attachProductCardEvents(container, cardType) {
   });
 }
 
+// 검색 결과 표시 함수
+async function displaySearchResults(searchTerm) {
+  try {
+    console.log("검색 시작:", searchTerm);
+    
+    if (!searchTerm || searchTerm.trim() === "") {
+      console.log("검색어가 비어있습니다.");
+      resetSearchView();
+      return;
+    }
+
+    const products = await SupabaseService.searchProducts(searchTerm.trim(), 50);
+    console.log("검색 결과:", products);
+    
+    // 모든 기존 recommendation-section 숨기기
+    const allSections = document.querySelectorAll(".recommendation-section");
+    allSections.forEach((section) => {
+      section.style.display = "none";
+    });
+
+    // 검색 결과 섹션 찾기 또는 생성
+    let searchSection = document.getElementById("search-results-section");
+    const shopContainer = document.querySelector(".shop-container");
+    
+    if (!searchSection) {
+      // 검색 결과 섹션 생성
+      searchSection = document.createElement("div");
+      searchSection.id = "search-results-section";
+      searchSection.className = "recommendation-section";
+      
+      // 검색 바 다음에 삽입 (검색 바의 부모 요소에서 삽입)
+      const searchBar = document.querySelector(".search-bar");
+      if (searchBar) {
+        // searchBar의 다음 형제 요소 앞에 삽입
+        if (searchBar.nextSibling) {
+          searchBar.parentNode.insertBefore(searchSection, searchBar.nextSibling);
+        } else {
+          // 다음 형제가 없으면 바로 뒤에 추가
+          searchBar.parentNode.appendChild(searchSection);
+        }
+      } else {
+        // 검색 바가 없으면 첫 번째 섹션 위치에 삽입
+        const firstSection = document.querySelector(".recommendation-section:first-of-type");
+        if (firstSection) {
+          shopContainer.insertBefore(searchSection, firstSection);
+        } else {
+          shopContainer.appendChild(searchSection);
+        }
+      }
+    }
+
+    // 검색 결과 섹션 내용 업데이트
+    searchSection.innerHTML = `
+      <div class="section-header">
+        <h2 class="section-title">검색 결과: "${searchTerm}"</h2>
+      </div>
+      <div class="product-grid-large" id="search-results-grid"></div>
+    `;
+    searchSection.style.display = "block";
+
+    // 검색 결과 그리드에 제품 표시
+    const searchGrid = document.getElementById("search-results-grid");
+    if (searchGrid) {
+      if (products && products.length > 0) {
+        searchGrid.innerHTML = products
+          .map((product) => createProductCardLarge(product))
+          .join("");
+        attachProductCardEvents(searchGrid, "large");
+        console.log("검색 결과 표시 완료:", products.length, "개");
+      } else {
+        searchGrid.innerHTML =
+          '<p style="text-align: center; color: #959595; padding: 40px; white-space: nowrap; font-family: \'JejuGothic\', sans-serif; font-size: 14px;">검색 결과가 없습니다.</p>';
+        console.log("검색 결과 없음");
+      }
+    } else {
+      console.error("검색 결과 그리드를 찾을 수 없습니다.");
+    }
+  } catch (error) {
+    console.error("검색 실패:", error);
+  }
+}
+
+// 검색 초기화 (기존 섹션 표시)
+function resetSearchView() {
+  // 검색 결과 섹션 숨기기
+  const searchSection = document.getElementById("search-results-section");
+  if (searchSection) {
+    searchSection.style.display = "none";
+  }
+
+  // 모든 기존 recommendation-section 다시 표시
+  const recommendationSections = document.querySelectorAll(".recommendation-section");
+  recommendationSections.forEach((section) => {
+    if (section.id !== "search-results-section") {
+      section.style.display = "block";
+    }
+  });
+}
+
 // 페이지 초기화
 document.addEventListener("DOMContentLoaded", async function () {
   // Supabase 스크립트 로드 확인
@@ -347,9 +446,61 @@ document.addEventListener("DOMContentLoaded", async function () {
     return;
   }
 
-  // 초기 제품 로드
+  // 초기 제품 로드 (섹션 생성 필요)
   await loadProducts("recommended");
   await loadProducts("category");
+
+  // URL 파라미터에서 검색어 확인
+  const urlParams = new URLSearchParams(window.location.search);
+  const searchParam = urlParams.get("search");
+  
+  if (searchParam) {
+    // 검색어가 있으면 검색 입력 필드에 설정하고 검색 실행
+    const searchInput = document.getElementById("searchInput");
+    if (searchInput) {
+      searchInput.value = searchParam;
+      await displaySearchResults(searchParam);
+    }
+  }
+
+  // 검색 기능
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    console.log("검색 입력 필드 찾음");
+    let searchTimeout;
+    
+    // 엔터키로 검색
+    searchInput.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const searchTerm = this.value.trim();
+        console.log("엔터키 검색:", searchTerm);
+        if (searchTerm) {
+          displaySearchResults(searchTerm);
+        } else {
+          resetSearchView();
+        }
+      }
+    });
+
+    // 입력값 변경 시 실시간 검색 (디바운싱)
+    searchInput.addEventListener("input", function () {
+      clearTimeout(searchTimeout);
+      const searchTerm = this.value.trim();
+      console.log("입력 변경:", searchTerm);
+      
+      if (searchTerm) {
+        searchTimeout = setTimeout(() => {
+          console.log("실시간 검색 실행:", searchTerm);
+          displaySearchResults(searchTerm);
+        }, 500); // 500ms 후 검색 실행
+      } else {
+        resetSearchView();
+      }
+    });
+  } else {
+    console.error("검색 입력 필드를 찾을 수 없습니다.");
+  }
 
   // 카테고리 탭 클릭 이벤트 (상단 필터)
   // 이 필터는 "종합관리를 위한 냠냠" 섹션에만 영향을 줌

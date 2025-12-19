@@ -112,6 +112,22 @@ const SupabaseService = {
     return data;
   },
 
+  // 제품명으로 검색 (product_name에 검색어 포함)
+  async searchProducts(searchTerm, limit = 100) {
+    const client = await getSupabaseClient();
+    const { data, error } = await client
+      .from('products')
+      .select('product_id, brand, product_name, current_price, original_price, discount_percent, rating, review_count, product_img, category, product_type')
+      .ilike('product_name', `%${searchTerm}%`)
+      .limit(limit);
+
+    if (error) {
+      console.error('제품 검색 실패:', error);
+      return [];
+    }
+    return data || [];
+  },
+
   // 반려동물 기반 제품 추천
   // 반려동물의 disease_id -> diseases 테이블의 category_id -> products 테이블의 category 매칭
   // 리뷰수, 별점으로 정렬하여 상위 3개 반환
