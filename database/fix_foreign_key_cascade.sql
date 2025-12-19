@@ -58,3 +58,4 @@ WHERE tc.constraint_type = 'FOREIGN KEY'
 
 -- delete_rule이 'CASCADE'로 표시되면 성공!
 
+
