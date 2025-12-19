@@ -465,39 +465,53 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   // 검색 기능
   const searchInput = document.getElementById("searchInput");
+  const searchBar = document.querySelector(".search-bar");
+  
   if (searchInput) {
     console.log("검색 입력 필드 찾음");
-    let searchTimeout;
+    
+    // 검색 실행 함수
+    const executeSearch = () => {
+      const searchTerm = searchInput.value.trim();
+      console.log("검색 실행:", searchTerm);
+      
+      if (searchTerm) {
+        // URL 파라미터 업데이트 (페이지 새로고침 없이)
+        const url = new URL(window.location);
+        url.searchParams.set("search", searchTerm);
+        window.history.pushState({ search: searchTerm }, "", url);
+        
+        // 검색 결과 표시
+        displaySearchResults(searchTerm);
+      } else {
+        // 검색어가 없으면 URL 파라미터 제거
+        const url = new URL(window.location);
+        url.searchParams.delete("search");
+        window.history.pushState({}, "", url);
+        
+        // 기존 섹션 표시
+        resetSearchView();
+      }
+    };
     
     // 엔터키로 검색
     searchInput.addEventListener("keypress", function (e) {
       if (e.key === "Enter") {
         e.preventDefault();
-        const searchTerm = this.value.trim();
-        console.log("엔터키 검색:", searchTerm);
-        if (searchTerm) {
-          displaySearchResults(searchTerm);
-        } else {
-          resetSearchView();
-        }
+        executeSearch();
       }
     });
 
-    // 입력값 변경 시 실시간 검색 (디바운싱)
-    searchInput.addEventListener("input", function () {
-      clearTimeout(searchTimeout);
-      const searchTerm = this.value.trim();
-      console.log("입력 변경:", searchTerm);
-      
-      if (searchTerm) {
-        searchTimeout = setTimeout(() => {
-          console.log("실시간 검색 실행:", searchTerm);
-          displaySearchResults(searchTerm);
-        }, 500); // 500ms 후 검색 실행
-      } else {
-        resetSearchView();
-      }
-    });
+    // 검색 아이콘 클릭 시 검색
+    const searchIcon = document.querySelector(".search-icon");
+    if (searchIcon) {
+      searchIcon.style.cursor = "pointer";
+      searchIcon.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        executeSearch();
+      });
+    }
   } else {
     console.error("검색 입력 필드를 찾을 수 없습니다.");
   }
