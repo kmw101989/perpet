@@ -848,9 +848,36 @@ async function loadBirthdaySchedule() {
         ? new Date(currentYear + 1, birthDate.getMonth(), birthDate.getDate())
         : birthdayThisYear;
 
-    const month = displayBirthday.getMonth() + 1;
+    const birthdayMonth = displayBirthday.getMonth() + 1;
     const day = displayBirthday.getDate();
     const dayName = getDayName(displayBirthday.getDay());
+
+    // 현재 달력에 표시된 월 가져오기
+    const calendarMonthEl = document.querySelector(".calendar-month");
+    let currentDisplayMonth = null;
+    if (calendarMonthEl) {
+      const monthText = calendarMonthEl.textContent.trim();
+      // "12월" 형식에서 숫자 추출
+      const monthMatch = monthText.match(/(\d+)월/);
+      if (monthMatch) {
+        currentDisplayMonth = parseInt(monthMatch[1], 10);
+      }
+    }
+    
+    // 현재 표시 월이 없으면 오늘 날짜의 월 사용
+    if (!currentDisplayMonth) {
+      currentDisplayMonth = new Date().getMonth() + 1;
+    }
+
+    // 생일 텍스트 생성 (12월 생이면 월 생략, 아니면 월 포함)
+    let birthdayText;
+    if (birthdayMonth === currentDisplayMonth) {
+      // 현재 표시 중인 월과 생일 월이 같으면 월 생략
+      birthdayText = `${day}일(${dayName}) ${petName} 생일 ❤️`;
+    } else {
+      // 현재 표시 중인 월과 생일 월이 다르면 월 포함
+      birthdayText = `${birthdayMonth}월 ${day}일(${dayName}) ${petName} 생일 ❤️`;
+    }
 
     // 일정 리스트 가져오기
     const scheduleList = document.querySelector(".schedule-list");
@@ -875,7 +902,7 @@ async function loadBirthdaySchedule() {
       <div class="schedule-icon">
         <img src="/svg/bday.svg" alt="생일" class="schedule-icon-img" />
       </div>
-      <div class="schedule-text">${day}일(${dayName}) ${petName} 생일 ❤️</div>
+      <div class="schedule-text">${birthdayText}</div>
     `;
 
     // 일정 리스트의 마지막에 추가 (예약 일정 다음)
