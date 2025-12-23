@@ -154,7 +154,7 @@
               <div class="hospital-info">
                 <div class="hospital-header">
                   <div class="hospital-name">스마트동물병원</div>
-                  <div class="hospital-rating">⭐ 4.4(636)</div>
+                  <div class="hospital-rating"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; margin-right: 2px;"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#ff7777"/></svg> 재진희망율 88% (636)</div>
                 </div>
                 <div class="hospital-details">
                   <div class="detail-item">24시간 운영</div>
@@ -176,7 +176,7 @@
               <div class="hospital-info">
                 <div class="hospital-header">
                   <div class="hospital-name">강남동물병원</div>
-                  <div class="hospital-rating">⭐ 4.6 (32)</div>
+                  <div class="hospital-rating"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; margin-right: 2px;"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#ff7777"/></svg> 재진희망율 92% (32)</div>
                 </div>
                 <div class="hospital-details">
                   <div class="detail-item">평일 09:00-21:00</div>
@@ -251,6 +251,13 @@
 
         naverMapScript.onerror = function (e) {
           console.error("네이버 지도 API 스크립트 로드 실패:", e);
+          console.error("에러 상세:", {
+            message: e.message,
+            filename: e.filename,
+            lineno: e.lineno,
+            colno: e.colno,
+            error: e.error
+          });
           window.naverMapCallbackCalled = true;
           setTimeout(function () {
             if (typeof showMapPlaceholder === "function") {
@@ -259,7 +266,7 @@
               const mapContainer = document.getElementById("mapContainer");
               if (mapContainer) {
                 mapContainer.innerHTML =
-                  '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg, #a5d6a7 0%, #81c784 50%, #66bb6a 100%);color:#fff;font-family:\'JejuGothic\',sans-serif;"><div style="font-size:16px;margin-bottom:8px;">🗺️</div><div style="font-size:14px;text-align:center;padding:0 20px;">지도를 불러올 수 없습니다</div></div>';
+                  '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg, #a5d6a7 0%, #81c784 50%, #66bb6a 100%);color:#fff;font-family:\'JejuGothic\',sans-serif;"><div style="font-size:16px;margin-bottom:8px;">🗺️</div><div style="font-size:14px;text-align:center;padding:0 20px;">지도를 불러올 수 없습니다<br/>브라우저 콘솔을 확인해주세요</div></div>';
               }
             }
           }, 500);
@@ -294,12 +301,16 @@
             !window.naverMapCallbackCalled &&
             (typeof naver === "undefined" || !naver.maps)
           ) {
-            console.warn("⚠️ 네이버 지도 API 콜백이 호출되지 않았습니다.");
-            console.warn("현재 URL:", window.location.href);
-            console.warn("Client ID: f3qp1zkzgn");
-            console.warn(
+            console.error("⚠️ 네이버 지도 API 콜백이 호출되지 않았습니다.");
+            console.error("현재 URL:", window.location.href);
+            console.error("Client ID: f3qp1zkzgn");
+            console.error(
               "등록된 URL 확인 필요: https://perpet.netlify.app (도메인만, 경로 제외)"
             );
+            console.error("가능한 원인:");
+            console.error("1. API 키가 유효하지 않거나 만료됨");
+            console.error("2. 현재 도메인이 네이버 클라우드 플랫폼에 등록되지 않음");
+            console.error("3. 네트워크 연결 문제");
             if (typeof showMapPlaceholder === "function") {
               showMapPlaceholder();
             }

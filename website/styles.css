@@ -233,6 +233,7 @@ html {
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
   pointer-events: none;
+  overflow: visible;
 }
 
 .management-slide.active {
@@ -402,7 +403,8 @@ html {
 }
 
 .card2-image {
-  width: 100%;
+  width: 95%;
+  max-width: 250px;
   height: auto;
   display: block;
   object-fit: contain;
@@ -584,6 +586,7 @@ html {
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow: visible;
 }
 
 .care-guide-title {
@@ -607,7 +610,10 @@ html {
   margin: 0 auto;
   position: relative;
   justify-content: center;
-  padding: 0;
+  padding: 12px 12px 4px 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 5px;
+  overflow: visible;
 }
 
 .care-guide-left {
@@ -617,6 +623,7 @@ html {
   gap: 8px;
   flex-shrink: 0;
   width: 89px;
+  overflow: visible;
 }
 
 .care-guide-disease-tag {
@@ -647,6 +654,10 @@ html {
   justify-content: flex-start;
   margin-left: 0;
   margin-top: 0;
+  overflow: visible;
+  margin-bottom: -16px;
+  position: relative;
+  z-index: 2;
 }
 
 .care-guide-illustration img {
@@ -654,6 +665,9 @@ html {
   height: 100%;
   object-fit: contain;
   object-position: bottom left;
+  transform: translateY(12px);
+  position: relative;
+  z-index: 1;
 }
 
 .care-guide-items {
@@ -662,6 +676,8 @@ html {
   gap: 8px;
   flex: 1;
   min-width: 0;
+  align-items: flex-start;
+  padding-bottom: 4px;
 }
 
 .care-guide-item {
@@ -675,8 +691,11 @@ html {
   font-size: 10px;
   color: #434343;
   font-weight: 400;
-  line-height: 10.85px;
+  line-height: 12px;
   font-family: "JejuGothic", sans-serif;
+  height: 12px;
+  display: flex;
+  align-items: center;
 }
 
 .care-guide-item-desc {
@@ -958,9 +977,9 @@ html {
   position: fixed;
   bottom: 70px;
   left: 50%;
-  margin-left: calc(390px / 2 - 56px - 16px);
-  width: 56px;
-  height: 56px;
+  margin-left: calc(390px / 2 - 104px - 16px);
+  width: 104px;
+  height: 104px;
   background: transparent;
   border: none;
   border-radius: 50%;
@@ -982,8 +1001,8 @@ html {
 }
 
 .bot-icon {
-  width: 56px;
-  height: 56px;
+  width: 104px;
+  height: 104px;
   object-fit: contain;
   display: block;
   filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.25));
@@ -1082,7 +1101,7 @@ html {
   }
 
   .ai-chat-fab {
-    margin-left: calc(768px / 2 - 56px - 16px);
+    margin-left: calc(768px / 2 - 104px - 16px);
   }
 
   .management-card-ribbon {
@@ -1098,7 +1117,7 @@ html {
   }
 
   .ai-chat-fab {
-    margin-left: calc(1024px / 2 - 56px - 16px);
+    margin-left: calc(1024px / 2 - 104px - 16px);
   }
 
   .management-card-ribbon {

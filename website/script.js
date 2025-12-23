@@ -303,19 +303,32 @@ document.addEventListener("DOMContentLoaded", function () {
   // 헤더 로고 업데이트 함수
   function updateHeaderLogo(pet) {
     const headerLogoEl = document.getElementById("headerLogo");
-    if (!headerLogoEl) {
-      return;
-    }
-
+    const botIconEl = document.getElementById("botIcon");
+    
     // pet_species에 따라 로고 변경
     const species = pet?.pet_species || pet?.species || "";
-    if (species === "cat" || species === "고양이") {
-      headerLogoEl.src = "../svg/main_cat.svg";
-    } else if (species === "dog" || species === "강아지") {
-      headerLogoEl.src = "../svg/main_dog.svg";
-    } else {
-      // 기본값 (species가 없거나 다른 경우)
-      headerLogoEl.src = "../svg/Union.svg";
+    
+    if (headerLogoEl) {
+      if (species === "cat" || species === "고양이") {
+        headerLogoEl.src = "../svg/main_cat.svg";
+      } else if (species === "dog" || species === "강아지") {
+        headerLogoEl.src = "../svg/main_dog.svg";
+      } else {
+        // 기본값 (species가 없거나 다른 경우)
+        headerLogoEl.src = "../svg/Union.svg";
+      }
+    }
+    
+    // bot-icon 업데이트
+    if (botIconEl) {
+      if (species === "cat" || species === "고양이") {
+        botIconEl.src = "../svg/chat_cat.svg";
+      } else if (species === "dog" || species === "강아지") {
+        botIconEl.src = "../svg/chat_dog.svg";
+      } else {
+        // 기본값 (species가 없거나 다른 경우)
+        botIconEl.src = "../svg/Union.svg";
+      }
     }
   }
 
@@ -364,15 +377,15 @@ document.addEventListener("DOMContentLoaded", function () {
         // 실제로는 질환별로 다른 가이드를 제공할 수 있습니다
         careGuideItemsEl.innerHTML = `
           <div class="care-guide-item">
-            <div class="care-guide-item-title">매일 피부 상태 체크</div>
+            <div class="care-guide-item-title">1. 매일 피부 상태 체크</div>
             <div class="care-guide-item-desc">의심 증상 시 수의사 진료</div>
           </div>
           <div class="care-guide-item">
-            <div class="care-guide-item-title">환경 및 생활습관 개선</div>
+            <div class="care-guide-item-title">2. 환경 및 생활습관 개선</div>
             <div class="care-guide-item-desc">오메가 3 급여 및 알러지 요소, 자극 줄이기</div>
           </div>
           <div class="care-guide-item">
-            <div class="care-guide-item-title">꾸준한 모니터링 및 예방</div>
+            <div class="care-guide-item-title">3. 꾸준한 모니터링 및 예방</div>
           </div>
         `;
       } else {

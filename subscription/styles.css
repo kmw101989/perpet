@@ -101,6 +101,16 @@ body {
   border-color: #2065c0;
 }
 
+.premium-card .premium-badge {
+  left: 30px;
+  transform: none;
+}
+
+.basic-card .basic-badge {
+  left: 30px;
+  transform: none;
+}
+
 .basic-card.selected {
   border-color: #2065c0;
 }
@@ -126,10 +136,16 @@ body {
 
 .premium-badge {
   background-color: #2065c0;
+  border-radius: 5px;
+  width: 90px;
+  font-size: 18px;
 }
 
 .basic-badge {
   background-color: #959595;
+  border-radius: 5px;
+  width: 90px;
+  font-size: 18px;
 }
 
 /* Membership Header */
@@ -204,6 +220,22 @@ body {
   background-color: #023e8c;
   flex-shrink: 0;
   margin-top: 2px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feature-dot::after {
+  content: '';
+  width: 6px;
+  height: 4px;
+  border: 2px solid #ffffff;
+  border-top: none;
+  border-right: none;
+  transform: rotate(-45deg);
+  border-radius: 0 0 0 2px;
+  position: absolute;
 }
 
 .basic-dot {
@@ -216,6 +248,7 @@ body {
   line-height: 8.68px;
   font-family: "JejuGothic", sans-serif;
   margin-left: 4px;
+  align-self: baseline;
 }
 
 /* Common Benefit */
