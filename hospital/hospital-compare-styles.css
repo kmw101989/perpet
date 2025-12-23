@@ -492,6 +492,27 @@ html {
   overflow-wrap: break-word;
 }
 
+.detail-item-hours {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.detail-item-hours .hours-text {
+  font-size: 12px;
+  color: #000000;
+  font-weight: 700;
+  line-height: 13.02px;
+}
+
+.detail-item-hours .specialty-text {
+  font-size: 12px;
+  color: #959595;
+  font-weight: 400;
+  line-height: 13.02px;
+}
+
 .hospital-actions {
   display: flex;
   gap: 8px;

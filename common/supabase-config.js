@@ -393,6 +393,40 @@ const SupabaseService = {
     return data;
   },
 
+  // 병원 좌표 업데이트
+  async updateHospitalCoordinates(hospitalId, lat, lng) {
+    const client = await getSupabaseClient();
+    const { data, error } = await client
+      .from('hospitals')
+      .update({ lat: lat, lng: lng })
+      .eq('hospital_id', hospitalId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating hospital coordinates:', error);
+      throw error;
+    }
+    return data;
+  },
+
+  // 병원 정보 업데이트 (일반)
+  async updateHospital(hospitalId, updateData) {
+    const client = await getSupabaseClient();
+    const { data, error } = await client
+      .from('hospitals')
+      .update(updateData)
+      .eq('hospital_id', hospitalId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating hospital:', error);
+      throw error;
+    }
+    return data;
+  },
+
   // 병원 서비스 가져오기
   async getHospitalServices(hospitalId = null, limit = 100) {
     const client = await getSupabaseClient();

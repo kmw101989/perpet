@@ -4,6 +4,7 @@ let markers = [];
 let hospitals = []; // Supabase에서 가져온 병원 데이터
 let allHospitals = []; // 전체 병원 데이터 (필터링 전)
 let currentCategoryId = null; // 현재 선택된 카테고리 ID (기본값: null = 종합관리)
+let is24hFilterActive = false; // 24시간 필터 활성화 여부
 
 // 카테고리 이름을 ID로 매핑
 const categoryMap = {
@@ -104,6 +105,7 @@ async function loadHospitalsFromSupabase() {
         rating: hospital.rating,
         category_id: hospital.category_id,
         img: hospital.hospital_img,
+        hours: hospital.hours,
         lat: lat,
         lng: lng
       };
@@ -180,10 +182,36 @@ async function initNaverMap() {
         try {
           // 좌표가 있는 병원만 마커 표시
           if (hospital.lat && hospital.lng) {
+            // 24시간 병원인지 확인하여 마커 색상 결정
+            const is24h = is24HourHospital(hospital);
+            
+            // 24시간 병원은 빨간색, 일반 병원은 파란색 마커
+            const markerColor = is24h ? '#ff5252' : '#023e8c';
+            
+            // 커스텀 마커 아이콘 생성
+            const markerSize = is24h ? 32 : 24;
+            const markerContent = is24h 
+              ? `<div style="width: ${markerSize}px; height: ${markerSize}px; background-color: ${markerColor}; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: #ffffff; font-family: 'Noto Sans KR', sans-serif;">24h</div>`
+              : `<div style="width: ${markerSize}px; height: ${markerSize}px; background-color: ${markerColor}; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`;
+            
+            // anchor: 마커의 하단 중앙이 실제 위치에 맞춰지도록 설정
+            // 원형 마커는 하단 중앙이 실제 위치를 가리켜야 함
+            const markerIcon = {
+              content: markerContent,
+              anchor: new naver.maps.Point(markerSize / 2, markerSize)
+            };
+            
+            // 디버깅: 좌표 확인
+            console.log(`[마커 생성] 병원: ${hospital.name}`);
+            console.log(`  - 좌표: 위도(${hospital.lat}), 경도(${hospital.lng})`);
+            console.log(`  - 주소: ${hospital.address || 'N/A'}`);
+            console.log(`  - 마커 크기: ${markerSize}px, anchor: (${markerSize / 2}, ${markerSize})`);
+            
             const marker = new naver.maps.Marker({
               position: new naver.maps.LatLng(hospital.lat, hospital.lng),
               map: map,
-              title: hospital.name
+              title: hospital.name,
+              icon: markerIcon
             });
             
             // 마커 클릭 이벤트
@@ -233,10 +261,36 @@ function updateMapMarkers() {
   hospitals.forEach(hospital => {
     try {
       if (hospital.lat && hospital.lng) {
+        // 24시간 병원인지 확인하여 마커 색상 결정
+        const is24h = is24HourHospital(hospital);
+        
+        // 24시간 병원은 빨간색, 일반 병원은 파란색 마커
+        const markerColor = is24h ? '#ff5252' : '#023e8c';
+        
+        // 커스텀 마커 아이콘 생성
+        const markerSize = is24h ? 32 : 24;
+        const markerContent = is24h 
+          ? `<div style="width: ${markerSize}px; height: ${markerSize}px; background-color: ${markerColor}; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: #ffffff; font-family: 'Noto Sans KR', sans-serif;">24h</div>`
+          : `<div style="width: ${markerSize}px; height: ${markerSize}px; background-color: ${markerColor}; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`;
+        
+        // anchor: 마커의 하단 중앙이 실제 위치에 맞춰지도록 설정
+        // 원형 마커는 하단 중앙이 실제 위치를 가리켜야 함
+        const markerIcon = {
+          content: markerContent,
+          anchor: new naver.maps.Point(markerSize / 2, markerSize)
+        };
+        
+        // 디버깅: 좌표 확인
+        console.log(`[마커 업데이트] 병원: ${hospital.name}`);
+        console.log(`  - 좌표: 위도(${hospital.lat}), 경도(${hospital.lng})`);
+        console.log(`  - 주소: ${hospital.address || 'N/A'}`);
+        console.log(`  - 마커 크기: ${markerSize}px, anchor: (${markerSize / 2}, ${markerSize})`);
+        
         const marker = new naver.maps.Marker({
           position: new naver.maps.LatLng(hospital.lat, hospital.lng),
           map: map,
-          title: hospital.name
+          title: hospital.name,
+          icon: markerIcon
         });
         
         naver.maps.Event.addListener(marker, 'click', function() {
@@ -272,9 +326,21 @@ function scrollToHospitalCard(hospitalId) {
   }
 }
 
+// 24시간 운영 병원인지 확인하는 함수
+function is24HourHospital(hospital) {
+  if (!hospital.hours) return false;
+  const hours = hospital.hours.toLowerCase().trim();
+  return hours.includes('24시간') || hours.includes('24시') || hours === '24h';
+}
+
 // 카테고리별 병원 필터링 및 정렬
-function filterAndSortHospitals(categoryId) {
+function filterAndSortHospitals(categoryId, filter24h = false) {
   let filtered = [...allHospitals];
+  
+  // 24시간 필터링
+  if (filter24h) {
+    filtered = filtered.filter(h => is24HourHospital(h));
+  }
   
   // 카테고리 필터링
   if (categoryId !== null) {
@@ -323,7 +389,7 @@ function renderHospitalCards() {
   hospitalList.innerHTML = '';
   
   // 카테고리별 필터링 및 정렬
-  const filteredHospitals = filterAndSortHospitals(currentCategoryId);
+  const filteredHospitals = filterAndSortHospitals(currentCategoryId, is24hFilterActive);
   
   if (filteredHospitals.length === 0) {
     hospitalList.innerHTML = '<div style="padding: 20px; text-align: center; color: #959595;">등록된 병원이 없습니다.</div>';
@@ -354,10 +420,11 @@ function renderHospitalCards() {
           <div class="hospital-rating">${ratingText}</div>
         </div>
         <div class="hospital-details">
-          ${hospital.city ? `<div class="detail-item">${hospital.city}</div>` : ''}
           <div class="detail-item">${hospital.address || '주소 없음'}</div>
-          <div class="detail-item">${hospital.phone || '전화번호 없음'}</div>
-          ${categoryName ? `<div class="detail-item">특화 분야: ${categoryName}</div>` : ''}
+          ${hospital.hours || categoryName ? `<div class="detail-item detail-item-hours">
+            ${hospital.hours ? `<span class="hours-text">${hospital.hours}</span>` : ''}
+            ${categoryName ? `<span class="specialty-text">${hospital.hours ? ' ' : ''}${categoryName} 전문</span>` : ''}
+          </div>` : ''}
         </div>
         <div class="hospital-actions">
           <button class="action-btn primary">예약하기</button>
@@ -529,7 +596,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('카테고리 선택:', categoryName, 'ID:', currentCategoryId);
       
       // 병원 필터링 및 재렌더링
-      const filteredHospitals = filterAndSortHospitals(currentCategoryId);
+      const filteredHospitals = filterAndSortHospitals(currentCategoryId, is24hFilterActive);
       hospitals = filteredHospitals;
       
       // 지도 마커 업데이트
@@ -544,7 +611,17 @@ document.addEventListener('DOMContentLoaded', function() {
   const filter24h = document.querySelector('.filter-24h');
   if (filter24h) {
     filter24h.addEventListener('click', function() {
-      this.classList.toggle('active');
+      is24hFilterActive = this.classList.toggle('active');
+      
+      // 병원 필터링 및 재렌더링
+      const filteredHospitals = filterAndSortHospitals(currentCategoryId, is24hFilterActive);
+      hospitals = filteredHospitals;
+      
+      // 지도 마커 업데이트
+      updateMapMarkers();
+      
+      // 병원 카드 재렌더링
+      renderHospitalCards();
     });
   }
   
