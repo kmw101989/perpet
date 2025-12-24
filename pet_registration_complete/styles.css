@@ -1,8 +1,9 @@
 /* JejuGothic 폰트 */
 @font-face {
   font-family: "JejuGothic";
-  src: url("../JejuGothic.ttf") format("truetype");
-  font-weight: 400;
+  src: url("../fonts/JejuGothic.ttf") format("truetype"),
+    url("../fonts/JejuGothicOTF.otf") format("opentype");
+  font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
